@@ -1,0 +1,129 @@
+/* ScriptIQ Design System — CSS Variables (design.md tokens) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ── Color Palette ─────────────────────────────── */
+  --color-ink-navy: #101A2E;
+  --color-mist-white: #F6F8FA;
+  --color-pulse-violet: #6D5DF6;
+  --color-pulse-violet-soft: #EFECFE;
+  --color-clinical-teal: #12897F;
+  --color-clinical-teal-soft: #E4F3F1;
+  --color-amber-flag: #E8A33D;
+  --color-amber-flag-soft: #FCF1DE;
+  --color-alert-coral: #E15554;
+  --color-alert-coral-soft: #FCEAEA;
+  --color-slate-gray: #5B6B82;
+  --color-line-gray: #E3E8EE;
+  --color-white: #FFFFFF;
+
+  /* ── Typography ────────────────────────────────── */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', Consolas, monospace;
+
+  /* ── Spacing (base 4px) ────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Border Radius ─────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  /* ── Shadows ───────────────────────────────────── */
+  --shadow-float: 0 4px 24px rgba(16,26,46,0.12);
+  --shadow-modal: 0 8px 48px rgba(16,26,46,0.18);
+
+  /* ── Animation ─────────────────────────────────── */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 400ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Dark Console Theme ─────────────────────────── */
+[data-theme="dark"] {
+  --color-bg: #0B1220;
+  --color-surface: #131C2E;
+  --color-text: #E8ECF3;
+  --color-border: rgba(255,255,255,0.08);
+}
+
+/* ── Global Resets ──────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-mist-white);
+  color: var(--color-ink-navy);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Focus Ring ─────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-pulse-violet);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Scrollbar ──────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-line-gray); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--color-slate-gray); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-navy); }
+
+/* ── Typography Utility Classes ─────────────────── */
+.font-display { font-family: var(--font-display); }
+.font-body { font-family: var(--font-body); }
+.font-mono { font-family: var(--font-mono); }
+
+/* ── Waveform Animation ─────────────────────────── */
+@keyframes waveform-bar {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+.waveform-bar {
+  animation: waveform-bar 1.4s ease-in-out infinite;
+}
+.waveform-bar:nth-child(2) { animation-delay: 0.1s; }
+.waveform-bar:nth-child(3) { animation-delay: 0.2s; }
+.waveform-bar:nth-child(4) { animation-delay: 0.3s; }
+.waveform-bar:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.pulse-ring {
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* ── Stagger Fade-in ────────────────────────────── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-field { animation: fadeSlideIn 0.3s var(--ease-out) both; }
+
+/* ── Reduced Motion ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

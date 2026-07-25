@@ -1,0 +1,124 @@
+/* ScriptIQ Design Tokens & Dark Theme Definitions */
+
+:root {
+  /* ── Core Design Palette ───────────────────────────────── */
+  --color-primary: #12897F;
+  --color-primary-hover: #0E6F67;
+  --color-primary-light: #E4F3F1;
+  --color-primary-dark: #09524C;
+
+  --color-accent: #6D5DF6;
+  --color-accent-hover: #5A4AD8;
+  --color-accent-light: #EFECFE;
+
+  --color-amber: #E8A33D;
+  --color-amber-hover: #D6912B;
+  --color-amber-light: #FCF1DE;
+
+  --color-coral: #E15554;
+  --color-coral-hover: #CC4544;
+  --color-coral-light: #FDF2F2;
+
+  --color-ink-900: #0F172A;
+  --color-ink-700: #334155;
+  --color-ink-500: #64748B;
+  --color-ink-300: #94A3B8;
+
+  /* ── Light Theme Defaults ──────────────────────────────── */
+  --color-bg-app: #F8FAFC;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-subtle: #F1F5F9;
+  --color-border: #E2E8F0;
+  --color-border-hover: #CBD5E1;
+
+  /* ── Typography ────────────────────────────────────────── */
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* ── Spacing & Grid (base 4px) ─────────────────────────── */
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Border Radius ──────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── Elevation & Shadows ────────────────────────────────── */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+  --shadow-xl: 0 20px 32px -8px rgba(15, 23, 42, 0.16), 0 8px 16px -4px rgba(15, 23, 42, 0.08);
+
+  /* ── Z-Index Layers ─────────────────────────────────────── */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-toast: 1080;
+  --z-tooltip: 1090;
+
+  /* ── Animation Durations ────────────────────────────────── */
+  --duration-fast: 100ms;
+  --duration-normal: 180ms;
+  --duration-slow: 300ms;
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Dark Console Theme Overrides ───────────────────────────── */
+[data-theme="dark"] {
+  --color-bg-app: #0B1220;
+  --color-bg-surface: #101A2E;
+  --color-bg-subtle: #18243C;
+
+  --color-border: #1E293B;
+  --color-border-hover: #334155;
+
+  --color-ink-900: #F1F5F9;
+  --color-ink-700: #CBD5E1;
+  --color-ink-500: #94A3B8;
+  --color-ink-300: #64748B;
+
+  --color-primary-light: rgba(18, 137, 127, 0.18);
+  --color-accent-light: rgba(109, 93, 246, 0.18);
+  --color-amber-light: rgba(232, 163, 61, 0.18);
+  --color-coral-light: rgba(225, 85, 84, 0.18);
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Focus Visible Ring (WCAG 2.1 AA) ───────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] :focus-visible {
+  outline-color: #2DD4BF;
+}
+
+/* ── Global Theme Dynamic Surfaces ─────────────────────────── */
+body {
+  background-color: var(--color-bg-app);
+  color: var(--color-ink-900);
+  transition: background-color var(--duration-normal) var(--ease-smooth),
+              color var(--duration-normal) var(--ease-smooth);
+}
