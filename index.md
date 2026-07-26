@@ -350,16 +350,16 @@
 ## Phase 25: Full Patient Portal Web Application Suite `[PRIORITY: HIGH - PATIENT PORTAL]`
 
 ### Phase 25A: Patient Phone Authentication & Profile Dashboard
-- [ ] OTP / Phone login screen for patients (`/patient/login`)
-- [ ] Patient Dashboard showing active prescriptions, upcoming appointments, and clinic contacts
+- [x] OTP / Phone login screen for patients (`/patient/login`)
+- [x] Patient Dashboard showing active prescriptions, upcoming appointments, and clinic contacts
 
 ### Phase 25B: Prescription & Lab Test History Viewer
-- [ ] Interactive timeline of past consultations and downloadable PDFs
-- [ ] Active medication reminders & dosage schedule view
+- [x] Interactive timeline of past consultations and downloadable PDFs
+- [x] Active medication reminders & dosage schedule view
 
 ### Phase 25C: Push Notification & Communication Preferences Center
-- [ ] Live toggle for Web Push, Email, and SMS notifications
-- [ ] Device management (view subscribed browsers/devices)
+- [x] Live toggle for Web Push, Email, and SMS notifications
+- [x] Device management (view subscribed browsers/devices)
 
 ### Phase 25D: Instant Welcome Push Notification & Auto-Verification
 - [x] Automatic instant welcome push notification upon subscribing

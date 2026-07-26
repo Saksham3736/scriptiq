@@ -13,6 +13,8 @@ import ReceiptViewPage from './pages/ReceiptViewPage';
 import PatientsPage from './pages/PatientsPage';
 import SettingsPage from './pages/SettingsPage';
 import PatientPortal from './pages/PatientPortal';
+import PatientLoginPage from './pages/patient/PatientLoginPage';
+import PatientDashboardPage from './pages/patient/PatientDashboardPage';
 
 import RequireRole from './components/auth/RequireRole';
 
@@ -27,6 +29,8 @@ export default function App() {
           <Route path="/p/:shareToken" element={<PrescriptionViewPage />} />
           <Route path="/receipt/:orderId" element={<ReceiptViewPage />} />
           <Route path="/patient" element={<PatientPortal />} />
+          <Route path="/patient/login" element={<PatientLoginPage />} />
+          <Route path="/patient/dashboard" element={<PatientDashboardPage />} />
 
           {/* Login */}
           <Route path="/login" element={<LoginPage />} />

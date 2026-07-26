@@ -11,6 +11,7 @@ export interface User {
   id: string;
   name: string;
   role: UserRole;
+  phone?: string;
   clinic?: string;
   avatar?: string;
 }

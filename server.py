@@ -790,6 +790,75 @@ def generate_sample_letterhead_pdf_endpoint(payload: LetterheadSettings):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ─── Patient Portal Endpoints ──────────────────────────────────────────
+
+class PatientOTPRequest(BaseModel):
+    phone: str = Field(..., description="Patient phone number")
+
+class PatientOTPVerifyRequest(BaseModel):
+    phone: str = Field(..., description="Patient phone number")
+    otp: str = Field(..., description="4-digit OTP code")
+
+@app.post("/api/patient/auth/request-otp", response_model=APIResponse, tags=["Patient Portal"])
+async def request_patient_otp(req: PatientOTPRequest):
+    """
+    Request a 4-digit OTP for patient phone authentication (Demo default: 1234).
+    """
+    clean_phone = req.phone.strip()
+    return APIResponse(
+        success=True,
+        data={
+            "phone": clean_phone,
+            "message": "OTP sent successfully. For demo testing, use OTP: 1234",
+            "demo_otp": "1234"
+        }
+    )
+
+@app.post("/api/patient/auth/verify-otp", response_model=APIResponse, tags=["Patient Portal"])
+async def verify_patient_otp(req: PatientOTPVerifyRequest):
+    """
+    Verify 4-digit OTP and issue a patient JWT access token.
+    """
+    clean_phone = req.phone.strip()
+    if req.otp != "1234":
+        raise HTTPException(status_code=400, detail="Invalid OTP code. Please enter 1234.")
+
+    patient_profile = {
+        "id": f"p-{clean_phone}",
+        "phone": clean_phone,
+        "name": f"Patient ({clean_phone})",
+        "role": "patient",
+    }
+
+    token = auth.create_access_token(patient_profile, expires_in_seconds=86400 * 30)
+    return APIResponse(
+        success=True,
+        data={
+            "token": token,
+            "user": patient_profile,
+        }
+    )
+
+@app.get("/api/patient/prescriptions", response_model=APIResponse, tags=["Patient Portal"])
+async def get_patient_prescriptions(phone: str = Query(...)):
+    """
+    Fetch all prescription records for a specific patient phone number.
+    """
+    try:
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("prescriptions")
+        cursor = db.retrieve({"phone": phone})
+        results = list(cursor)
+        for doc in results:
+            if "_id" in doc:
+                doc["_id"] = str(doc["_id"])
+        clean_results = [clean_mongo_dict(d) for d in results]
+        return APIResponse(success=True, data={"prescriptions": clean_results})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ─── P9-M1 Endpoint 8: Web Push Notifications ──────────────────────────────────
 
 class PushSubscriptionRequest(BaseModel):
