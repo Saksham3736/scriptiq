@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, BellOff, Smartphone } from 'lucide-react';
 
-const VAPID_PUBLIC_KEY = "BPGY-QHh7lR2sUIZpMVL6hxvo9R9D_3QTS5iV_zHWSSVCwPYE4qtARm5un_OX8mdZuwnr3fty0c9xMvxB_0YPXg";
+const VAPID_PUBLIC_KEY = "BD3tmSicsE_2-a3_lG1yHpePnf2QLDnPx65cGgCzronPmSA86KX-H0OFfixR7ADYaFxIv1257RklLVrloPTgQyc";
 
 function urlB64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);

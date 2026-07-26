@@ -12,6 +12,7 @@ import DrugInteractionBanner from './DrugInteractionBanner';
 import SendPrescriptionModal from '../delivery/SendPrescriptionModal';
 import AILoadingStatusBadge from '../ui/AILoadingStatusBadge';
 import StatusTimeline from '../ui/StatusTimeline';
+import PatientIntakeSpace from './PatientIntakeSpace';
 import { useUIStore } from '@/store/uiStore';
 
 import {
@@ -130,6 +131,9 @@ export default function DraftPanel() {
 
         {/* Prescription Lifecycle Status Stepper */}
         <StatusTimeline />
+
+        {/* Doctor Console Voice & Typed Patient Intake Space */}
+        <PatientIntakeSpace />
 
         {/* Dispatched Pharmacy Receipt Banner */}
         {saved && (

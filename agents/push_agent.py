@@ -28,11 +28,11 @@ class PushAgent:
             self.logger.info("Successfully sent web push notification.")
             return True
         except WebPushException as ex:
-            self.logger.error("Web Push Error: {}", repr(ex))
+            self.logger.error(f"Web Push Error: {repr(ex)}")
             # If ex.response exists, check for HTTP 410 Gone (unsubscribe)
             if ex.response is not None and ex.response.status_code == 410:
                 self.logger.warning("Subscription has expired or is no longer valid (HTTP 410).")
             return False
         except Exception as e:
-            self.logger.error("Unexpected error sending push: {}", str(e))
+            self.logger.error(f"Unexpected error sending push: {str(e)}")
             return False

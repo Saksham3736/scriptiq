@@ -447,5 +447,13 @@
   - [ ] mg/kg pediatric dosage and GFR renal clearance calculation engine based on patient age, weight, and diagnosis
   - [ ] Safe dosage range indicators and clinical warning badges directly inside `MedicineRow.tsx`
 
+---
+
+### Phase 35: Dedicated Patient Demographics & Clinical Intake Space in Doctor Console (Voice & Typed Input) `[PRIORITY: HIGH - CLINICAL CONSOLE]`
+- [ ] Step 55: Patient Intake Space Component & AI Demographics Extractor
+  - [ ] Build `PatientIntakeSpace.tsx` in Doctor Console (`/console`) with dual Voice & Typed intake controls
+  - [ ] Voice input parser extracting patient name, age, gender, DOB, phone number, and chief complaints into `draftStore`
+  - [ ] Instant 1-click patient demographic pre-hydration before generating prescription PDF
+
 
 
