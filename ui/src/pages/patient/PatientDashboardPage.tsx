@@ -431,6 +431,21 @@ export default function PatientDashboardPage() {
                 {pushMessage}
               </p>
             )}
+
+            {/* Mobile Phone Pairing Instructions */}
+            <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid var(--color-border, #E3E8EE)', textAlign: 'center' }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-ink-900, #101A2E)', marginBottom: '6px' }}>
+                📲 Want Push Notifications on your Mobile Phone?
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--color-ink-500, #5B6B82)', margin: '0 0 14px 0' }}>
+                Scan this QR code with your phone camera to open ScriptIQ on your mobile browser and tap <strong>Enable Push Notifications</strong>.
+              </p>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.origin + '/login')}`}
+                alt="Mobile Login QR Code"
+                style={{ width: '140px', height: '140px', borderRadius: '12px', border: '1px solid var(--color-border, #E3E8EE)', padding: '6px', background: '#FFF' }}
+              />
+            </div>
           </div>
         )}
 
