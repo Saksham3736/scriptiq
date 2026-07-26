@@ -943,6 +943,55 @@ def send_prescription_push(req: SendPushRequest):
         print(f"[Send Push Error] {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class SendEmailRequest(BaseModel):
+    prescription_data: Optional[dict] = None
+    pdf_path: Optional[str] = None
+    patient_email: str
+    patient_name: Optional[str] = "Patient"
+
+@app.post("/api/prescription/send-email", response_model=APIResponse, tags=["Delivery"])
+def send_prescription_email_endpoint(req: SendEmailRequest):
+    """
+    Dispatch HTML email with prescription PDF attachment via EmailAgent.
+    """
+    try:
+        from agents.email_agent import EmailAgent
+        from database.mongodb import DBHelper
+        import os
+        
+        db = DBHelper()
+        db.select_collection("settings")
+        doc = db.collection.find_one({"_id": "email_config"})
+        email_config = doc if doc else {
+            "email_simulation_mode": True,
+            "smtp_host": "smtp.gmail.com",
+            "smtp_port": 587,
+            "smtp_user": "saksham2435157@gmail.com",
+            "smtp_pass": "",
+            "sender_email": "saksham2435157@gmail.com",
+            "hospital_name": "ScriptIQ Medical Center"
+        }
+        
+        email_agent = EmailAgent()
+        pdf_file = req.pdf_path
+        if not pdf_file or not os.path.exists(pdf_file):
+            pdf_dir = "output/prescriptions"
+            if os.path.exists(pdf_dir):
+                pdfs = [os.path.join(pdf_dir, f) for f in os.listdir(pdf_dir) if f.endswith(".pdf")]
+                if pdfs:
+                    pdf_file = pdfs[-1]
+                    
+        success = email_agent.send_prescription_email(
+            pdf_path=pdf_file,
+            patient_email=req.patient_email,
+            patient_name=req.patient_name or "Patient",
+            config=email_config
+        )
+        return APIResponse(success=success, data={"patient_email": req.patient_email, "pdf_path": pdf_file, "from_email": email_config.get("sender_email", "saksham2435157@gmail.com")})
+    except Exception as e:
+        print(f"[Send Email Error] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/notifications/status", response_model=APIResponse, tags=["Push Notifications"])
 def check_push_status(phone: str = Query(...)):
     """
