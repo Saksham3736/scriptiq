@@ -10,7 +10,6 @@ from typing import Dict, Any, Optional
 
 from agents.prescription_agent import PrescriptionAgent
 from agents.pdf_agent import PDFAgent
-from agents.whatsapp_agent import WhatsAppAgent
 from agents.pharmacy_agent import PharmacyAgent
 from agents.database_agent import DatabaseAgent
 from agents.speech_agent import SpeechAgent
@@ -33,7 +32,6 @@ class AIPrescriptionAgent:
         print("==========================================================")
         self.prescription_agent = PrescriptionAgent()
         self.pdf_agent = PDFAgent()
-        self.whatsapp_agent = WhatsAppAgent()
         self.pharmacy_agent = PharmacyAgent()
         self.db_agent = DatabaseAgent(collection_name="prescriptions")
         self.speech_agent = SpeechAgent()
@@ -127,24 +125,12 @@ class AIPrescriptionAgent:
             prescription_data["_id"] = str(prescription_data["_id"])
         prescription_data["db_id"] = inserted_id_str
 
-        # 3. Direct WhatsApp dispatch to patient
-        whatsapp_result = {}
-        if target_phone:
-            whatsapp_result = self.whatsapp_agent.send_whatsapp(
-                phone_number=target_phone,
-                pdf_path=pdf_path,
-                patient_name=patient_name,
-                patient_dob=target_dob
-            )
-            print(f"[AIPrescriptionAgent] WhatsApp dispatch result: {whatsapp_result.get('status')}")
-        else:
-            print("[AIPrescriptionAgent] Note: Patient phone number not provided. WhatsApp dispatch skipped.")
-
+        # 3. Direct WhatsApp dispatch to patient removed in Phase 22
+        
         return {
             "status": "success",
             "pdf_path": pdf_path,
             "db_id": inserted_id_str,
-            "whatsapp_result": whatsapp_result,
             "prescription": prescription_data
         }
 
@@ -219,16 +205,6 @@ class AIPrescriptionAgent:
             "Status: Priority Dispense Ready"
         )
 
-        # Dispatch receipt to Patient
-        patient_wa_res = {}
-        if target_phone:
-            patient_wa_res = self.whatsapp_agent.send_whatsapp(
-                phone_number=target_phone,
-                patient_name=patient_name,
-                custom_message=patient_receipt_msg
-            )
-            print("[AIPrescriptionAgent] Medicine receipt sent to Patient via WhatsApp.")
-
         # Dispatch alert to Medical Desk
         print("[AIPrescriptionAgent] Automated dispatch sent to Hospital Medical Desk / Pharmacy Counter.")
         print(f"\n--- [MEDICAL DESK NOTIFICATION LOG] ---\n{medical_desk_msg}\n---------------------------------------\n")
@@ -236,7 +212,6 @@ class AIPrescriptionAgent:
         return {
             "pharmacy_choice": "In-House Pharmacy",
             "pharmacy_order": pharmacy_order,
-            "patient_whatsapp": patient_wa_res,
             "medical_desk_notified": True,
             "medical_desk_summary": medical_desk_msg
         }

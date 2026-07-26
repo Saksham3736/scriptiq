@@ -114,7 +114,7 @@ export default function LoginPage() {
           {[
             ['🎙️', 'Voice-to-prescription in 30 seconds'],
             ['📋', 'AI extraction with full doctor control'],
-            ['📱', 'Auto-dispatch to patient via WhatsApp'],
+            ['📱', 'Automated dispatch to patient'],
           ].map(([icon, text]) => (
             <div key={text} style={{ display:'flex', alignItems:'center', gap:'12px' }}>
               <span style={{ fontSize:'16px' }}>{icon}</span>

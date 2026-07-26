@@ -11,7 +11,7 @@ interface DeliveryStatusBadgeProps {
 
 export default function DeliveryStatusBadge({
   status = 'draft',
-  channel = 'WhatsApp',
+  channel = 'System',
 }: DeliveryStatusBadgeProps) {
   const configs: Record<DeliveryState, { label: string; bg: string; color: string; icon: React.ReactNode }> = {
     draft: { label: 'Draft', bg: '#FAFBFC', color: '#5B6B82', icon: <Clock size={11} /> },

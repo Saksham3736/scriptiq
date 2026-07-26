@@ -21,8 +21,7 @@ export default function SendPrescriptionModal({
   onSuccess,
 }: SendPrescriptionModalProps) {
   const [phone, setPhone] = useState(draft.phone || '');
-  const [channels, setChannels] = useState<{ whatsapp: boolean; sms: boolean; email: boolean }>({
-    whatsapp: true,
+  const [channels, setChannels] = useState<{ sms: boolean; email: boolean }>({
     sms: false,
     email: false,
   });
@@ -36,7 +35,7 @@ export default function SendPrescriptionModal({
 
   if (!isOpen) return null;
 
-  const toggleChannel = (key: 'whatsapp' | 'sms' | 'email') => {
+  const toggleChannel = (key: 'sms' | 'email') => {
     setChannels((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
@@ -52,7 +51,7 @@ export default function SendPrescriptionModal({
       addToast({
         type: 'success',
         title: 'Prescription & Receipt Dispatched',
-        message: `Sent to ${phone || 'patient'} via WhatsApp and queued at Pharmacy Counter #1.`,
+        message: `Sent to ${phone || 'patient'} and queued at Pharmacy Counter #1.`,
       });
       onSuccess?.(res.pdf_url, orderId);
     }
@@ -111,7 +110,7 @@ export default function SendPrescriptionModal({
 
               <div>
                 <h4 style={{ fontFamily: 'Space Grotesk', fontSize: '16px', fontWeight: 700, color: 'var(--color-ink-900, #101A2E)', margin: 0 }}>
-                  Sent Successfully via WhatsApp!
+                  Sent Successfully!
                 </h4>
                 <p style={{ fontSize: '13px', color: 'var(--color-ink-500, #5B6B82)', margin: '4px 0 0 0' }}>
                   Prescription PDF and Pharmacy Order have been sent to <strong>{phone}</strong>.
@@ -177,7 +176,7 @@ export default function SendPrescriptionModal({
               {/* Phone Number Input */}
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5B6B82', marginBottom: '6px' }}>
-                  Patient Phone Number (WhatsApp)
+                  Patient Phone Number
                 </label>
                 <input
                   type="text"
@@ -204,23 +203,7 @@ export default function SendPrescriptionModal({
                   Dispatch Channels
                 </label>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div
-                    onClick={() => toggleChannel('whatsapp')}
-                    style={{
-                      padding: '12px',
-                      borderRadius: '10px',
-                      border: `1.5px solid ${channels.whatsapp ? '#6D5DF6' : '#E3E8EE'}`,
-                      background: channels.whatsapp ? '#EFECFE22' : '#FAFBFC',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    <MessageSquare size={16} color={channels.whatsapp ? '#6D5DF6' : '#5B6B82'} />
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: channels.whatsapp ? '#6D5DF6' : '#5B6B82' }}>WhatsApp</span>
-                  </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
 
                   <div
                     onClick={() => toggleChannel('sms')}

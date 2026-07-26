@@ -67,8 +67,6 @@ class LetterheadSettings(BaseModel):
     encrypt_pdf: Optional[bool] = Field(True, description="Encrypt PDF with DOB")
     default_followup: Optional[str] = Field("7 days", description="Default Follow-up Duration")
     show_watermark: Optional[bool] = Field(True, description="Show Watermark / Stamp")
-    whatsapp_simulation: Optional[bool] = Field(True, description="WhatsApp Simulation Mode")
-    auto_send_on_approve: Optional[bool] = Field(True, description="Auto Send WhatsApp on Approve")
     in_house_pharmacy_default: Optional[bool] = Field(True, description="Default In-House Pharmacy Routing")
 
 class APIResponse(BaseModel):
@@ -353,7 +351,7 @@ def clean_mongo_dict(obj):
         return str(obj)
     return obj
 
-# ─── P9-M1 Endpoint 3: Approve Prescription → PDF + MongoDB + WhatsApp ───────
+# ─── P9-M1 Endpoint 3: Approve Prescription → PDF + MongoDB ───────
 
 @app.post("/api/prescription/approve", response_model=APIResponse, tags=["Prescription"])
 def approve_prescription(req: ApprovePrescriptionRequest):
@@ -361,8 +359,7 @@ def approve_prescription(req: ApprovePrescriptionRequest):
     On doctor confirmation:
     - Generates DOB-encrypted PDF
     - Saves prescription to MongoDB (Agent_Doctor → prescriptions)
-    - Dispatches prescription PDF + DOB key to patient via WhatsApp
-    Returns: pdf_path, db_id, whatsapp_result
+    Returns: pdf_path, db_id
     """
     try:
         result = agent.approve_and_send_prescription(
@@ -388,7 +385,7 @@ def pharmacy_receipt(req: PharmacyReceiptRequest):
     """
     Handle in-house medicine purchase choice:
     - If want_in_house_buy=True: generates itemized receipt, saves to pharmacy_orders,
-      sends receipt to patient and alert to medical desk via WhatsApp.
+      and alerts medical desk.
     - If want_in_house_buy=False: records external pharmacy choice.
     """
     try:

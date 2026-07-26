@@ -2,7 +2,7 @@
 ## Complete Project Context Reference for AI Agent
 
 > This file is the single source of truth for the project. Read this first before any task.
-> Last updated: July 24, 2026
+> Last updated: July 26, 2026
 
 ---
 
@@ -12,7 +12,7 @@
 |---|---|
 | **Product Name** | ScriptIQ |
 | **Project Root** | `s:/AI-prescription-agent/` |
-| **Phase** | Phase 21 Complete (Prescription Letterhead Customization & Live Preview Engine) |
+| **Phase** | Phase 28 Complete (GitHub Production Repository Deployed — https://github.com/Saksham3736/scriptiq.git) |
 | **LLM Model** | `gemini-2.0-flash` (primary), `gemma-4-26b-a4b-it` (fallback 1) |
 | **Database** | MongoDB Atlas (`Agent_Doctor` db) |
 | **Backend** | Python (agents + `ai_prescription_agent.py`) → FastAPI (`server.py`) |
@@ -183,17 +183,18 @@ Per `structure.md §9 Build Order`:
 14. **P19: Streamlit Cleanup, Query Projections, Master Agent Telemetry & Auto-Pilot Mode** (Completed) — Deleted legacy `app.py`, MongoDB query projections (80% RAM cut), `/ws/master_agent` telemetry stream, `Auto-Pilot ON/OFF` zero-touch mode
 15. **P20: High-Security Typed Batch Record Deletion** (Completed) — `POST /api/consultations/delete-batch`, `DeleteConfirmModal.tsx` GitHub-style typed phrase confirmation, multi-select mode in History & Patients pages
 16. **P21: Full Prescription Letterhead Customization Suite** (Completed) — `GET/POST /api/settings/letterhead` REST API, dynamic ReportLab PDF letterhead branding in `pdf_agent.py`, interactive live preview in `SettingsPage.tsx`
-17. **P22: Decommissioning & Removal of SMS / WhatsApp Module** (Planned) — Decommission Meta WhatsApp Cloud API credentials, simulation handlers, and UI dispatch triggers
-18. **P23: Production Email Dispatch Engine (`EmailAgent`)** (Planned) — `agents/email_agent.py` SMTP / Resend API agent sending HTML prescription emails with DOB-password encrypted PDF attachment & dual receipt dispatch
-19. **P24: Patient Web Push Notification Engine** (Planned) — VAPID key pairs + `pywebpush` backend engine, Service Worker (`sw.js`), iOS & Android authorization modal, patient ON/OFF notification preference toggle controls, and lock-screen alert banners
-20. **P25: Multi-Language Regional Audio STT Engine (Hindi / Hinglish)** (Planned) — Multi-lingual prompting in `SpeechAgent`, Hindi/Hinglish clinical translation, and UI language selector dropdown (`English` / `Hinglish` / `Hindi`)
-21. **P26: Master Agent Live Telemetry & AI Thinking Console** (Planned) — Real-time `/ws/master_agent` WebSocket stepper stream, floating `AutoPilotTelemetryConsole.tsx` AI working progress console with staggered field reveals
-22. **P27: World-Class Clinical UI/UX & Structural Layout Improvisation Engine** (Planned) — Strict 3-tier button scale (`32px`, `38px`, `46px`), 8px baseline spatial grid tokens, optical flex alignment, WCAG focus rings, micro-elevation, and 13"-to-4K density control
-23. **P30: Real-Time Speaker Diarization Engine** (Planned) — Doctor vs. Patient dual-channel speech separation & PyAnnote / Whisper diarization in `SpeechAgent`
-24. **P31: Automated ICD-10 Medical Billing Auto-Coder** (Planned) — ICD-10 diagnosis database & Gemini auto-coder mapping with 1-click autocomplete chips
-25. **P32: Interactive Vitals & Chronic Disease Analytics** (Planned) — Recharts longitudinal vitals tracking (BP, Glucose, Weight, SpO2) in Patient Dossier
-26. **P33: Offline-First PWA with IndexedDB Queue** (Planned) — IndexedDB audio blob queue (`idb-keyval`) and background sync on Wi-Fi reconnection
-27. **P34: Pediatric & Renal Dosage Safety Calculator** (Planned) — mg/kg pediatric dosage and GFR clearance calculation engine inside `MedicineRow.tsx`
+17. **P28: GitHub Production Repository Deployment** (Completed) — Sanitized `.gitignore`, root commit `c64ebac` (`21,799` lines), and remote push to `https://github.com/Saksham3736/scriptiq.git` on branch `main`
+18. **P22: Decommissioning & Removal of SMS / WhatsApp Module** (Planned) — Decommission Meta WhatsApp Cloud API credentials, simulation handlers, and UI dispatch triggers
+19. **P23: Production Email Dispatch Engine (`EmailAgent`)** (Planned) — `agents/email_agent.py` SMTP / Resend API agent sending HTML prescription emails with DOB-password encrypted PDF attachment & dual receipt dispatch
+20. **P24: Patient Web Push Notification Engine** (Planned) — VAPID key pairs + `pywebpush` backend engine, Service Worker (`sw.js`), iOS & Android authorization modal, patient ON/OFF notification preference toggle controls, and lock-screen alert banners
+21. **P25: Multi-Language Regional Audio STT Engine (Hindi / Hinglish)** (Planned) — Multi-lingual prompting in `SpeechAgent`, Hindi/Hinglish clinical translation, and UI language selector dropdown (`English` / `Hinglish` / `Hindi`)
+22. **P26: Master Agent Live Telemetry & AI Thinking Console** (Planned) — Real-time `/ws/master_agent` WebSocket stepper stream, floating `AutoPilotTelemetryConsole.tsx` AI working progress console with staggered field reveals
+23. **P27: World-Class Clinical UI/UX & Structural Layout Improvisation Engine** (Planned) — Strict 3-tier button scale (`32px`, `38px`, `46px`), 8px baseline spatial grid tokens, optical flex alignment, WCAG focus rings, micro-elevation, and 13"-to-4K density control
+24. **P30: Real-Time Speaker Diarization Engine** (Planned) — Doctor vs. Patient dual-channel speech separation & PyAnnote / Whisper diarization in `SpeechAgent`
+25. **P31: Automated ICD-10 Medical Billing Auto-Coder** (Planned) — ICD-10 diagnosis database & Gemini auto-coder mapping with 1-click autocomplete chips
+26. **P32: Interactive Vitals & Chronic Disease Analytics** (Planned) — Recharts longitudinal vitals tracking (BP, Glucose, Weight, SpO2) in Patient Dossier
+27. **P33: Offline-First PWA with IndexedDB Queue** (Planned) — IndexedDB audio blob queue (`idb-keyval`) and background sync on Wi-Fi reconnection
+28. **P34: Pediatric & Renal Dosage Safety Calculator** (Planned) — mg/kg pediatric dosage and GFR clearance calculation engine inside `MedicineRow.tsx`
 
 ---
 

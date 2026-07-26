@@ -15,7 +15,7 @@ export default function SetReminderToggle() {
             Medicine Dose Reminders
           </p>
           <p style={{ fontSize: '11px', color: '#5B6B82', margin: '2px 0 0 0' }}>
-            Receive WhatsApp alerts for scheduled medicine timings
+            Receive automated alerts for scheduled medicine timings
           </p>
         </div>
       </div>

@@ -60,7 +60,7 @@ export default function TopBar() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: '1',
-      title: 'WhatsApp Link Dispatched',
+      title: 'Prescription Link Dispatched',
       message: 'Prescription PDF link sent to patient Priya Verma (919876543211)',
       time: '5m ago',
       type: 'success',
@@ -178,7 +178,7 @@ export default function TopBar() {
         {/* Auto-Pilot Mode Switch */}
         <button
           onClick={toggleAutoPilot}
-          title={isAutoPilotEnabled ? "Auto-Pilot ACTIVE: Voice/text automatically generates PDF & WhatsApp dispatch." : "Auto-Pilot OFF: Click to enable zero-touch automated processing."}
+          title={isAutoPilotEnabled ? "Auto-Pilot ACTIVE: Voice/text automatically generates PDF & automated dispatch." : "Auto-Pilot OFF: Click to enable zero-touch automated processing."}
           style={{
             display: 'flex',
             alignItems: 'center',

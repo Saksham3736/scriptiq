@@ -7,7 +7,6 @@ export interface DeliveryResult {
   pdf_url?: string;
   pdf_path?: string;
   db_id?: string;
-  whatsapp_result?: any;
   pharmacy_result?: any;
 }
 
@@ -24,7 +23,7 @@ export function useSendPrescription() {
 
   const sendPrescription = async (
     phoneOverride?: string,
-    channels: string[] = ['whatsapp'],
+    channels: string[] = [],
     wantInHousePharmacy: boolean = true
   ): Promise<DeliveryResult | null> => {
     if (!draft) return null;
@@ -34,7 +33,7 @@ export function useSendPrescription() {
     const targetPhone = phoneOverride || draft.phone || '919876543210';
 
     try {
-      // 1. Approve prescription (generates PDF, saves DB, sends WhatsApp)
+      // 1. Approve prescription (generates PDF, saves DB)
       const approveRes = await fetch('/api/prescription/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

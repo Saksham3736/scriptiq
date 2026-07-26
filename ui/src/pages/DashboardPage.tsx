@@ -167,7 +167,7 @@ export default function DashboardPage() {
               Welcome back, {user?.name || 'Dr. Arjun Sharma'}
             </h1>
             <p style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'rgba(241, 245, 249, 0.8)', marginTop: '4px', maxWidth: '580px', lineHeight: 1.4 }}>
-              Your AI-powered prescription workspace is ready. Audio STT, Gemini LLM structuring, and WhatsApp dispatch engines are online.
+              Your AI-powered prescription workspace is ready. Audio STT, Gemini LLM structuring, and Automated Pharmacy Dispatch engines are online.
             </p>
           </div>
 
@@ -209,7 +209,7 @@ export default function DashboardPage() {
             icon={Users}
             label="Patients Served"
             value={stats.totalPatients}
-            trend="WhatsApp Dispatch Active"
+            trend="Automated Dispatch Active"
             color="#6D5DF6"
             bg="#EFECFE"
           />
@@ -327,7 +327,6 @@ export default function DashboardPage() {
               <AgentHealthRow icon={Cpu} name="Prescription LLM" status="gemini-2.0-flash / Gemma 4" color="#6D5DF6" />
               <AgentHealthRow icon={FileText} name="ReportLab PDF Agent" status="DOB Encryption Active" color="#12897F" />
               <AgentHealthRow icon={Database} name="Database Agent" status="MongoDB Atlas (Agent_Doctor)" color="#12897F" />
-              <AgentHealthRow icon={MessageSquare} name="WhatsApp Agent" status="Cloud API / Simulation" color="#E8A33D" />
               <AgentHealthRow icon={ShoppingBag} name="Pharmacy Agent" status="Medical Desk Counter Alert" color="#12897F" />
             </div>
           </div>
@@ -350,7 +349,7 @@ export default function DashboardPage() {
             />
             <NavShortcutCard
               title="Prescription Audit Log"
-              desc="View saved MongoDB records, PDF links, and WhatsApp logs"
+              desc="View saved MongoDB records, PDF links, and audit logs"
               icon={FileCheck}
               onClick={() => navigate('/history')}
               color="#12897F"

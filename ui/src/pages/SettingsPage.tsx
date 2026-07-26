@@ -20,7 +20,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
-type SettingsTab = 'clinic' | 'ai' | 'pdf' | 'whatsapp' | 'security';
+type SettingsTab = 'clinic' | 'ai' | 'pdf' | 'pharmacy' | 'security';
 
 export default function SettingsPage() {
   const addToast = useUIStore((s) => s.addToast);
@@ -53,8 +53,6 @@ export default function SettingsPage() {
   const [defaultFollowup, setDefaultFollowup] = useState('7 days');
   const [showWatermark, setShowWatermark] = useState(true);
 
-  const [whatsappSimulation, setWhatsappSimulation] = useState(true);
-  const [autoSendOnApprove, setAutoSendOnApprove] = useState(true);
   const [inHousePharmacyDefault, setInHousePharmacyDefault] = useState(true);
 
   // Load Letterhead & System Settings from API on Mount
@@ -84,8 +82,6 @@ export default function SettingsPage() {
           if (d.encrypt_pdf !== undefined) setEncryptPdf(d.encrypt_pdf);
           if (d.default_followup) setDefaultFollowup(d.default_followup);
           if (d.show_watermark !== undefined) setShowWatermark(d.show_watermark);
-          if (d.whatsapp_simulation !== undefined) setWhatsappSimulation(d.whatsapp_simulation);
-          if (d.auto_send_on_approve !== undefined) setAutoSendOnApprove(d.auto_send_on_approve);
           if (d.in_house_pharmacy_default !== undefined) setInHousePharmacyDefault(d.in_house_pharmacy_default);
         }
       })
@@ -116,8 +112,6 @@ export default function SettingsPage() {
         encrypt_pdf: encryptPdf,
         default_followup: defaultFollowup,
         show_watermark: showWatermark,
-        whatsapp_simulation: whatsappSimulation,
-        auto_send_on_approve: autoSendOnApprove,
         in_house_pharmacy_default: inHousePharmacyDefault,
       };
 
@@ -300,11 +294,11 @@ export default function SettingsPage() {
                 desc="Encrypted PDF options"
               />
               <TabButton
-                active={activeTab === 'whatsapp'}
-                onClick={() => setActiveTab('whatsapp')}
-                icon={MessageSquare}
-                label="WhatsApp & Pharmacy"
-                desc="Dispatch & Cloud API"
+                active={activeTab === 'pharmacy'}
+                onClick={() => setActiveTab('pharmacy')}
+                icon={Building2}
+                label="Pharmacy Dispatch"
+                desc="Internal routing"
               />
               <TabButton
                 active={activeTab === 'security'}
@@ -649,25 +643,11 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {activeTab === 'whatsapp' && (
+            {activeTab === 'pharmacy' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <SectionHeader title="WhatsApp & Pharmacy Dispatch" desc="Manage Meta WhatsApp Cloud API credentials and automated pharmacy notification rules." />
+                <SectionHeader title="Pharmacy Dispatch" desc="Manage automated pharmacy notification rules." />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <ToggleRow
-                    title="WhatsApp Simulation Mode"
-                    desc="Simulate WhatsApp dispatch logs when cloud API tokens are not configured."
-                    checked={whatsappSimulation}
-                    onChange={setWhatsappSimulation}
-                  />
-
-                  <ToggleRow
-                    title="Auto-Send on Doctor Approval"
-                    desc="Automatically dispatch WhatsApp prescription link upon clicking Approve & Send."
-                    checked={autoSendOnApprove}
-                    onChange={setAutoSendOnApprove}
-                  />
-
                   <ToggleRow
                     title="Default In-House Pharmacy Routing"
                     desc="Pre-select in-house hospital pharmacy counter purchase option."

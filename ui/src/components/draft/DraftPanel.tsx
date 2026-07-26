@@ -141,7 +141,7 @@ export default function DraftPanel() {
                   Pharmacy Receipt Ready ({dispatchedOrderId})
                 </p>
                 <p style={{ fontSize: '11px', color: '#5B6B82', margin: '2px 0 0 0' }}>
-                  Dispatched to WhatsApp & Medical Desk Counter #1
+                  Dispatched to Medical Desk Counter #1
                 </p>
               </div>
             </div>
