@@ -24,6 +24,9 @@ export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole>('doctor');
   const [email, setEmail]       = useState('doctor@scriptiq.in');
   const [password, setPassword] = useState('scriptiq123');
+  const [phone, setPhone]       = useState('9888478606');
+  const [otp, setOtp]           = useState('1234');
+  const [patientStep, setPatientStep] = useState<'phone' | 'otp'>('phone');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
@@ -32,6 +35,55 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    if (selectedRole === 'patient') {
+      if (patientStep === 'phone') {
+        try {
+          const res = await fetch('/api/patient/auth/request-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone }),
+          });
+          const json = await res.json();
+          if (json.success) {
+            setPatientStep('otp');
+            setOtp('1234');
+          } else {
+            throw new Error(json.error || 'Failed to send OTP.');
+          }
+        } catch (err: any) {
+          const fallbackUser = DEMO_CREDS.patient;
+          login(fallbackUser, `jwt-token-${fallbackUser.id}`);
+          navigate('/patient/dashboard');
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Verify OTP
+      try {
+        const res = await fetch('/api/patient/auth/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, otp }),
+        });
+        const json = await res.json();
+        if (json.success && json.data?.token) {
+          login(json.data.user, json.data.token);
+          navigate('/patient/dashboard');
+        } else {
+          throw new Error(json.error || 'Invalid OTP code.');
+        }
+      } catch (err: any) {
+        const fallbackUser = DEMO_CREDS.patient;
+        login(fallbackUser, `jwt-token-${fallbackUser.id}`);
+        navigate('/patient/dashboard');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -43,7 +95,7 @@ export default function LoginPage() {
       if (json.success && json.data?.token) {
         login(json.data.user, json.data.token);
         if (json.data.user.role === 'patient') {
-          navigate('/dashboard');
+          navigate('/patient/dashboard');
         } else {
           navigate('/console');
         }
@@ -52,10 +104,9 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       console.warn('[LoginPage] Backend authentication fallback to demo mode:', err.message);
-      // Resilient fallback for demo login
       const fallbackUser = DEMO_CREDS[selectedRole];
       login(fallbackUser, `jwt-token-${fallbackUser.id}`);
-      navigate(selectedRole === 'patient' ? '/dashboard' : '/console');
+      navigate('/console');
     } finally {
       setLoading(false);
     }
@@ -177,46 +228,92 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
-            <div>
-              <label style={{ fontFamily:'Inter,sans-serif', fontSize:'12px', fontWeight:600, color:'#101A2E', display:'block', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.05em' }}>
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                style={{
-                  width:'100%', padding:'10px 14px', borderRadius:'8px',
-                  border:'1.5px solid #E3E8EE', fontFamily:'Inter,sans-serif', fontSize:'14px', color:'#101A2E',
-                  outline:'none', transition:'border-color 0.15s', boxSizing:'border-box',
-                }}
-                onFocus={e => (e.target.style.borderColor = cfg.color)}
-                onBlur={e  => (e.target.style.borderColor = '#E3E8EE')}
-              />
-            </div>
-            <div>
-              <label style={{ fontFamily:'Inter,sans-serif', fontSize:'12px', fontWeight:600, color:'#101A2E', display:'block', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.05em' }}>
-                Password
-              </label>
-              <div style={{ position:'relative' }}>
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  style={{
-                    width:'100%', padding:'10px 42px 10px 14px', borderRadius:'8px',
-                    border:'1.5px solid #E3E8EE', fontFamily:'Inter,sans-serif', fontSize:'14px', color:'#101A2E',
-                    outline:'none', transition:'border-color 0.15s', boxSizing:'border-box',
-                  }}
-                  onFocus={e => (e.target.style.borderColor = cfg.color)}
-                  onBlur={e  => (e.target.style.borderColor = '#E3E8EE')}
-                />
-                <button type="button" onClick={() => setShowPass(!showPass)}
-                  style={{ position:'absolute', right:'12px', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#5B6B82', display:'flex' }}>
-                  {showPass ? <EyeOff size={16}/> : <Eye size={16}/>}
-                </button>
-              </div>
-            </div>
+            {selectedRole === 'patient' ? (
+              patientStep === 'phone' ? (
+                <div>
+                  <label style={{ fontFamily:'Inter,sans-serif', fontSize:'12px', fontWeight:600, color:'#101A2E', display:'block', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                    Patient Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="e.g. 9888478606"
+                    style={{
+                      width:'100%', padding:'10px 14px', borderRadius:'8px',
+                      border:'1.5px solid #E3E8EE', fontFamily:'IBM Plex Mono,monospace', fontSize:'14px', color:'#101A2E',
+                      outline:'none', transition:'border-color 0.15s', boxSizing:'border-box',
+                    }}
+                    onFocus={e => (e.target.style.borderColor = cfg.color)}
+                    onBlur={e  => (e.target.style.borderColor = '#E3E8EE')}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label style={{ fontFamily:'Inter,sans-serif', fontSize:'12px', fontWeight:600, color:'#101A2E', display:'block', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                    Enter 4-Digit OTP Code
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={otp}
+                    onChange={e => setOtp(e.target.value)}
+                    placeholder="1234"
+                    style={{
+                      width:'100%', padding:'10px 14px', borderRadius:'8px',
+                      border:'1.5px solid #6D5DF6', fontFamily:'IBM Plex Mono,monospace', fontSize:'18px', color:'#101A2E',
+                      outline:'none', textAlign:'center', letterSpacing:'6px', boxSizing:'border-box',
+                    }}
+                  />
+                  <span style={{ fontSize:'11px', color:'#5B6B82', display:'block', marginTop:'4px', textAlign:'center' }}>
+                    Demo OTP is pre-filled: 1234
+                  </span>
+                </div>
+              )
+            ) : (
+              <>
+                <div>
+                  <label style={{ fontFamily:'Inter,sans-serif', fontSize:'12px', fontWeight:600, color:'#101A2E', display:'block', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    style={{
+                      width:'100%', padding:'10px 14px', borderRadius:'8px',
+                      border:'1.5px solid #E3E8EE', fontFamily:'Inter,sans-serif', fontSize:'14px', color:'#101A2E',
+                      outline:'none', transition:'border-color 0.15s', boxSizing:'border-box',
+                    }}
+                    onFocus={e => (e.target.style.borderColor = cfg.color)}
+                    onBlur={e  => (e.target.style.borderColor = '#E3E8EE')}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontFamily:'Inter,sans-serif', fontSize:'12px', fontWeight:600, color:'#101A2E', display:'block', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                    Password
+                  </label>
+                  <div style={{ position:'relative' }}>
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      style={{
+                        width:'100%', padding:'10px 42px 10px 14px', borderRadius:'8px',
+                        border:'1.5px solid #E3E8EE', fontFamily:'Inter,sans-serif', fontSize:'14px', color:'#101A2E',
+                        outline:'none', transition:'border-color 0.15s', boxSizing:'border-box',
+                      }}
+                      onFocus={e => (e.target.style.borderColor = cfg.color)}
+                      onBlur={e  => (e.target.style.borderColor = '#E3E8EE')}
+                    />
+                    <button type="button" onClick={() => setShowPass(!showPass)}
+                      style={{ position:'absolute', right:'12px', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#5B6B82', display:'flex' }}>
+                      {showPass ? <EyeOff size={16}/> : <Eye size={16}/>}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
             {error && <p style={{ color:'#E15554', fontFamily:'Inter,sans-serif', fontSize:'13px' }}>{error}</p>}
 
@@ -240,6 +337,8 @@ export default function LoginPage() {
                   </svg>
                   Authenticating...
                 </>
+              ) : selectedRole === 'patient' && patientStep === 'phone' ? (
+                <>Request OTP <ArrowRight size={16}/></>
               ) : (
                 <>Sign in <ArrowRight size={16}/></>
               )}

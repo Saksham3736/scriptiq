@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Activity, Pill, Calendar, Bell, FileText, Download, LogOut, Smartphone, CheckCircle, ShieldCheck, Sun, Moon, Sunset
+  Activity, Pill, FileText, Download, LogOut, Smartphone, CheckCircle, ShieldCheck, Sun, Moon, Sunset, Bell
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import TopBar from '@/components/layout/TopBar';
 
 const VAPID_PUBLIC_KEY = "BD3tmSicsE_2-a3_lG1yHpePnf2QLDnPx65cGgCzronPmSA86KX-H0OFfixR7ADYaFxIv1257RklLVrloPTgQyc";
 
@@ -119,37 +120,40 @@ export default function PatientDashboardPage() {
   const activeMedicines = latestPrescription?.medicines || [];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0F172A', color: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--color-bg, #F8FAFC)', color: 'var(--color-ink-900, #101A2E)', display: 'flex', flexDirection: 'column' }}>
       
       {/* Top Navbar */}
-      <div style={{ background: '#1E293B', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: 40, height: 40, borderRadius: '10px', background: '#0284C7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Activity size={22} color="#FFF" />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0, fontFamily: 'Space Grotesk' }}>
-              ScriptIQ Patient Portal
-            </h1>
-            <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
-              Phone: {patientPhone}
-            </p>
-          </div>
-        </div>
+      <TopBar />
 
-        <button
-          onClick={() => { logout(); navigate('/patient/login'); }}
-          style={{ padding: '8px 14px', borderRadius: '8px', background: '#334155', color: '#CBD5E1', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600 }}
-        >
-          <LogOut size={14} /> Sign Out
-        </button>
-      </div>
-
-      {/* Main Layout Container */}
+      {/* Main Container */}
       <div style={{ flex: 1, maxWidth: '1100px', width: '100%', margin: '0 auto', padding: '24px', boxSizing: 'border-box' }}>
         
+        {/* Patient Sub-Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', padding: '16px 20px', background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '12px', border: '1px solid var(--color-border, #E3E8EE)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#E4F3F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Activity size={20} color="#12897F" />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, fontFamily: 'Space Grotesk, sans-serif' }}>
+                Patient Health Portal
+              </h2>
+              <p style={{ fontSize: '12px', color: 'var(--color-ink-500, #5B6B82)', margin: 0, fontFamily: 'IBM Plex Mono, monospace' }}>
+                Patient ID / Phone: {patientPhone}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { logout(); navigate('/login'); }}
+            style={{ padding: '8px 14px', borderRadius: '8px', background: '#F1F5F9', color: '#5B6B82', border: '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600 }}
+          >
+            <LogOut size={14} /> Sign Out
+          </button>
+        </div>
+
         {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '8px', background: '#1E293B', padding: '6px', borderRadius: '12px', border: '1px solid #334155', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '8px', background: 'var(--color-bg-surface, #FFFFFF)', padding: '6px', borderRadius: '12px', border: '1px solid var(--color-border, #E3E8EE)', marginBottom: '24px' }}>
           {[
             { id: 'overview', label: 'Overview', icon: Activity },
             { id: 'prescriptions', label: 'Prescriptions', icon: FileText },
@@ -167,8 +171,8 @@ export default function PatientDashboardPage() {
                   padding: '10px 16px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: isActive ? '#0284C7' : 'transparent',
-                  color: isActive ? '#FFF' : '#94A3B8',
+                  background: isActive ? '#12897F' : 'transparent',
+                  color: isActive ? '#FFF' : 'var(--color-ink-500, #5B6B82)',
                   fontSize: '13px',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -176,7 +180,7 @@ export default function PatientDashboardPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.15s'
                 }}
               >
                 <Icon size={16} /> {tab.label}
@@ -188,38 +192,38 @@ export default function PatientDashboardPage() {
         {/* Tab 1: Overview */}
         {activeTab === 'overview' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ background: 'linear-gradient(135deg, #0284C7, #0369A1)', borderRadius: '16px', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: 'linear-gradient(135deg, #12897F, #0E6A62)', borderRadius: '16px', padding: '28px', color: '#FFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <span style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#BAE6FD' }}>
-                  Patient Health Dashboard
+                <span style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#E4F3F1' }}>
+                  ScriptIQ Health Dossier
                 </span>
-                <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '6px 0', fontFamily: 'Space Grotesk' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '6px 0', fontFamily: 'Space Grotesk, sans-serif' }}>
                   Welcome back!
                 </h2>
-                <p style={{ fontSize: '14px', color: '#E0F2FE', margin: 0 }}>
-                  You have {prescriptions.length} recorded consultation prescription(s) on file.
+                <p style={{ fontSize: '14px', color: '#E4F3F1', margin: 0 }}>
+                  You have {prescriptions.length} consultation prescription(s) on file with your doctor.
                 </p>
               </div>
-              <ShieldCheck size={54} color="#BAE6FD" opacity={0.6} />
+              <ShieldCheck size={56} color="#E4F3F1" opacity={0.6} />
             </div>
 
             {/* Latest Prescription Card */}
             {latestPrescription ? (
-              <div style={{ background: '#1E293B', borderRadius: '16px', border: '1px solid #334155', padding: '24px' }}>
+              <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <FileText size={18} color="#38BDF8" /> Latest Prescription Diagnosis
+                    <FileText size={18} color="#12897F" /> Latest Prescription Diagnosis
                   </h3>
-                  <span style={{ fontSize: '12px', color: '#94A3B8', fontFamily: 'IBM Plex Mono' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--color-ink-500, #5B6B82)', fontFamily: 'IBM Plex Mono, monospace' }}>
                     {latestPrescription.created_at || 'Recent'}
                   </span>
                 </div>
                 
-                <div style={{ background: '#0F172A', padding: '16px', borderRadius: '10px', marginBottom: '16px', border: '1px solid #334155' }}>
-                  <p style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#38BDF8' }}>
+                <div style={{ background: 'var(--color-bg, #F8FAFC)', padding: '16px', borderRadius: '10px', marginBottom: '16px', border: '1px solid var(--color-border, #E3E8EE)' }}>
+                  <p style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#12897F' }}>
                     {latestPrescription.diagnosis || 'General Consultation'}
                   </p>
-                  <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#94A3B8' }}>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--color-ink-500, #5B6B82)' }}>
                     Doctor: {latestPrescription.doctor_name || 'Dr. Arjun Sharma'} ({latestPrescription.clinic_name || 'MediCare Hospital'})
                   </p>
                 </div>
@@ -230,7 +234,7 @@ export default function PatientDashboardPage() {
                       href={latestPrescription.pdf_url}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ padding: '10px 16px', borderRadius: '8px', background: '#0284C7', color: '#FFF', textDecoration: 'none', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
+                      style={{ padding: '10px 16px', borderRadius: '8px', background: '#12897F', color: '#FFF', textDecoration: 'none', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
                       <Download size={15} /> Download PDF Prescription
                     </a>
@@ -238,7 +242,7 @@ export default function PatientDashboardPage() {
                 </div>
               </div>
             ) : (
-              <div style={{ background: '#1E293B', borderRadius: '16px', border: '1px solid #334155', padding: '40px', textAlign: 'center', color: '#94A3B8' }}>
+              <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '40px', textAlign: 'center', color: 'var(--color-ink-500, #5B6B82)' }}>
                 <p>No prescription history found for phone number {patientPhone}.</p>
               </div>
             )}
@@ -247,25 +251,25 @@ export default function PatientDashboardPage() {
 
         {/* Tab 2: Prescriptions Timeline */}
         {activeTab === 'prescriptions' && (
-          <div style={{ background: '#1E293B', borderRadius: '16px', border: '1px solid #334155', padding: '24px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px 0', fontFamily: 'Space Grotesk' }}>
+          <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px 0', fontFamily: 'Space Grotesk, sans-serif' }}>
               Prescription Consultation History
             </h3>
 
             {loading ? (
-              <p style={{ color: '#94A3B8' }}>Loading prescriptions...</p>
+              <p style={{ color: 'var(--color-ink-500, #5B6B82)' }}>Loading prescriptions...</p>
             ) : prescriptions.length === 0 ? (
-              <p style={{ color: '#94A3B8' }}>No prescription records found.</p>
+              <p style={{ color: 'var(--color-ink-500, #5B6B82)' }}>No prescription records found.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {prescriptions.map((p, idx) => (
-                  <div key={idx} style={{ background: '#0F172A', padding: '20px', borderRadius: '12px', border: '1px solid #334155' }}>
+                  <div key={idx} style={{ background: 'var(--color-bg, #F8FAFC)', padding: '20px', borderRadius: '12px', border: '1px solid var(--color-border, #E3E8EE)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <div>
-                        <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#38BDF8', margin: 0 }}>
+                        <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#12897F', margin: 0 }}>
                           {p.diagnosis || 'Medical Consultation'}
                         </h4>
-                        <p style={{ fontSize: '13px', color: '#94A3B8', margin: '4px 0 0 0' }}>
+                        <p style={{ fontSize: '13px', color: 'var(--color-ink-500, #5B6B82)', margin: '4px 0 0 0' }}>
                           Patient: {p.patient_name || 'Patient'} | Phone: {p.phone || patientPhone}
                         </p>
                       </div>
@@ -274,7 +278,7 @@ export default function PatientDashboardPage() {
                           href={p.pdf_url}
                           target="_blank"
                           rel="noreferrer"
-                          style={{ padding: '8px 14px', borderRadius: '6px', background: '#0284C7', color: '#FFF', textDecoration: 'none', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{ padding: '8px 14px', borderRadius: '6px', background: '#12897F', color: '#FFF', textDecoration: 'none', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
                           <Download size={14} /> PDF
                         </a>
@@ -283,13 +287,13 @@ export default function PatientDashboardPage() {
 
                     {/* Prescribed medicines list */}
                     {(p.medicines || []).length > 0 && (
-                      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #1E293B' }}>
-                        <p style={{ fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '8px' }}>
+                      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--color-border, #E3E8EE)' }}>
+                        <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-ink-900, #101A2E)', marginBottom: '8px' }}>
                           Prescribed Medicines:
                         </p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                           {p.medicines.map((m: any, mIdx: number) => (
-                            <span key={mIdx} style={{ padding: '4px 10px', borderRadius: '6px', background: '#1E293B', border: '1px solid #334155', fontSize: '12px', color: '#F1F5F9', fontFamily: 'IBM Plex Mono' }}>
+                            <span key={mIdx} style={{ padding: '4px 10px', borderRadius: '6px', background: 'var(--color-bg-surface, #FFFFFF)', border: '1px solid var(--color-border, #E3E8EE)', fontSize: '12px', color: 'var(--color-ink-900, #101A2E)', fontFamily: 'IBM Plex Mono, monospace' }}>
                               💊 {m.name} ({m.dosage || 'As directed'})
                             </span>
                           ))}
@@ -305,54 +309,54 @@ export default function PatientDashboardPage() {
 
         {/* Tab 3: Daily Medications */}
         {activeTab === 'medications' && (
-          <div style={{ background: '#1E293B', borderRadius: '16px', border: '1px solid #334155', padding: '24px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px 0', fontFamily: 'Space Grotesk' }}>
+          <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px 0', fontFamily: 'Space Grotesk, sans-serif' }}>
               Daily Medication Dosage Schedule
             </h3>
 
             {activeMedicines.length === 0 ? (
-              <p style={{ color: '#94A3B8' }}>No active medication schedule available.</p>
+              <p style={{ color: 'var(--color-ink-500, #5B6B82)' }}>No active medication schedule available.</p>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                 
                 {/* Morning */}
-                <div style={{ background: '#0F172A', borderRadius: '12px', border: '1px solid #334155', padding: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', color: '#F59E0B' }}>
+                <div style={{ background: 'var(--color-bg, #F8FAFC)', borderRadius: '12px', border: '1px solid var(--color-border, #E3E8EE)', padding: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', color: '#D97706' }}>
                     <Sun size={20} />
-                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>Morning (After Breakfast)</h4>
+                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>Morning (Breakfast)</h4>
                   </div>
                   {activeMedicines.map((m: any, i: number) => (
-                    <div key={i} style={{ padding: '8px', background: '#1E293B', borderRadius: '6px', marginBottom: '8px', fontSize: '13px', color: '#F8FAFC' }}>
-                      <span style={{ fontWeight: 600, color: '#38BDF8' }}>{m.name}</span>
-                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>Dosage: {m.dosage || '1 Tablet'}</div>
+                    <div key={i} style={{ padding: '10px', background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '8px', border: '1px solid var(--color-border, #E3E8EE)', marginBottom: '8px', fontSize: '13px' }}>
+                      <span style={{ fontWeight: 600, color: '#12897F' }}>{m.name}</span>
+                      <div style={{ fontSize: '11px', color: 'var(--color-ink-500, #5B6B82)' }}>Dosage: {m.dosage || '1 Tablet'}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Afternoon */}
-                <div style={{ background: '#0F172A', borderRadius: '12px', border: '1px solid #334155', padding: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', color: '#38BDF8' }}>
+                <div style={{ background: 'var(--color-bg, #F8FAFC)', borderRadius: '12px', border: '1px solid var(--color-border, #E3E8EE)', padding: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', color: '#12897F' }}>
                     <Sunset size={20} />
-                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>Afternoon (After Lunch)</h4>
+                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>Afternoon (Lunch)</h4>
                   </div>
                   {activeMedicines.map((m: any, i: number) => (
-                    <div key={i} style={{ padding: '8px', background: '#1E293B', borderRadius: '6px', marginBottom: '8px', fontSize: '13px', color: '#F8FAFC' }}>
-                      <span style={{ fontWeight: 600, color: '#38BDF8' }}>{m.name}</span>
-                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>Dosage: {m.dosage || '1 Tablet'}</div>
+                    <div key={i} style={{ padding: '10px', background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '8px', border: '1px solid var(--color-border, #E3E8EE)', marginBottom: '8px', fontSize: '13px' }}>
+                      <span style={{ fontWeight: 600, color: '#12897F' }}>{m.name}</span>
+                      <div style={{ fontSize: '11px', color: 'var(--color-ink-500, #5B6B82)' }}>Dosage: {m.dosage || '1 Tablet'}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Night */}
-                <div style={{ background: '#0F172A', borderRadius: '12px', border: '1px solid #334155', padding: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', color: '#8B5CF6' }}>
+                <div style={{ background: 'var(--color-bg, #F8FAFC)', borderRadius: '12px', border: '1px solid var(--color-border, #E3E8EE)', padding: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', color: '#6D5DF6' }}>
                     <Moon size={20} />
-                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>Night (Before Bed)</h4>
+                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700 }}>Night (Bedtime)</h4>
                   </div>
                   {activeMedicines.map((m: any, i: number) => (
-                    <div key={i} style={{ padding: '8px', background: '#1E293B', borderRadius: '6px', marginBottom: '8px', fontSize: '13px', color: '#F8FAFC' }}>
-                      <span style={{ fontWeight: 600, color: '#38BDF8' }}>{m.name}</span>
-                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>Dosage: {m.dosage || '1 Tablet'}</div>
+                    <div key={i} style={{ padding: '10px', background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '8px', border: '1px solid var(--color-border, #E3E8EE)', marginBottom: '8px', fontSize: '13px' }}>
+                      <span style={{ fontWeight: 600, color: '#12897F' }}>{m.name}</span>
+                      <div style={{ fontSize: '11px', color: 'var(--color-ink-500, #5B6B82)' }}>Dosage: {m.dosage || '1 Tablet'}</div>
                     </div>
                   ))}
                 </div>
@@ -364,16 +368,16 @@ export default function PatientDashboardPage() {
 
         {/* Tab 4: Push Notifications & Devices */}
         {activeTab === 'notifications' && (
-          <div style={{ background: '#1E293B', borderRadius: '16px', border: '1px solid #334155', padding: '32px', maxWidth: '500px', margin: '0 auto', textAlign: 'center' }}>
-            <div style={{ width: '64px', height: '64px', background: isSubscribed ? '#0284C722' : '#334155', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-              <Bell size={32} color={isSubscribed ? '#38BDF8' : '#94A3B8'} />
+          <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '32px', maxWidth: '500px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ width: '64px', height: '64px', background: isSubscribed ? '#E4F3F1' : '#F1F5F9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <Bell size={32} color={isSubscribed ? '#12897F' : '#94A3B8'} />
             </div>
 
-            <h3 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 8px 0', fontFamily: 'Space Grotesk' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 8px 0', fontFamily: 'Space Grotesk, sans-serif' }}>
               Push Notification Status
             </h3>
-            <p style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '24px' }}>
-              Device Subscribed for: <strong style={{ color: '#F8FAFC' }}>{patientPhone}</strong>
+            <p style={{ fontSize: '14px', color: 'var(--color-ink-500, #5B6B82)', marginBottom: '24px' }}>
+              Device Subscribed for: <strong style={{ color: 'var(--color-ink-900, #101A2E)' }}>{patientPhone}</strong>
             </p>
 
             <button
@@ -382,7 +386,7 @@ export default function PatientDashboardPage() {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: isSubscribed ? '#10B981' : '#0284C7',
+                background: isSubscribed ? '#10B981' : '#12897F',
                 color: '#FFF',
                 border: 'none',
                 borderRadius: '8px',
@@ -402,9 +406,9 @@ export default function PatientDashboardPage() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  background: '#0F172A',
-                  color: '#38BDF8',
-                  border: '1.5px solid #38BDF844',
+                  background: 'var(--color-bg, #F8FAFC)',
+                  color: '#12897F',
+                  border: '1.5px solid #12897F44',
                   borderRadius: '8px',
                   fontSize: '14px',
                   fontWeight: 600,
