@@ -12,6 +12,7 @@ import PrescriptionViewPage from './pages/PrescriptionViewPage';
 import ReceiptViewPage from './pages/ReceiptViewPage';
 import PatientsPage from './pages/PatientsPage';
 import SettingsPage from './pages/SettingsPage';
+import PatientPortal from './pages/PatientPortal';
 
 import RequireRole from './components/auth/RequireRole';
 
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/prescription/:prescriptionId" element={<PrescriptionViewPage />} />
           <Route path="/p/:shareToken" element={<PrescriptionViewPage />} />
           <Route path="/receipt/:orderId" element={<ReceiptViewPage />} />
+          <Route path="/patient" element={<PatientPortal />} />
 
           {/* Login */}
           <Route path="/login" element={<LoginPage />} />

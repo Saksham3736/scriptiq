@@ -97,6 +97,24 @@ export function useSendPrescription() {
         }
       }
 
+      // 4. Trigger Web Push Agent if 'sms' (push) channel selected
+      if (channels.includes('sms')) {
+        try {
+          const pushRes = await fetch('/api/prescription/send-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: targetPhone,
+              patient_name: draft.patient_name || 'Patient',
+            })
+          });
+          const pushText = await pushRes.text();
+          console.log('[useSendPrescription] Push Agent response:', pushText);
+        } catch (pushErr) {
+          console.error('[useSendPrescription] Push Agent error:', pushErr);
+        }
+      }
+
       const resPayload: DeliveryResult = {
         ...approveJson.data,
         pharmacy_result: pharmacyJson?.data || null,

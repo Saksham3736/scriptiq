@@ -11,3 +11,4 @@ reportlab
 pymongo
 python-dotenv
 requests
+pywebpush

@@ -244,7 +244,7 @@ export default function SendPrescriptionModal({
                     }}
                   >
                     <Smartphone size={16} color={channels.sms ? '#6D5DF6' : '#5B6B82'} />
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: channels.sms ? '#6D5DF6' : '#5B6B82' }}>SMS Alert</span>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: channels.sms ? '#6D5DF6' : '#5B6B82' }}>Web Push</span>
                   </div>
                   
                   <div
