@@ -23,7 +23,8 @@ class PushAgent:
                 subscription_info=subscription_info,
                 data=json.dumps(payload),
                 vapid_private_key=config.VAPID_PRIVATE_KEY,
-                vapid_claims=config.VAPID_CLAIMS
+                vapid_claims=config.VAPID_CLAIMS,
+                ttl=86400
             )
             self.logger.info("Successfully sent web push notification.")
             return True
