@@ -76,6 +76,13 @@ export default function PatientDashboardPage() {
         throw new Error('Notification permission denied.');
       }
       const swReg = await navigator.serviceWorker.register('/sw.js');
+
+      // Unsubscribe any existing stale push subscription to force a fresh VAPID token
+      const existingSub = await swReg.pushManager.getSubscription();
+      if (existingSub) {
+        await existingSub.unsubscribe();
+      }
+
       const sub = await swReg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),

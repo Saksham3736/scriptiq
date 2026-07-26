@@ -59,6 +59,12 @@ export default function PatientPortal() {
       const swReg = await navigator.serviceWorker.register('/sw.js');
       const applicationServerKey = urlB64ToUint8Array(VAPID_PUBLIC_KEY);
       
+      // Unsubscribe any existing stale push subscription to force a fresh VAPID token
+      const existingSub = await swReg.pushManager.getSubscription();
+      if (existingSub) {
+        await existingSub.unsubscribe();
+      }
+
       const subscription = await swReg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey

@@ -930,6 +930,22 @@ def send_prescription_push(req: SendPushRequest):
         print(f"[Send Push Error] {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/notifications/status", response_model=APIResponse, tags=["Push Notifications"])
+def check_push_status(phone: str = Query(...)):
+    """
+    Check if a valid push subscription exists for a specific phone number.
+    """
+    try:
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("push_subscriptions")
+        doc = db.collection.find_one({"phone": phone})
+        if doc and "subscription" in doc:
+            return APIResponse(success=True, data={"subscribed": True, "phone": phone, "endpoint": doc["subscription"].get("endpoint")})
+        return APIResponse(success=True, data={"subscribed": False, "phone": phone})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ─── P9-M1 WebSocket: Live Transcript Streaming ──────────────────────────────
 
