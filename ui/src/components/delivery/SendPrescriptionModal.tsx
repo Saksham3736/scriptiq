@@ -22,9 +22,9 @@ export default function SendPrescriptionModal({
 }: SendPrescriptionModalProps) {
   const [phone, setPhone] = useState(draft.phone || '');
   const [email, setEmail] = useState(draft.email || '');
-  const [channels, setChannels] = useState<{ sms: boolean; email: boolean }>({
-    sms: false,
-    email: false,
+  const [channels, setChannels] = useState<{ push: boolean; email: boolean }>({
+    push: true,
+    email: true,
   });
   const [wantInHousePharmacy, setWantInHousePharmacy] = useState(true);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function SendPrescriptionModal({
 
   if (!isOpen) return null;
 
-  const toggleChannel = (key: 'sms' | 'email') => {
+  const toggleChannel = (key: 'push' | 'email') => {
     setChannels((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
@@ -231,20 +231,16 @@ export default function SendPrescriptionModal({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
 
                   <div
-                    onClick={() => toggleChannel('sms')}
+                    onClick={() => toggleChannel('push')}
                     style={{
-                      padding: '12px',
-                      borderRadius: '10px',
-                      border: `1.5px solid ${channels.sms ? '#6D5DF6' : '#E3E8EE'}`,
-                      background: channels.sms ? '#EFECFE22' : '#FAFBFC',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '10px',
+                      border: `1.5px solid ${channels.push ? '#6D5DF6' : '#E3E8EE'}`,
+                      background: channels.push ? '#EFECFE22' : '#FAFBFC',
+                      cursor: 'pointer', flex: 1, transition: 'all 0.15s',
                     }}
                   >
-                    <Smartphone size={16} color={channels.sms ? '#6D5DF6' : '#5B6B82'} />
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: channels.sms ? '#6D5DF6' : '#5B6B82' }}>Web Push</span>
+                    <Smartphone size={16} color={channels.push ? '#6D5DF6' : '#5B6B82'} />
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: channels.push ? '#6D5DF6' : '#5B6B82' }}>Web Push</span>
                   </div>
                   
                   <div

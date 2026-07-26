@@ -72,9 +72,21 @@ ScriptIQ is an AI-powered clinical assistant. A doctor speaks or types during a 
 | [`design.md`](file:///s:/AI-prescription-agent/design.md) | ScriptIQ Design System: palette (Ink Navy/Mist White/Pulse Violet/Clinical Teal/Amber Flag/Alert Coral), typography (Space Grotesk + Inter + IBM Plex Mono), layout concept (split-pane console + Waveform Spine), components, motion guidelines, accessibility |
 | [`structure.md`](file:///s:/AI-prescription-agent/structure.md) | React/Vite folder structure, route map, 7 feature modules, doctor console component tree, Zustand state model, MongoDB TypeScript document shape, 8-milestone build order |
 | [`progress.md`](file:///s:/AI-prescription-agent/progress.md) | Phase-by-phase development log (Phases 1–8 done) |
-| [`index.md`](file:///s:/AI-prescription-agent/index.md) | Master development checklist (Phases 1–9, all tasks tracked) |
+| [`progress.md`](file:///s:/AI-prescription-agent/progress.md) | Phase-by-phase development log (Phases 1–24 done) |
+| [`index.md`](file:///s:/AI-prescription-agent/index.md) | Master development checklist (Phases 1–28, all tasks tracked) |
 | [`README.md`](file:///s:/AI-prescription-agent/README.md) | Public-facing project readme |
 | [`brain.md`](file:///s:/AI-prescription-agent/brain.md) | This file — AI agent context reference |
+
+---
+
+## ScriptIQ Architecture & Design Memory (brain.md)
+
+> [!IMPORTANT]
+> **CRITICAL ARCHITECTURAL DECISION (STRICT REPOSITORY POLICY)**:
+> All SMS and WhatsApp modules, API credentials, and dispatch code have been **100% DECOMMISSIONED AND PERMANENTLY REMOVED** from ScriptIQ.
+> The system operates **EXCLUSIVELY on two active patient delivery channels**:
+> 1. **Web Push Notification Engine (`PushAgent`)**: VAPID Service Worker browser & mobile phone notifications (`POST /api/notifications/subscribe`, `POST /api/prescription/send-push`).
+> 2. **Production Email Dispatch Engine (`EmailAgent`)**: SMTP HTML prescription delivery with encrypted PDF attachments (`POST /api/prescription/send-email`).
 
 ---
 
@@ -183,10 +195,9 @@ Per `structure.md §9 Build Order`:
 14. **P19: Streamlit Cleanup, Query Projections, Master Agent Telemetry & Auto-Pilot Mode** (Completed) — Deleted legacy `app.py`, MongoDB query projections (80% RAM cut), `/ws/master_agent` telemetry stream, `Auto-Pilot ON/OFF` zero-touch mode
 15. **P20: High-Security Typed Batch Record Deletion** (Completed) — `POST /api/consultations/delete-batch`, `DeleteConfirmModal.tsx` GitHub-style typed phrase confirmation, multi-select mode in History & Patients pages
 16. **P21: Full Prescription Letterhead Customization Suite** (Completed) — `GET/POST /api/settings/letterhead` REST API, dynamic ReportLab PDF letterhead branding in `pdf_agent.py`, interactive live preview in `SettingsPage.tsx`
-17. **P28: GitHub Production Repository Deployment** (Completed) — Sanitized `.gitignore`, root commit `c64ebac` (`21,799` lines), and remote push to `https://github.com/Saksham3736/scriptiq.git` on branch `main`
-18. **P22: Decommissioning & Removal of SMS / WhatsApp Module** (Planned) — Decommission Meta WhatsApp Cloud API credentials, simulation handlers, and UI dispatch triggers
-19. **P23: Production Email Dispatch Engine (`EmailAgent`)** (Planned) — `agents/email_agent.py` SMTP / Resend API agent sending HTML prescription emails with DOB-password encrypted PDF attachment & dual receipt dispatch
-20. **P24: Patient Web Push Notification Engine** (Planned) — VAPID key pairs + `pywebpush` backend engine, Service Worker (`sw.js`), iOS & Android authorization modal, patient ON/OFF notification preference toggle controls, and lock-screen alert banners
+18. **P22: Decommissioning & Removal of SMS / WhatsApp Module** (Completed) — Decommissioned Meta WhatsApp Cloud API credentials, deleted `agents/whatsapp_agent.py` & `agents/sms_agent.py`, and purged all SMS/WhatsApp triggers
+19. **P23: Production Email Dispatch Engine (`EmailAgent`)** (Completed) — `agents/email_agent.py` SMTP agent sending HTML prescription emails with DOB-password encrypted PDF attachment & dual receipt dispatch
+20. **P24: Patient Web Push Notification Engine** (Completed) — VAPID key pairs + `pywebpush` backend engine with `ttl=86400`, Service Worker (`sw.js`), mobile phone multi-device array support, and Patient Portal dashboard integration
 21. **P25: Multi-Language Regional Audio STT Engine (Hindi / Hinglish)** (Planned) — Multi-lingual prompting in `SpeechAgent`, Hindi/Hinglish clinical translation, and UI language selector dropdown (`English` / `Hinglish` / `Hindi`)
 22. **P26: Master Agent Live Telemetry & AI Thinking Console** (Planned) — Real-time `/ws/master_agent` WebSocket stepper stream, floating `AutoPilotTelemetryConsole.tsx` AI working progress console with staggered field reveals
 23. **P27: World-Class Clinical UI/UX & Structural Layout Improvisation Engine** (Planned) — Strict 3-tier button scale (`32px`, `38px`, `46px`), 8px baseline spatial grid tokens, optical flex alignment, WCAG focus rings, micro-elevation, and 13"-to-4K density control

@@ -358,7 +358,7 @@
 - [x] Active medication reminders & dosage schedule view
 
 ### Phase 25C: Push Notification & Communication Preferences Center
-- [x] Live toggle for Web Push, Email, and SMS notifications
+- [x] Live toggle for Web Push and Email notifications
 - [x] Device management (view subscribed browsers/devices)
 
 ### Phase 25D: Instant Welcome Push Notification & Auto-Verification
