@@ -20,7 +20,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
-type SettingsTab = 'clinic' | 'ai' | 'pdf' | 'pharmacy' | 'security';
+type SettingsTab = 'clinic' | 'ai' | 'pdf' | 'pharmacy' | 'email' | 'security';
 
 export default function SettingsPage() {
   const addToast = useUIStore((s) => s.addToast);
@@ -55,6 +55,14 @@ export default function SettingsPage() {
 
   const [inHousePharmacyDefault, setInHousePharmacyDefault] = useState(true);
 
+  // Email Settings State
+  const [emailSimulationMode, setEmailSimulationMode] = useState(true);
+  const [smtpHost, setSmtpHost] = useState('smtp.gmail.com');
+  const [smtpPort, setSmtpPort] = useState('587');
+  const [smtpUser, setSmtpUser] = useState('saksham2435157@gmail.com');
+  const [smtpPass, setSmtpPass] = useState('');
+  const [senderEmail, setSenderEmail] = useState('saksham2435157@gmail.com');
+
   // Load Letterhead & System Settings from API on Mount
   useEffect(() => {
     fetch('/api/settings/letterhead')
@@ -86,6 +94,21 @@ export default function SettingsPage() {
         }
       })
       .catch((err) => console.warn('[SettingsPage] Error loading letterhead config:', err));
+      
+    fetch('/api/settings/email')
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          const d = res.data;
+          if (d.email_simulation_mode !== undefined) setEmailSimulationMode(d.email_simulation_mode);
+          if (d.smtp_host) setSmtpHost(d.smtp_host);
+          if (d.smtp_port) setSmtpPort(d.smtp_port.toString());
+          if (d.smtp_user) setSmtpUser(d.smtp_user);
+          if (d.smtp_pass !== undefined) setSmtpPass(d.smtp_pass);
+          if (d.sender_email) setSenderEmail(d.sender_email);
+        }
+      })
+      .catch((err) => console.warn('[SettingsPage] Error loading email config:', err));
   }, []);
 
   const handleSave = async () => {
@@ -121,9 +144,23 @@ export default function SettingsPage() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
+      
+      const emailRes = await fetch('/api/settings/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email_simulation_mode: emailSimulationMode,
+          smtp_host: smtpHost,
+          smtp_port: parseInt(smtpPort.toString(), 10),
+          smtp_user: smtpUser,
+          smtp_pass: smtpPass,
+          sender_email: senderEmail,
+        }),
+      });
+      const emailData = await emailRes.json();
 
       setSaving(false);
-      if (data.success) {
+      if (data.success && emailData.success) {
         addToast({
           type: 'success',
           title: 'All Settings & Letterhead Saved',
@@ -299,6 +336,13 @@ export default function SettingsPage() {
                 icon={Building2}
                 label="Pharmacy Dispatch"
                 desc="Internal routing"
+              />
+              <TabButton
+                active={activeTab === 'email'}
+                onClick={() => setActiveTab('email')}
+                icon={MessageSquare}
+                label="Email Dispatch"
+                desc="SMTP Configuration"
               />
               <TabButton
                 active={activeTab === 'security'}
@@ -654,6 +698,39 @@ export default function SettingsPage() {
                     checked={inHousePharmacyDefault}
                     onChange={setInHousePharmacyDefault}
                   />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'email' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <SectionHeader title="Email Dispatch Engine" desc="Configure SMTP credentials for sending PDF prescriptions." />
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <ToggleRow
+                    title="Email Simulation Mode"
+                    desc="If enabled, emails will be printed to the backend console instead of being sent over SMTP."
+                    checked={emailSimulationMode}
+                    onChange={setEmailSimulationMode}
+                  />
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <FormField label="SMTP Host">
+                      <input type="text" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} style={inputStyle} />
+                    </FormField>
+                    <FormField label="SMTP Port">
+                      <input type="text" value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} style={inputStyle} />
+                    </FormField>
+                    <FormField label="SMTP Username (Email)">
+                      <input type="text" value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} style={inputStyle} />
+                    </FormField>
+                    <FormField label="SMTP Password (App Password)">
+                      <input type="password" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} style={inputStyle} />
+                    </FormField>
+                    <FormField label="Sender Email Address">
+                      <input type="text" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)} style={inputStyle} />
+                    </FormField>
+                  </div>
                 </div>
               </div>
             )}

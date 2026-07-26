@@ -185,6 +185,14 @@ export default function DraftPanel() {
             onChange={(v) => updateField('phone', v)}
             placeholder="+91 98765 43210"
           />
+          <div style={{ gridColumn: '1 / -1' }}>
+            <FieldChip
+              label="Patient Email"
+              value={draft.email || ''}
+              onChange={(v) => updateField('email', v)}
+              placeholder="patient@example.com"
+            />
+          </div>
         </div>
 
         {/* Diagnosis */}

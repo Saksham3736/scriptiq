@@ -69,6 +69,14 @@ class LetterheadSettings(BaseModel):
     show_watermark: Optional[bool] = Field(True, description="Show Watermark / Stamp")
     in_house_pharmacy_default: Optional[bool] = Field(True, description="Default In-House Pharmacy Routing")
 
+class EmailSettings(BaseModel):
+    email_simulation_mode: bool = Field(True, description="Enable simulation mode to bypass real SMTP")
+    smtp_host: str = Field("smtp.gmail.com", description="SMTP Host")
+    smtp_port: int = Field(587, description="SMTP Port")
+    smtp_user: str = Field("saksham2435157@gmail.com", description="SMTP Username")
+    smtp_pass: str = Field("", description="SMTP Password")
+    sender_email: str = Field("saksham2435157@gmail.com", description="Sender Email Address")
+
 class APIResponse(BaseModel):
     success: bool
     data: Optional[Any] = None
@@ -378,6 +386,45 @@ def approve_prescription(req: ApprovePrescriptionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class SendEmailRequest(BaseModel):
+    prescription_data: Dict[str, Any]
+    pdf_path: Optional[str] = None
+    patient_email: str
+    patient_name: str
+
+@app.post("/api/prescription/send-email", response_model=APIResponse, tags=["Prescription"])
+def send_prescription_email_endpoint(req: SendEmailRequest):
+    """
+    Triggers the EmailAgent to send the prescription PDF via Email.
+    """
+    try:
+        from agents.email_agent import EmailAgent
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("settings")
+        doc = db.collection.find_one({"_id": "email_config"}) or {}
+        
+        lh = db.collection.find_one({"_id": "letterhead_config"}) or {}
+        doc["hospital_name"] = lh.get("hospital_name", "ScriptIQ Medical Center")
+        
+        # Resolve full path for PDF
+        abs_pdf_path = req.pdf_path
+        if abs_pdf_path and not os.path.isabs(abs_pdf_path):
+            abs_pdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), abs_pdf_path)
+            
+        email_agent_instance = EmailAgent()
+        success = email_agent_instance.send_prescription_email(
+            pdf_path=abs_pdf_path,
+            patient_email=req.patient_email,
+            patient_name=req.patient_name,
+            config=doc
+        )
+        return APIResponse(success=success)
+    except Exception as e:
+        print(f"[Send Email Error] {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ─── P9-M1 Endpoint 4: Pharmacy Receipt + Dual Dispatch ──────────────────────
 
 @app.post("/api/pharmacy/receipt", response_model=APIResponse, tags=["Pharmacy"])
@@ -652,6 +699,36 @@ def update_letterhead_settings_endpoint(payload: LetterheadSettings):
         settings_dict = payload.model_dump()
         settings_dict["_id"] = "letterhead_config"
         db.collection.update_one({"_id": "letterhead_config"}, {"$set": settings_dict}, upsert=True)
+        return APIResponse(success=True, data=payload.model_dump())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/settings/email", response_model=APIResponse, tags=["Settings"])
+def get_email_settings_endpoint():
+    try:
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("settings")
+        doc = db.collection.find_one({"_id": "email_config"})
+        defaults = EmailSettings().model_dump()
+        if doc:
+            for k, v in doc.items():
+                if k != "_id" and v is not None:
+                    defaults[k] = v
+        return APIResponse(success=True, data=defaults)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/settings/email", response_model=APIResponse, tags=["Settings"])
+def update_email_settings_endpoint(payload: EmailSettings):
+    try:
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("settings")
+        settings_dict = payload.model_dump()
+        settings_dict["_id"] = "email_config"
+        db.collection.update_one({"_id": "email_config"}, {"$set": settings_dict}, upsert=True)
         return APIResponse(success=True, data=payload.model_dump())
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

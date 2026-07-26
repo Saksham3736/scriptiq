@@ -23,6 +23,7 @@ export function useSendPrescription() {
 
   const sendPrescription = async (
     phoneOverride?: string,
+    emailOverride?: string,
     channels: string[] = [],
     wantInHousePharmacy: boolean = true
   ): Promise<DeliveryResult | null> => {
@@ -74,6 +75,26 @@ export function useSendPrescription() {
         try {
           pharmacyJson = JSON.parse(pharmText);
         } catch (_) {}
+      }
+
+      // 3. Trigger Email Agent if 'email' channel selected
+      if (channels.includes('email') && (emailOverride || draft.email)) {
+        try {
+          const emailRes = await fetch('/api/prescription/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prescription_data: draft,
+              pdf_path: approveJson.data?.pdf_path,
+              patient_email: emailOverride || draft.email,
+              patient_name: draft.patient_name || 'Patient',
+            })
+          });
+          const emailText = await emailRes.text();
+          console.log('[useSendPrescription] Email Agent response:', emailText);
+        } catch (emailErr) {
+          console.error('[useSendPrescription] Email Agent error:', emailErr);
+        }
       }
 
       const resPayload: DeliveryResult = {

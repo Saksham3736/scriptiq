@@ -1,0 +1,98 @@
+import os
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from typing import Dict, Any
+
+class EmailAgent:
+    """
+    Handles sending automated HTML emails with attached prescription PDFs.
+    Supports a simulation mode for development/testing without real SMTP credentials.
+    """
+    def __init__(self):
+        pass
+
+    def send_prescription_email(self, pdf_path: str, patient_email: str, patient_name: str, config: Dict[str, Any]) -> bool:
+        """
+        Sends the encrypted prescription PDF to the patient.
+        """
+        simulation_mode = config.get("email_simulation_mode", True)
+        smtp_host = config.get("smtp_host", "smtp.gmail.com")
+        smtp_port = int(config.get("smtp_port", 587))
+        smtp_user = config.get("smtp_user", "saksham2435157@gmail.com")
+        smtp_pass = config.get("smtp_pass", "")
+        sender_email = config.get("sender_email", smtp_user)
+        hospital_name = config.get("hospital_name", "ScriptIQ Medical Center")
+
+        subject = f"Your Prescription from {hospital_name}"
+        body = f"""
+        <html>
+        <head>
+            <style>
+                body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background-color: #12897F; color: white; padding: 15px; border-radius: 8px 8px 0 0; text-align: center; }}
+                .content {{ padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }}
+                .footer {{ margin-top: 20px; font-size: 12px; color: #777; text-align: center; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h2>{hospital_name}</h2>
+                </div>
+                <div class="content">
+                    <p>Dear <strong>{patient_name or 'Patient'}</strong>,</p>
+                    <p>Your latest prescription is attached to this email as a PDF document.</p>
+                    <p><strong>Note:</strong> If privacy encryption is enabled, the PDF is password-protected. Your password is your Date of Birth in DDMMYYYY format.</p>
+                    <p>Wishing you a speedy recovery!</p>
+                </div>
+                <div class="footer">
+                    <p>This is an automated email from ScriptIQ on behalf of {hospital_name}. Please do not reply directly to this message.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        if simulation_mode or not smtp_pass:
+            print("\n" + "="*50)
+            print("✉️  [SIMULATION MODE] EMAIL DISPATCH INITIATED")
+            print("="*50)
+            print(f"To: {patient_email}")
+            print(f"From: {sender_email}")
+            print(f"Subject: {subject}")
+            print(f"Attachment: {os.path.basename(pdf_path) if pdf_path else 'None'}")
+            print("-" * 50)
+            print(body)
+            print("="*50 + "\n")
+            return True
+
+        # Actual SMTP Dispatch
+        msg = MIMEMultipart()
+        msg['From'] = f"{hospital_name} <{sender_email}>"
+        msg['To'] = patient_email
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText(body, 'html'))
+
+        if pdf_path and os.path.exists(pdf_path):
+            with open(pdf_path, "rb") as f:
+                part = MIMEApplication(f.read(), Name=os.path.basename(pdf_path))
+            part['Content-Disposition'] = f'attachment; filename="{os.path.basename(pdf_path)}"'
+            msg.attach(part)
+        else:
+            print(f"[EmailAgent] Warning: PDF not found at {pdf_path}")
+
+        try:
+            server = smtplib.SMTP(smtp_host, smtp_port)
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+            server.quit()
+            print(f"[EmailAgent] Email successfully sent to {patient_email}")
+            return True
+        except Exception as e:
+            print(f"[EmailAgent] SMTP Error: {e}")
+            raise Exception(f"Failed to send email: {str(e)}")

@@ -21,6 +21,7 @@ export default function SendPrescriptionModal({
   onSuccess,
 }: SendPrescriptionModalProps) {
   const [phone, setPhone] = useState(draft.phone || '');
+  const [email, setEmail] = useState(draft.email || '');
   const [channels, setChannels] = useState<{ sms: boolean; email: boolean }>({
     sms: false,
     email: false,
@@ -41,7 +42,7 @@ export default function SendPrescriptionModal({
 
   const handleSend = async () => {
     const selected = Object.keys(channels).filter((k) => channels[k as keyof typeof channels]);
-    const res = await sendPrescription(phone, selected, wantInHousePharmacy);
+    const res = await sendPrescription(phone, email, selected, wantInHousePharmacy);
     if (res) {
       const orderId = res.pharmacy_result?.pharmacy_order?.order_id || res.db_id || '';
       setCreatedOrderId(orderId);
@@ -113,7 +114,7 @@ export default function SendPrescriptionModal({
                   Sent Successfully!
                 </h4>
                 <p style={{ fontSize: '13px', color: 'var(--color-ink-500, #5B6B82)', margin: '4px 0 0 0' }}>
-                  Prescription PDF and Pharmacy Order have been sent to <strong>{phone}</strong>.
+                  Prescription PDF and Pharmacy Order have been sent.
                 </p>
               </div>
 
@@ -173,28 +174,52 @@ export default function SendPrescriptionModal({
           ) : (
             /* Configure Dispatch Form */
             <>
-              {/* Phone Number Input */}
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5B6B82', marginBottom: '6px' }}>
-                  Patient Phone Number
-                </label>
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g. +91 98765 43210"
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #E3E8EE',
-                    fontFamily: 'IBM Plex Mono',
-                    fontSize: '14px',
-                    color: '#101A2E',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
+              {/* Phone and Email Input */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5B6B82', marginBottom: '6px' }}>
+                    Patient Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. +91 98765 43210"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      border: '1.5px solid #E3E8EE',
+                      fontFamily: 'IBM Plex Mono',
+                      fontSize: '14px',
+                      color: '#101A2E',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#5B6B82', marginBottom: '6px' }}>
+                    Patient Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="patient@example.com"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      border: '1.5px solid #E3E8EE',
+                      fontFamily: 'IBM Plex Mono',
+                      fontSize: '14px',
+                      color: '#101A2E',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Delivery Channels Selector */}
@@ -203,7 +228,7 @@ export default function SendPrescriptionModal({
                   Dispatch Channels
                 </label>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
 
                   <div
                     onClick={() => toggleChannel('sms')}
@@ -220,6 +245,23 @@ export default function SendPrescriptionModal({
                   >
                     <Smartphone size={16} color={channels.sms ? '#6D5DF6' : '#5B6B82'} />
                     <span style={{ fontSize: '13px', fontWeight: 600, color: channels.sms ? '#6D5DF6' : '#5B6B82' }}>SMS Alert</span>
+                  </div>
+                  
+                  <div
+                    onClick={() => toggleChannel('email')}
+                    style={{
+                      padding: '12px',
+                      borderRadius: '10px',
+                      border: `1.5px solid ${channels.email ? '#6D5DF6' : '#E3E8EE'}`,
+                      background: channels.email ? '#EFECFE22' : '#FAFBFC',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <MessageSquare size={16} color={channels.email ? '#6D5DF6' : '#5B6B82'} />
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: channels.email ? '#6D5DF6' : '#5B6B82' }}>Email Dispatch</span>
                   </div>
                 </div>
               </div>
