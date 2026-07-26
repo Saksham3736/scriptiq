@@ -197,7 +197,13 @@ Per `structure.md §9 Build Order`:
 16. **P21: Full Prescription Letterhead Customization Suite** (Completed) — `GET/POST /api/settings/letterhead` REST API, dynamic ReportLab PDF letterhead branding in `pdf_agent.py`, interactive live preview in `SettingsPage.tsx`
 18. **P22: Decommissioning & Removal of SMS / WhatsApp Module** (Completed) — Decommissioned Meta WhatsApp Cloud API credentials, deleted `agents/whatsapp_agent.py` & `agents/sms_agent.py`, and purged all SMS/WhatsApp triggers
 19. **P23: Production Email Dispatch Engine (`EmailAgent`)** (Completed) — `agents/email_agent.py` SMTP agent sending HTML prescription emails with DOB-password encrypted PDF attachment & dual receipt dispatch
-20. **P24: Patient Web Push Notification Engine** (Completed) — VAPID key pairs + `pywebpush` backend engine with `ttl=86400`, Service Worker (`sw.js`), mobile phone multi-device array support, and Patient Portal dashboard integration
+20. **Phase 29: System Core Repair & End-to-End Delivery Realization (Planned)**
+  - Subphase 29A: AI Extraction Engine Resiliency & Fast Retry (< 3s).
+  - Subphase 29B: ReportLab PDF DOB Password Encryption Enforcement (`DDMMYYYY`).
+  - Subphase 29C: Production Gmail SMTP Email Dispatch Integration (`saksham2435157@gmail.com` -> `saksham.kj.3736@gmail.com`).
+  - Subphase 29D: Multi-Device Mobile Web Push Notification Engine (`ttl=86400`).
+  - Subphase 29E: Minimal & Clean Patient Portal Suite.
+  - Subphase 29F: Patient Portal Navigation & TopBar Alignment (ScriptIQ Teal `#12897F`).
 21. **P25: Multi-Language Regional Audio STT Engine (Hindi / Hinglish)** (Planned) — Multi-lingual prompting in `SpeechAgent`, Hindi/Hinglish clinical translation, and UI language selector dropdown (`English` / `Hinglish` / `Hindi`)
 22. **P26: Master Agent Live Telemetry & AI Thinking Console** (Planned) — Real-time `/ws/master_agent` WebSocket stepper stream, floating `AutoPilotTelemetryConsole.tsx` AI working progress console with staggered field reveals
 23. **P27: World-Class Clinical UI/UX & Structural Layout Improvisation Engine** (Planned) — Strict 3-tier button scale (`32px`, `38px`, `46px`), 8px baseline spatial grid tokens, optical flex alignment, WCAG focus rings, micro-elevation, and 13"-to-4K density control

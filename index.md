@@ -399,7 +399,33 @@
 
 ---
 
-## Phase 29: Structural Layout Improvisation Engine `[PRIORITY: HIGH - UI/UX ERGONOMICS]`
+## Phase 29: System Core Repair & End-to-End Delivery Realization `[PRIORITY: HIGH - PLANNED FUTURE WORK]`
+
+### Phase 29A: AI Extraction Engine Resiliency & Fast Retry
+- [ ] Implement multi-model fallback retry (`gemini-2.5-flash`, `gemini-2.0-flash`, heuristic extraction) in `PrescriptionAgent` (< 3s response)
+- [ ] Connect `useExtraction.ts` and `DoctorConsolePage.tsx` to immediately populate `draftStore` with structured medicines, dosages, and complaints
+
+### Phase 29B: ReportLab PDF DOB Password Encryption Enforcement
+- [ ] Pass patient DOB (`DDMMYYYY`) from consultation payload into ReportLab `StandardEncryption`
+- [ ] Enforce PDF password protection automatically on all generated prescription exports
+
+### Phase 29C: Production Gmail SMTP Email Dispatch Integration (`saksham2435157@gmail.com`)
+- [ ] Configure live Gmail SMTP TLS connection (`smtp.gmail.com:587`) from `saksham2435157@gmail.com` to `saksham.kj.3736@gmail.com`
+- [ ] Attach DOB-password protected PDF prescription with HTML letterhead email template
+
+### Phase 29D: Multi-Device Mobile Web Push Notification Engine
+- [ ] Upgrade Mobile Service Worker notification permission & VAPID subscription flow in `PatientDashboardPage.tsx`
+- [ ] Enforce WNS/FCM TTL header (`86400`) in `push_agent.py` for instant mobile lock-screen alerts
+
+### Phase 29E: Minimal & Clean Patient Portal Suite
+- [ ] Streamline `PatientDashboardPage.tsx` into a minimal patient view with active prescription card, medication schedule, and quick push toggle
+
+### Phase 29F: Patient Portal Navigation & TopBar Alignment
+- [ ] Align Patient Portal header to use identical ScriptIQ Teal (`#12897F`) branding, logo, profile pill, and theme toggle as Doctor Console `<TopBar />`
+
+---
+
+## Phase 30: Structural Layout Improvisation Engine `[PRIORITY: HIGH - UI/UX ERGONOMICS]`
 
 - [ ] Step 48: Button Scaling, Elevation & Spatial Grid Token System
   - [ ] Enforce strict 3-tier button scale (`32px` Sm, `38px` Md, `46px` Lg CTAs) across all 5 pages
