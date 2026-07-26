@@ -317,33 +317,33 @@
 
 ## Phase 22: Decommissioning & Removal of SMS / WhatsApp Module `[PRIORITY: HIGH - REFACTOR]`
 
-- [ ] Step 42: Decommission WhatsApp / SMS Dependencies
-  - [ ] Decommission legacy Meta WhatsApp Cloud API credentials and simulation handlers in `agents/whatsapp_agent.py`
-  - [ ] Remove WhatsApp dispatch triggers from `ai_prescription_agent.py` workflow orchestrator and `server.py`
-  - [ ] Remove WhatsApp tab controls in `SettingsPage.tsx` and WhatsApp status badges in `DraftPanel.tsx` and `DashboardPage.tsx`
+- [x] Step 42: Decommission WhatsApp / SMS Dependencies
+  - [x] Decommission legacy Meta WhatsApp Cloud API credentials and simulation handlers in `agents/whatsapp_agent.py`
+  - [x] Remove WhatsApp dispatch triggers from `ai_prescription_agent.py` workflow orchestrator and `server.py`
+  - [x] Remove WhatsApp tab controls in `SettingsPage.tsx` and WhatsApp status badges in `DraftPanel.tsx` and `DashboardPage.tsx`
 
 ---
 
 ## Phase 23: Production Email Dispatch Engine (`EmailAgent`) `[PRIORITY: HIGH - COMMUNICATION]`
 
-- [ ] Step 43: Build `EmailAgent` & REST Integration
-  - [ ] Create Python SMTP / Resend API email agent (`agents/email_agent.py`) sending styled HTML prescription emails
-  - [ ] Automatically attach DOB-password-encrypted ReportLab prescription PDFs
-  - [ ] Build REST endpoints `POST /api/prescription/send-email` and `POST /api/pharmacy/email-receipt` in `server.py`
-  - [ ] Add Email tab controls in `SettingsPage.tsx`, patient email input fields in `DraftPanel.tsx`, and 1-click **Send Email Prescription** CTA
-  - [ ] Implement dual receipt dispatch sending prescription receipts to both Patient Email and Hospital Pharmacy Desk
+- [x] Step 43: Build `EmailAgent` & REST Integration
+  - [x] Create Python SMTP / Resend API email agent (`agents/email_agent.py`) sending styled HTML prescription emails
+  - [x] Automatically attach DOB-password-encrypted ReportLab prescription PDFs
+  - [x] Build REST endpoints `POST /api/prescription/send-email` and `POST /api/pharmacy/email-receipt` in `server.py`
+  - [x] Add Email tab controls in `SettingsPage.tsx`, patient email input fields in `DraftPanel.tsx`, and 1-click **Send Email Prescription** CTA
+  - [x] Implement dual receipt dispatch sending prescription receipts to both Patient Email and Hospital Pharmacy Desk
 
 ---
 
 ## Phase 24: Patient Web Push Notification Engine (Service Worker + VAPID Keys) `[PRIORITY: HIGH - NOTIFICATIONS]`
 
-- [ ] Step 44: VAPID Key Generation, Service Worker & Universal Device Authorization
-  - [ ] Generate VAPID public/private key pairs and add `pywebpush` backend push dispatcher in `server.py`
-  - [ ] Create browser Service Worker (`ui/public/sw.js`) handling background push events and native OS notifications
-  - [ ] Build **Universal iOS & Android Authorization Modal**: Custom gesture-triggered permission window with smart OS detector (`iOS / Android`) complying with Apple Safari user-gesture standards
-  - [ ] Build **Patient Notification Control Toggle (ON/OFF)**: Interactive push notification preference toggle in patient portal and settings allowing users to enable/disable alerts anytime
-  - [ ] REST API endpoints (`POST /api/notifications/subscribe`, `POST /api/notifications/toggle`) persisting subscription endpoints & ON/OFF preference states in MongoDB Atlas
-  - [ ] Trigger instant lock-screen phone notifications when prescriptions or pharmacy receipts are generated
+- [x] Step 44: VAPID Key Generation, Service Worker & Universal Device Authorization
+  - [x] Generate VAPID public/private key pairs and add `pywebpush` backend push dispatcher in `server.py`
+  - [x] Create browser Service Worker (`ui/public/sw.js`) handling background push events and native OS notifications
+  - [x] Build **Universal iOS & Android Authorization Modal**: Custom gesture-triggered permission window with smart OS detector (`iOS / Android`) complying with Apple Safari user-gesture standards
+  - [x] Build **Patient Notification Control Toggle (ON/OFF)**: Interactive push notification preference toggle in patient portal and settings allowing users to enable/disable alerts anytime
+  - [x] REST API endpoints (`POST /api/notifications/subscribe`, `POST /api/notifications/toggle`) persisting subscription endpoints & ON/OFF preference states in MongoDB Atlas
+  - [x] Trigger instant lock-screen phone notifications when prescriptions or pharmacy receipts are generated
 
 ---
 

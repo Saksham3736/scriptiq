@@ -4,8 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-## 📅 Project Status Summary
-* **Current Phase**: Phase 28 — GitHub Production Repository Deployment (100% Complete)
+* **Current Phase**: Phase 36 — Patient Portal Web Application Suite (In Progress)
 * **Completed Phases & Modules**: 
   * Phase 1: Project Initialization (100% Complete)
   * Phase 2: Dependency Setup (100% Complete)
@@ -24,8 +23,12 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 19: Complete Streamlit UI Removal, MongoDB Query Projections (80% RAM cut), Master Agent Live Telemetry & Zero-Touch Auto-Pilot Mode (100% Complete)
   * Phase 20: High-Security Typed Batch Record Deletion (`POST /api/consultations/delete-batch`, `DeleteConfirmModal.tsx`, Multi-Select Selection Modes in History & Patients Workspaces) (100% Complete)
   * Phase 21: Full Prescription Letterhead Customization Suite (`GET/POST /api/settings/letterhead`, ReportLab dynamic PDF branding, live preview in `SettingsPage.tsx`) (100% Complete)
+  * Phase 22: Decommissioning & Removal of SMS / WhatsApp Module (100% Complete)
+  * Phase 23: Production Email Dispatch Engine (`EmailAgent`) (100% Complete)
+  * Phase 24: Patient Web Push Notification Engine (Service Worker + VAPID Keys) (100% Complete)
   * Phase 28: GitHub Production Repository Deployment (`https://github.com/Saksham3736/scriptiq.git` — branch `main`) (100% Complete)
-* **Next Steps**: SMS/WhatsApp Decommissioning (Phase 22), Production Email Engine (`EmailAgent`) (Phase 23), Web Push Notifications (Phase 24), Multi-Language Audio STT Engine (Phase 25), Master Agent Telemetry Console (Phase 26), and World-Class Clinical UI/UX Engine (Phase 27)
+  * Phase 35: Patient Voice & Typed Intake Space in Doctor Console (100% Complete)
+* **Next Steps**: Phase 36 (Full Patient Portal Web Application Suite), Multi-Language Audio STT Engine (Phase 25)
 * **Last Updated**: July 26, 2026
 
 ---
@@ -317,6 +320,30 @@ This document records all architectural decisions, actions, command executions, 
   * **Git Repository Initialization**: Initialized empty git repository, set primary branch to `main`, and staged all 139 core source files (`21,799` lines of code).
   * **Production Commit**: Created root commit (`c64ebac`) with message: `feat: ScriptIQ production release with 6-agent AI engine, React 18 UI, JWT auth, letterhead customization & record deletion`.
   * **Remote Repository Sync**: Added remote origin [`https://github.com/Saksham3736/scriptiq.git`](https://github.com/Saksham3736/scriptiq.git) and successfully pushed all branches/commits (`git push -u origin main`).
+
+---
+
+## 🛠️ Phase 22: Decommissioning & Removal of SMS / WhatsApp Module
+* *Status: Completed*
+* Details: Removed WhatsApp API tokens from `config.py`, deleted `tests/test_whatsapp_agent.py`, and cleaned up legacy dispatch references across backend and frontend.
+
+---
+
+## 📧 Phase 23: Production Email Dispatch Engine (`EmailAgent`)
+* *Status: Completed*
+* Details: Built `agents/email_agent.py` supporting standard SMTP and simulation mode with HTML template formatting. Added `POST /api/prescription/send-email` endpoint in `server.py` and updated `SendPrescriptionModal.tsx` and `useSendPrescription.ts`.
+
+---
+
+## 🔔 Phase 24: Patient Web Push Notification Engine
+* *Status: Completed*
+* Details: Generated VAPID keypair (`vapid_private.pem`), built `PushAgent` (`agents/push_agent.py`), created browser Service Worker (`ui/public/sw.js`), built Patient Portal UI (`PatientPortal.tsx`), added `/patient` route in `App.tsx`, and added `POST /api/notifications/subscribe` and `POST /api/prescription/send-push` endpoints in `server.py`.
+
+---
+
+## 🎙️ Phase 35: Patient Voice & Typed Intake Space in Doctor Console
+* *Status: Completed*
+* Details: Created `PatientIntakeSpace.tsx` embedded at top of `DraftPanel.tsx` in `/console`. Allows doctors to speak or type patient demographics (name, age, gender, DOB, phone, chief complaints) with instant AI heuristic parsing into `draftStore`.
   * **Verification**:
     - Confirmed remote repository sync at [`https://github.com/Saksham3736/scriptiq.git`](https://github.com/Saksham3736/scriptiq.git) tracking branch `origin/main`.
 
