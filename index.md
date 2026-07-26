@@ -347,7 +347,27 @@
 
 ---
 
-## Phase 25: Multi-Language Regional Audio STT Engine (Hindi / Hinglish) `[PRIORITY: HIGH - REGIONAL CLINICAL STT]`
+## Phase 25: Full Patient Portal Web Application Suite `[PRIORITY: HIGH - PATIENT PORTAL]`
+
+### Phase 25A: Patient Phone Authentication & Profile Dashboard
+- [ ] OTP / Phone login screen for patients (`/patient/login`)
+- [ ] Patient Dashboard showing active prescriptions, upcoming appointments, and clinic contacts
+
+### Phase 25B: Prescription & Lab Test History Viewer
+- [ ] Interactive timeline of past consultations and downloadable PDFs
+- [ ] Active medication reminders & dosage schedule view
+
+### Phase 25C: Push Notification & Communication Preferences Center
+- [ ] Live toggle for Web Push, Email, and SMS notifications
+- [ ] Device management (view subscribed browsers/devices)
+
+### Phase 25D: Instant Welcome Push Notification & Auto-Verification
+- [x] Automatic instant welcome push notification upon subscribing
+- [x] Instant test notification button directly inside the Patient Portal UI
+
+---
+
+## Phase 26: Multi-Language Regional Audio STT Engine (Hindi / Hinglish) `[PRIORITY: HIGH - REGIONAL CLINICAL STT]`
 
 - [ ] Step 45: Multi-Lingual Hindi / Hinglish Speech Support & Translation
   - [ ] Upgrade `SpeechAgent` (`agents/speech_agent.py`) with regional multi-lingual prompting & Hindi/Hinglish clinical term translation
@@ -356,7 +376,7 @@
 
 ---
 
-## Phase 26: Master Agent Live Telemetry & AI Thinking Console `[PRIORITY: HIGH - AI TRANSPARENCY]`
+## Phase 27: Master Agent Live Telemetry & AI Thinking Console `[PRIORITY: HIGH - AI TRANSPARENCY]`
 
 - [ ] Step 46: Real-Time Sub-Agent Telemetry & Progress Stepper Stream
   - [ ] Upgrade `/ws/master_agent` WebSocket stream in `server.py` to yield real-time step execution events (`SpeechAgent` -> `PrescriptionAgent` -> `PDFAgent` -> `DatabaseAgent` -> `EmailAgent` -> `PharmacyAgent`)
@@ -365,32 +385,40 @@
 
 ---
 
-## Phase 27: World-Class Clinical UI/UX & Structural Layout Improvisation Engine `[PRIORITY: HIGH - UI/UX ERGONOMICS]`
+## Phase 28: Dedicated Patient Demographics & Clinical Intake Space in Doctor Console (Voice & Typed Input) `[PRIORITY: HIGH - CLINICAL CONSOLE]`
+- [x] Step 47: Patient Intake Space Component & AI Demographics Extractor
+  - [x] Build `PatientIntakeSpace.tsx` in Doctor Console (`/console`) with dual Voice & Typed intake controls
+  - [x] Voice input parser extracting patient name, age, gender, DOB, phone number, and chief complaints into `draftStore`
+  - [x] Instant 1-click patient demographic pre-hydration before generating prescription PDF
 
-- [ ] Step 47: Button Scaling, Elevation & Spatial Grid Token System
+---
+
+## Phase 29: Structural Layout Improvisation Engine `[PRIORITY: HIGH - UI/UX ERGONOMICS]`
+
+- [ ] Step 48: Button Scaling, Elevation & Spatial Grid Token System
   - [ ] Enforce strict 3-tier button scale (`32px` Sm, `38px` Md, `46px` Lg CTAs) across all 5 pages
   - [ ] Enforce strict 8px Baseline Grid token system (`var(--space-2)` = 8px, `var(--space-4)` = 16px, `var(--space-6)` = 24px) for cards, padding, and gaps
   - [ ] Apply subtle multi-layered ambient elevation shadows (`0 1px 3px rgba(0,0,0,0.12), 0 8px 24px -4px rgba(0,0,0,0.08)`) and 1px translucent borders (`rgba(255,255,255,0.08)` in dark mode)
-- [ ] Step 48: Optical Icon Alignment, Focus Rings & Micro-Interactions
+- [ ] Step 49: Optical Icon Alignment, Focus Rings & Micro-Interactions
   - [ ] Optical flex alignment (`inline-flex`, `align-items: center`, `gap: 6px`) and icon sizing (`14px` inside buttons, `16px` in headers, `20px` in hero banners)
   - [ ] High-contrast WCAG 2.1 AA focus rings (`:focus-visible` glow `0 0 0 3px rgba(18,137,127,0.25)`) and snappy `100ms ease-out` hover states
-- [ ] Step 49: Viewport Density Optimization & 3-Pane Layout Improvisation
+- [ ] Step 50: Viewport Density Optimization & 3-Pane Layout Improvisation
   - [ ] Responsive screen scaling for 13" laptops (zero-scroll fitted 3-pane console) up to 27" 4K displays
 
 ---
 
-## Phase 28: Cloud CI/CD & Production Environment Config `[PRIORITY: MEDIUM]` *(Docker Deferred)*
+## Phase 30: Cloud CI/CD & Production Environment Config `[PRIORITY: MEDIUM]` *(Docker Deferred)*
 
-- [ ] Step 50: Production Configuration & CI Pipeline
+- [ ] Step 51: Production Configuration & CI Pipeline
   - [ ] Environment config (`VITE_API_URL`, `VITE_WS_URL`)
   - [ ] Backend Gunicorn/Uvicorn workers config & HTTPS rate limiting in `server.py`
   - [ ] GitHub Actions CI pipeline (`.github/workflows/ci.yml`) for automated linting, testing, and deployment
 
 ---
 
-## Phase 27: Performance, Caching & Offline Resilience `[PRIORITY: MEDIUM - PERFORMANCE]`
+## Phase 31: Performance, Caching & Offline Resilience `[PRIORITY: MEDIUM - PERFORMANCE]`
 
-- [ ] Step 47: Caching & Offline Storage
+- [ ] Step 52: Caching & Offline Storage
   - [ ] Response caching with Redis / in-memory LRU for common drug dosages
   - [ ] Service Worker & IndexedDB offline audio blob recording queue
 
@@ -398,15 +426,15 @@
 
 ## 💡 Recommended Future Roadmap (Bonus Extensions)
 
-### Phase 28: Electronic Health Record (EHR) / FHIR Standard Export `[RECOMMENDED / OPTIONAL BONUS]`
-- [ ] Step 48: HL7 FHIR Interoperability Standard
+### Phase 32: Electronic Health Record (EHR) / FHIR Standard Export `[RECOMMENDED / OPTIONAL BONUS]`
+- [ ] Step 53: HL7 FHIR Interoperability Standard
   - [ ] Build `fhirExporter.py` converting prescriptions to HL7 / FHIR JSON standard resources
   - [ ] REST endpoint `GET /api/prescription/:id/fhir` for hospital EHR system integration
 
 ---
 
-### Phase 29: E-Prescription Aadhaar Digital Signature (e-Sign) `[RECOMMENDED / OPTIONAL BONUS]`
-- [ ] Step 49: Cryptographic Doctor Signature Verification
+### Phase 33: E-Prescription Aadhaar Digital Signature (e-Sign) `[RECOMMENDED / OPTIONAL BONUS]`
+- [ ] Step 54: Cryptographic Doctor Signature Verification
   - [ ] Aadhaar e-Sign / PKI digital signature verification module for Telemedicine Guidelines 2020 compliance
   - [ ] Embed cryptographic signature stamp on PDF exports
 
@@ -414,66 +442,35 @@
 
 ## 🚀 Enterprise Expansion Roadmap (Senior UX & Clinical Solutions)
 
-### Phase 30: Real-Time Speaker Diarization Engine `[PRIORITY: HIGH - CLINICAL CONTEXT]`
-- [ ] Step 50: Doctor vs. Patient Speech Channeling
+### Phase 34: Real-Time Speaker Diarization Engine `[PRIORITY: HIGH - CLINICAL CONTEXT]`
+- [ ] Step 55: Doctor vs. Patient Speech Channeling
   - [ ] Dual-channel audio stream separation & PyAnnote / Whisper diarization backend integration in `agents/speech_agent.py`
   - [ ] Colored dual-bubble transcript stream in `LiveTranscriptPanel.tsx` (`[Doctor]` vs `[Patient]`)
 
 ---
 
-### Phase 31: Automated ICD-10 Medical Billing Auto-Coder `[PRIORITY: HIGH - HOSPITAL BILLING]`
-- [ ] Step 51: ICD-10 Clinical Coding & Differential Diagnosis
+### Phase 35: Automated ICD-10 Medical Billing Auto-Coder `[PRIORITY: HIGH - HOSPITAL BILLING]`
+- [ ] Step 56: ICD-10 Clinical Coding & Differential Diagnosis
   - [ ] ICD-10 clinical diagnosis code database & Gemini auto-coder mapping in `agents/prescription_agent.py`
   - [ ] 1-Click ICD-10 autocomplete chips and differential diagnosis popover in `DraftPanel.tsx`
 
 ---
 
-### Phase 32: Interactive Vitals & Chronic Disease Progression Analytics `[PRIORITY: HIGH - CLINICAL TRENDS]`
-- [ ] Step 52: Longitudinal Patient Vitals Analytics
+### Phase 36: Interactive Vitals & Chronic Disease Progression Analytics `[PRIORITY: HIGH - CLINICAL TRENDS]`
+- [ ] Step 57: Longitudinal Patient Vitals Analytics
   - [ ] Recharts interactive vitals tracking (BP, HbA1c, Blood Glucose, Weight, SpO2) across historical consultations
   - [ ] Patient Dossier health progression trends dashboard in `PatientsPage.tsx`
 
 ---
 
-### Phase 33: Offline-First PWA with IndexedDB Audio Sync Queue `[PRIORITY: HIGH - OFFLINE RESILIENCE]`
-- [ ] Step 53: Offline Audio Queue & Background Sync
+### Phase 37: Offline-First PWA with IndexedDB Audio Sync Queue `[PRIORITY: HIGH - OFFLINE RESILIENCE]`
+- [ ] Step 58: Offline Audio Queue & Background Sync
   - [ ] Service Worker offline caching & IndexedDB storage queue (`idb-keyval`) for audio blobs when clinic Wi-Fi drops
   - [ ] Automatic background sync engine pushing offline consultations to MongoDB Atlas upon network reconnection
 
 ---
 
-### Phase 34: Pediatric & Renal Clinical Dosage Safety Calculator `[PRIORITY: HIGH - PATIENT SAFETY]`
-- [ ] Step 54: Weight-Based Pediatric & Renal Clearance Calculation
+### Phase 38: Pediatric & Renal Clinical Dosage Safety Calculator `[PRIORITY: HIGH - PATIENT SAFETY]`
+- [ ] Step 59: Weight-Based Pediatric & Renal Clearance Calculation
   - [ ] mg/kg pediatric dosage and GFR renal clearance calculation engine based on patient age, weight, and diagnosis
   - [ ] Safe dosage range indicators and clinical warning badges directly inside `MedicineRow.tsx`
-
----
-
-### Phase 35: Dedicated Patient Demographics & Clinical Intake Space in Doctor Console (Voice & Typed Input) `[PRIORITY: HIGH - CLINICAL CONSOLE]`
-- [x] Step 55: Patient Intake Space Component & AI Demographics Extractor
-  - [x] Build `PatientIntakeSpace.tsx` in Doctor Console (`/console`) with dual Voice & Typed intake controls
-  - [x] Voice input parser extracting patient name, age, gender, DOB, phone number, and chief complaints into `draftStore`
-  - [x] Instant 1-click patient demographic pre-hydration before generating prescription PDF
-
----
-
-### Phase 36: Full Patient Portal Web Application Suite `[PRIORITY: HIGH - PATIENT PORTAL]`
-
-#### Phase 36A: Patient Phone Authentication & Profile Dashboard
-- [ ] OTP / Phone login screen for patients (`/patient/login`)
-- [ ] Patient Dashboard showing active prescriptions, upcoming appointments, and clinic contacts
-
-#### Phase 36B: Prescription & Lab Test History Viewer
-- [ ] Interactive timeline of past consultations and downloadable PDFs
-- [ ] Active medication reminders & dosage schedule view
-
-#### Phase 36C: Push Notification & Communication Preferences Center
-- [ ] Live toggle for Web Push, Email, and SMS notifications
-- [ ] Device management (view subscribed browsers/devices)
-
-#### Phase 36D: Instant Welcome Push Notification & Auto-Verification
-- [ ] Automatic instant welcome push notification upon subscribing
-- [ ] Instant test notification button directly inside the Patient Portal UI
-
-
-

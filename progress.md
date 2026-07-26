@@ -4,7 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-* **Current Phase**: Phase 36 — Patient Portal Web Application Suite (In Progress)
+* **Current Phase**: Phase 25 — Full Patient Portal Web Application Suite (In Progress)
 * **Completed Phases & Modules**: 
   * Phase 1: Project Initialization (100% Complete)
   * Phase 2: Dependency Setup (100% Complete)
@@ -26,9 +26,8 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 22: Decommissioning & Removal of SMS / WhatsApp Module (100% Complete)
   * Phase 23: Production Email Dispatch Engine (`EmailAgent`) (100% Complete)
   * Phase 24: Patient Web Push Notification Engine (Service Worker + VAPID Keys) (100% Complete)
-  * Phase 28: GitHub Production Repository Deployment (`https://github.com/Saksham3736/scriptiq.git` — branch `main`) (100% Complete)
-  * Phase 35: Patient Voice & Typed Intake Space in Doctor Console (100% Complete)
-* **Next Steps**: Phase 36 (Full Patient Portal Web Application Suite), Multi-Language Audio STT Engine (Phase 25)
+  * Phase 28: Dedicated Patient Demographics & Clinical Intake Space in Doctor Console (100% Complete)
+* **Next Steps**: Phase 25 (Full Patient Portal Web Application Suite), Multi-Language Audio STT Engine (Phase 26)
 * **Last Updated**: July 26, 2026
 
 ---
