@@ -97,8 +97,8 @@ export function useSendPrescription() {
         }
       }
 
-      // 4. Trigger Web Push Agent if 'push' or 'sms' channel selected
-      if (channels.includes('push') || channels.includes('sms')) {
+      // 4. Trigger Web Push Agent if 'push' channel selected
+      if (channels.includes('push')) {
         try {
           const pushRes = await fetch('/api/prescription/send-push', {
             method: 'POST',
