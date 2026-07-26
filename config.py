@@ -16,6 +16,3 @@ LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.0-flash")
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "scriptiq-super-secret-jwt-key-2026")
 JWT_ALGORITHM = "HS256"
 
-# WhatsApp Config
-WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
-WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")

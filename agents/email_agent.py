@@ -58,7 +58,7 @@ class EmailAgent:
 
         if simulation_mode or not smtp_pass:
             print("\n" + "="*50)
-            print("✉️  [SIMULATION MODE] EMAIL DISPATCH INITIATED")
+            print("[SIMULATION MODE] EMAIL DISPATCH INITIATED")
             print("="*50)
             print(f"To: {patient_email}")
             print(f"From: {sender_email}")
