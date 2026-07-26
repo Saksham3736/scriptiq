@@ -21,14 +21,10 @@ def test_web_push():
         
         if response.status_code == 200:
             if data.get("success"):
-                print("SUCCESS: Web push notification successfully dispatched to PushAgent!")
-                if data.get("data") and data["data"].get("message"):
-                    print(f"Server Note: {data['data']['message']}")
-                else:
-                    print("Check your desktop or device for the native push popup.")
+                print("SUCCESS: Web push notification sent to browser Service Worker!")
+                print("Check your desktop or device for the native push popup notification.")
             else:
-                print("FAILED: API returned success=False")
-                print("Details:", data)
+                print("FAILED: " + (data.get("error") or "Unknown error"))
         else:
             print(f"ERROR: Server returned HTTP {response.status_code}")
             print(response.text)

@@ -810,6 +810,20 @@ def subscribe_push(req: PushSubscriptionRequest):
             {"$set": {"subscription": req.subscription}},
             upsert=True
         )
+        
+        # Dispatch instant welcome push notification
+        try:
+            from agents.push_agent import PushAgent
+            push_agent = PushAgent()
+            welcome_payload = {
+                "title": "Welcome to ScriptIQ Patient Portal! 🎉",
+                "body": f"Push notifications active for {req.phone}. You will receive instant alerts when your doctor generates a prescription.",
+                "url": "/patient"
+            }
+            push_agent.send_push(req.subscription, welcome_payload)
+        except Exception as p_err:
+            print(f"[Welcome Push Warning] {p_err}")
+
         return APIResponse(success=True, data={"message": "Subscribed successfully"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -832,7 +846,7 @@ def send_prescription_push(req: SendPushRequest):
         doc = db.collection.find_one({"phone": req.phone})
         
         if not doc or "subscription" not in doc:
-            return APIResponse(success=True, data={"message": "No subscription found for this phone number."})
+            return APIResponse(success=False, error=f"No subscription found for phone {req.phone}. Please visit /patient to subscribe.")
             
         push_agent = PushAgent()
         payload = {

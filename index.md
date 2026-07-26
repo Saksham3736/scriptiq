@@ -450,10 +450,30 @@
 ---
 
 ### Phase 35: Dedicated Patient Demographics & Clinical Intake Space in Doctor Console (Voice & Typed Input) `[PRIORITY: HIGH - CLINICAL CONSOLE]`
-- [ ] Step 55: Patient Intake Space Component & AI Demographics Extractor
-  - [ ] Build `PatientIntakeSpace.tsx` in Doctor Console (`/console`) with dual Voice & Typed intake controls
-  - [ ] Voice input parser extracting patient name, age, gender, DOB, phone number, and chief complaints into `draftStore`
-  - [ ] Instant 1-click patient demographic pre-hydration before generating prescription PDF
+- [x] Step 55: Patient Intake Space Component & AI Demographics Extractor
+  - [x] Build `PatientIntakeSpace.tsx` in Doctor Console (`/console`) with dual Voice & Typed intake controls
+  - [x] Voice input parser extracting patient name, age, gender, DOB, phone number, and chief complaints into `draftStore`
+  - [x] Instant 1-click patient demographic pre-hydration before generating prescription PDF
+
+---
+
+### Phase 36: Full Patient Portal Web Application Suite `[PRIORITY: HIGH - PATIENT PORTAL]`
+
+#### Phase 36A: Patient Phone Authentication & Profile Dashboard
+- [ ] OTP / Phone login screen for patients (`/patient/login`)
+- [ ] Patient Dashboard showing active prescriptions, upcoming appointments, and clinic contacts
+
+#### Phase 36B: Prescription & Lab Test History Viewer
+- [ ] Interactive timeline of past consultations and downloadable PDFs
+- [ ] Active medication reminders & dosage schedule view
+
+#### Phase 36C: Push Notification & Communication Preferences Center
+- [ ] Live toggle for Web Push, Email, and SMS notifications
+- [ ] Device management (view subscribed browsers/devices)
+
+#### Phase 36D: Instant Welcome Push Notification & Auto-Verification
+- [ ] Automatic instant welcome push notification upon subscribing
+- [ ] Instant test notification button directly inside the Patient Portal UI
 
 
 

@@ -77,10 +77,34 @@ export default function PatientPortal() {
       if (!res.ok) throw new Error('Failed to save subscription on server');
       
       setIsSubscribed(true);
-      setMessage('Successfully subscribed to notifications!');
+      setMessage('Successfully subscribed! Instant welcome push notification sent to your device.');
     } catch (err: any) {
       console.error(err);
       setMessage(err.message || 'An error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendTestPush = async () => {
+    setLoading(true);
+    setMessage('');
+    try {
+      const res = await fetch('/api/prescription/send-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phone,
+          patient_name: 'Patient (Test Mode)'
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to dispatch push notification.');
+      }
+      setMessage('Test push notification sent! Check your desktop popup.');
+    } catch (err: any) {
+      setMessage(err.message || 'Error sending test push.');
     } finally {
       setLoading(false);
     }
@@ -125,7 +149,7 @@ export default function PatientPortal() {
 
         <button
           onClick={handleSubscribe}
-          disabled={loading || isSubscribed}
+          disabled={loading}
           style={{
             width: '100%',
             padding: '14px',
@@ -135,13 +159,35 @@ export default function PatientPortal() {
             borderRadius: '8px',
             fontSize: '15px',
             fontWeight: 600,
-            cursor: (loading || isSubscribed) ? 'not-allowed' : 'pointer',
+            cursor: loading ? 'not-allowed' : 'pointer',
             transition: 'background 0.2s',
-            opacity: loading ? 0.7 : 1
+            opacity: loading ? 0.7 : 1,
+            marginBottom: '10px'
           }}
         >
-          {loading ? 'Subscribing...' : isSubscribed ? 'Subscribed' : 'Enable Push Notifications'}
+          {loading ? 'Processing...' : isSubscribed ? 'Re-Subscribe Push Notifications' : 'Enable Push Notifications'}
         </button>
+
+        {isSubscribed && (
+          <button
+            onClick={handleSendTestPush}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              background: '#F1F5F9',
+              color: '#334155',
+              border: '1.5px solid #CBD5E1',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            🔔 Send Test Push Notification
+          </button>
+        )}
 
         {message && (
           <p style={{ marginTop: '16px', fontSize: '13px', color: isSubscribed ? '#10B981' : '#EF4444' }}>
