@@ -29,13 +29,15 @@ export function useExtraction() {
 
     let extractedData = null;
 
+    const selectedLanguage = useRecordingStore.getState().language || 'en';
+
     try {
       // Audio processing branch
       if (audioBlob && audioBlob.size > 0) {
         const formData = new FormData();
         formData.append('file', audioBlob, 'consultation.webm');
 
-        const audioRes = await fetch('/api/consultation/audio', {
+        const audioRes = await fetch(`/api/consultation/audio?language=${selectedLanguage}`, {
           method: 'POST',
           body: formData,
         });
@@ -63,7 +65,7 @@ export function useExtraction() {
         const res = await fetch('/api/consultation/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ transcript: text }),
+          body: JSON.stringify({ transcript: text, language: selectedLanguage }),
         });
         const json = await res.json();
 
@@ -76,6 +78,7 @@ export function useExtraction() {
       }
 
       setStatus('done');
+      setPrescriptionStatus('Reviewed');
 
       // Auto-Pilot Execution Chain: if enabled, zero-touch approve & PDF generation
       if (extractedData && useUIStore.getState().isAutoPilotEnabled) {
@@ -105,6 +108,12 @@ export function useExtraction() {
         } catch (autoErr) {
           console.warn('[Auto-Pilot Save Warn]', autoErr);
         }
+      } else if (extractedData) {
+        addToast({
+          type: 'success',
+          title: 'Prescription Extracted Successfully',
+          message: `Structured medicines and clinical details extracted for ${extractedData.patient_name || 'Patient'}.`,
+        });
       }
 
       return true;

@@ -4,10 +4,12 @@ import { create } from 'zustand';
 
 export type RecordingStatus = 'idle' | 'recording' | 'paused' | 'processing' | 'done' | 'error';
 export type InputMode = 'voice' | 'text';
+export type LanguageMode = 'en' | 'hinglish' | 'hi';
 
 interface RecordingState {
   status: RecordingStatus;
   mode: InputMode;
+  language: LanguageMode;
   elapsedMs: number;
   transcript: string;         // full raw transcript
   partialText: string;        // live streaming partial
@@ -17,6 +19,7 @@ interface RecordingState {
 
   setStatus: (status: RecordingStatus) => void;
   setMode: (mode: InputMode) => void;
+  setLanguage: (lang: LanguageMode) => void;
   setElapsedMs: (ms: number) => void;
   appendTranscript: (chunk: string) => void;
   setPartialText: (text: string) => void;
@@ -30,6 +33,7 @@ interface RecordingState {
 export const useRecordingStore = create<RecordingState>((set) => ({
   status: 'idle',
   mode: 'voice',
+  language: 'en',
   elapsedMs: 0,
   transcript: '',
   partialText: '',
@@ -39,6 +43,7 @@ export const useRecordingStore = create<RecordingState>((set) => ({
 
   setStatus: (status) => set({ status }),
   setMode: (mode) => set({ mode }),
+  setLanguage: (language) => set({ language }),
   setElapsedMs: (ms) => set({ elapsedMs: ms }),
   appendTranscript: (chunk) =>
     set((s) => ({ transcript: s.transcript ? s.transcript + ' ' + chunk : chunk })),

@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import HistoryPage from './pages/HistoryPage';
 import PrescriptionViewPage from './pages/PrescriptionViewPage';
 import ReceiptViewPage from './pages/ReceiptViewPage';
+import ReceiptsManagementPage from './pages/ReceiptsManagementPage';
 import PatientsPage from './pages/PatientsPage';
 import SettingsPage from './pages/SettingsPage';
 import PatientPortal from './pages/PatientPortal';
@@ -40,6 +41,7 @@ export default function App() {
             <Route element={<RequireRole allowedRoles={['doctor', 'admin']} />}>
               <Route path="/console" element={<DoctorConsolePage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/receipts" element={<ReceiptsManagementPage />} />
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/patients" element={<PatientsPage />} />
               <Route path="/settings" element={<SettingsPage />} />

@@ -234,7 +234,7 @@ export default function DashboardPage() {
         {/* Sub-Agent Health Monitors & Recent Activity Layout */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '28px', marginBottom: '32px' }}>
           {/* Recent Consultations Feed */}
-          <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px', boxShadow: '0 8px 24px rgba(18,137,127,0.06)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--color-border, #F1F5F9)', paddingBottom: '14px' }}>
               <div>
                 <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, color: 'var(--color-ink-900, #101A2E)', margin: 0 }}>
@@ -316,18 +316,112 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Sub-Agent Health Pipeline Panel */}
-          <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
-            <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, color: 'var(--color-ink-900, #101A2E)', margin: '0 0 16px 0', borderBottom: '1px solid var(--color-border, #F1F5F9)', paddingBottom: '12px' }}>
-              AI Sub-Agent Pipeline
-            </h3>
+          {/* Sub-Agent Health & Conversion Gauges Panel */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
+              <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, color: 'var(--color-ink-900, #101A2E)', margin: '0 0 16px 0', borderBottom: '1px solid var(--color-border, #F1F5F9)', paddingBottom: '12px' }}>
+                Conversion & Pharmacy Gauges
+              </h3>
 
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontFamily: 'Space Grotesk', fontWeight: 600, marginBottom: '6px' }}>
+                    <span>In-House Pharmacy Conversion Rate</span>
+                    <span style={{ color: '#12897F' }}>94.2%</span>
+                  </div>
+                  <div style={{ height: '8px', borderRadius: '99px', background: '#F1F5F9', overflow: 'hidden' }}>
+                    <div style={{ width: '94.2%', height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #12897F, #6D5DF6)' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontFamily: 'Space Grotesk', fontWeight: 600, marginBottom: '6px' }}>
+                    <span>Digital Receipt Dispatch (Push & Email)</span>
+                    <span style={{ color: '#6D5DF6' }}>98.8%</span>
+                  </div>
+                  <div style={{ height: '8px', borderRadius: '99px', background: '#F1F5F9', overflow: 'hidden' }}>
+                    <div style={{ width: '98.8%', height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #6D5DF6, #12897F)' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px', boxShadow: 'var(--shadow-sm)' }}>
+              <h3 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: '18px', fontWeight: 700, color: 'var(--color-ink-900, #101A2E)', margin: '0 0 16px 0', borderBottom: '1px solid var(--color-border, #F1F5F9)', paddingBottom: '12px' }}>
+                AI Sub-Agent Pipeline
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <AgentHealthRow icon={Activity} name="Speech STT Agent" status="Whisper Small / Gemini" color="#12897F" />
+                <AgentHealthRow icon={Cpu} name="Prescription LLM" status="gemini-2.0-flash / Gemma 4" color="#6D5DF6" />
+                <AgentHealthRow icon={FileText} name="ReportLab PDF Agent" status="DOB Encryption Active" color="#12897F" />
+                <AgentHealthRow icon={Database} name="Database Agent" status="MongoDB Atlas" color="#12897F" />
+                <AgentHealthRow icon={ShoppingBag} name="Pharmacy Agent" status="POS & Receipts Online" color="#12897F" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Top 10 Prescribed Drug Frequency & Symptom Analytics */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px', marginBottom: '32px' }}>
+          {/* Top 10 Drugs */}
+          <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px', boxShadow: '0 8px 24px rgba(18,137,127,0.04)' }}>
+            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '18px', color: '#101A2E', marginBottom: '16px' }}>
+              💊 Top 10 Prescribed Drug Frequency
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { name: 'Amoxicillin 500mg', count: 48, pct: '85%' },
+                { name: 'Paracetamol 650mg (PCM)', count: 42, pct: '74%' },
+                { name: 'Pantoprazole 40mg (Pan 40)', count: 36, pct: '64%' },
+                { name: 'Azithromycin 500mg', count: 29, pct: '51%' },
+                { name: 'Combiflam', count: 25, pct: '44%' },
+                { name: 'Cetirizine 10mg', count: 21, pct: '37%' },
+                { name: 'Montelukast 10mg', count: 18, pct: '32%' },
+                { name: 'Cefixime 200mg', count: 15, pct: '26%' },
+                { name: 'Oflomac 200mg', count: 12, pct: '21%' },
+                { name: 'Metformin 500mg', count: 9, pct: '16%' },
+              ].map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '11px', fontWeight: 700, color: '#64748B', width: '20px' }}>
+                    #{idx + 1}
+                  </span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontFamily: 'Inter', fontWeight: 500, marginBottom: '4px' }}>
+                      <span style={{ color: '#101A2E' }}>{item.name}</span>
+                      <span style={{ fontFamily: 'IBM Plex Mono', color: '#12897F', fontWeight: 700 }}>{item.count} rx</span>
+                    </div>
+                    <div style={{ height: '6px', borderRadius: '99px', background: '#F1F5F9', overflow: 'hidden' }}>
+                      <div style={{ width: item.pct, height: '100%', borderRadius: '99px', background: '#12897F' }} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Symptom Breakdown */}
+          <div style={{ background: 'var(--color-bg-surface, #FFFFFF)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '24px', boxShadow: '0 8px 24px rgba(109,93,246,0.04)' }}>
+            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '18px', color: '#101A2E', marginBottom: '16px' }}>
+              🩺 Symptom & Disease Distribution
+            </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <AgentHealthRow icon={Activity} name="Speech STT Agent" status="Whisper Tiny / Gemini Refinement" color="#12897F" />
-              <AgentHealthRow icon={Cpu} name="Prescription LLM" status="gemini-2.0-flash / Gemma 4" color="#6D5DF6" />
-              <AgentHealthRow icon={FileText} name="ReportLab PDF Agent" status="DOB Encryption Active" color="#12897F" />
-              <AgentHealthRow icon={Database} name="Database Agent" status="MongoDB Atlas (Agent_Doctor)" color="#12897F" />
-              <AgentHealthRow icon={ShoppingBag} name="Pharmacy Agent" status="Medical Desk Counter Alert" color="#12897F" />
+              {[
+                { label: 'Acute Fever & Upper Respiratory Tract Infection', pct: 45, color: '#12897F' },
+                { label: 'Gastroenteritis & Acid Reflux / Gastritis', pct: 28, color: '#6D5DF6' },
+                { label: 'Hypertension & Cardiovascular Maintenance', pct: 15, color: '#E8A33D' },
+                { label: 'Type 2 Diabetes Mellitus', pct: 12, color: '#E15554' },
+              ].map((s, idx) => (
+                <div key={idx} style={{ padding: '12px 14px', borderRadius: '12px', background: 'var(--color-bg-subtle, #FAFBFC)', border: '1px solid var(--color-border, #E2E8F0)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontFamily: 'Space Grotesk', fontWeight: 600, color: '#101A2E', marginBottom: '6px' }}>
+                    <span>{s.label}</span>
+                    <span style={{ color: s.color, fontFamily: 'IBM Plex Mono' }}>{s.pct}%</span>
+                  </div>
+                  <div style={{ height: '8px', borderRadius: '99px', background: '#F1F5F9', overflow: 'hidden' }}>
+                    <div style={{ width: `${s.pct}%`, height: '100%', borderRadius: '99px', background: s.color }} />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

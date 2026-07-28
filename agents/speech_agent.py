@@ -5,11 +5,11 @@ from google import genai
 import config
 
 class SpeechAgent:
-    def __init__(self, model_size="tiny"):
+    def __init__(self, model_size="small"):
         """
         Initialize the Speech Agent.
         Uses Gemini Multimodal Audio API for direct audio-to-text decoding,
-        with faster-whisper as a local fallback.
+        with faster-whisper (small/base model) as a high-accuracy local fallback.
         """
         self.model_size = model_size
         self._whisper_model = None
@@ -33,59 +33,84 @@ class SpeechAgent:
             self._whisper_model = WhisperModel(self.model_size, device="cpu", compute_type="float32")
         return self._whisper_model
 
-    def speech_to_text(self, audio_path: str) -> str:
+    def speech_to_text(self, audio_path: str, language: str = "en") -> str:
         """
-        Convert the audio file into a raw text transcript.
-        Tries Gemini Multimodal Audio first (works on any OS without ffmpeg),
-        falling back to local faster-whisper.
+        Convert the audio file into a raw text transcript with fallback AI models & medical vocabulary hints.
         """
-        print(f"[SpeechAgent] Transcribing audio file: {audio_path}...")
+        print(f"[SpeechAgent] Transcribing audio file ({language} mode): {audio_path}...")
         if not os.path.exists(audio_path):
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
-        # 1. Try Gemini Multimodal Audio transcription
+        # 1. Try Gemini Multimodal Audio transcription with fallback model chain
         if self.gemini_client:
-            try:
-                print("[SpeechAgent] Transcribing via Gemini Multimodal Audio API...")
-                with open(audio_path, "rb") as f:
-                    audio_bytes = f.read()
+            target_model = getattr(config, "LLM_MODEL", "gemini-2.0-flash")
+            fallback_models = ["gemini-2.0-flash", "gemma-4-26b-a4b-it", "gemini-1.5-flash"]
+            models_to_try = []
+            for m in [target_model] + fallback_models:
+                if m not in models_to_try:
+                    models_to_try.append(m)
 
-                mime_type = "audio/webm"
-                if audio_path.endswith(".wav"):
-                    mime_type = "audio/wav"
-                elif audio_path.endswith(".mp3"):
-                    mime_type = "audio/mp3"
+            with open(audio_path, "rb") as f:
+                audio_bytes = f.read()
 
-                target_model = getattr(config, "LLM_MODEL", "gemini-2.5-flash")
+            mime_type = "audio/webm"
+            if audio_path.endswith(".wav"):
+                mime_type = "audio/wav"
+            elif audio_path.endswith(".mp3"):
+                mime_type = "audio/mp3"
 
-                response = self.gemini_client.models.generate_content(
-                    model=target_model,
-                    contents=[
-                        genai.types.Part.from_bytes(data=audio_bytes, mime_type=mime_type),
-                        "You are an expert clinical medical transcriptionist. Transcribe this doctor consultation audio accurately into English text. Include patient name, symptoms, diagnosis, prescribed medicines with strength, dosage, frequency, and duration. Output ONLY the raw transcript text with proper punctuation."
-                    ]
-                )
+            stt_prompt = (
+                "You are an expert clinical medical transcriptionist with universal multilingual capabilities.\n"
+                "Listen to the doctor's consultation audio, which may be spoken in English, Hindi, Hinglish, or any regional mix.\n"
+                "1. Automatically detect the spoken language.\n"
+                "2. Transcribe the audio with extreme precision, accurately identifying medical brand names (e.g., Dolo 650, Combiflam, Pan 40, Azithromycin, Augmentin, Amoxicillin, Cetirizine, Paracetamol, Telma 40, Metformin).\n"
+                "3. Normalize any spoken Hindi/vernacular clinical terms into standard medical English terminology "
+                "(e.g., 'bukhar' -> 'fever', 'sar dard' -> 'headache', 'subah-shaam' -> 'Twice Daily (1-0-1)', 'khana khane ke baad' -> 'After Meals', 'khali pet' -> 'Before Food').\n"
+                "Output ONLY the clear transcript text with proper medical terms and punctuation."
+            )
 
-                transcript_text = response.text.strip() if response and response.text else ""
-                if transcript_text:
-                    print(f"[SpeechAgent] Gemini Audio Transcript Success: '{transcript_text[:100]}...'")
-                    return transcript_text
-            except Exception as e:
-                print(f"[SpeechAgent] Gemini Audio STT warning: {e}. Trying Whisper fallback...")
+            for model_name in models_to_try:
+                try:
+                    print(f"[SpeechAgent] Attempting Gemini Audio STT with model '{model_name}'...")
+                    response = self.gemini_client.models.generate_content(
+                        model=model_name,
+                        contents=[
+                            genai.types.Part.from_bytes(data=audio_bytes, mime_type=mime_type),
+                            stt_prompt
+                        ]
+                    )
 
-        # 2. Fallback to faster-whisper
+                    transcript_text = response.text.strip() if response and response.text else ""
+                    if transcript_text:
+                        print(f"[SpeechAgent] Gemini Audio STT Success via '{model_name}': '{transcript_text[:100]}...'")
+                        return transcript_text
+                except Exception as e:
+                    print(f"[SpeechAgent] Model '{model_name}' STT warning: {e}. Trying next fallback...")
+
+        # 2. High-accuracy local Whisper fallback with medical initial prompt
         try:
-            segments, info = self.whisper_model.transcribe(audio_path, beam_size=5)
+            whisper_lang = "hi" if language in ["hi", "hinglish"] else "en"
+            medical_vocab_prompt = (
+                "Doctor consultation prescription transcript: Dolo 650mg, Pan 40, Combiflam, Azithromycin 500mg, "
+                "Augmentin 625mg, Amoxicillin, Cetirizine 10mg, Paracetamol, PCM, BD, TDS, HS, OD, QID, "
+                "Twice Daily, Once Daily, After Meals, Before Food, Empty Stomach, Fever, Headache, Cough."
+            )
+            segments, info = self.whisper_model.transcribe(
+                audio_path,
+                beam_size=5,
+                language=whisper_lang,
+                initial_prompt=medical_vocab_prompt
+            )
             raw_transcript = " ".join([segment.text for segment in segments]).strip()
-            print(f"[SpeechAgent] Whisper transcript: '{raw_transcript}'")
+            print(f"[SpeechAgent] Whisper transcript ({whisper_lang}): '{raw_transcript}'")
             return raw_transcript
         except Exception as e:
             print(f"[SpeechAgent] Whisper transcription error: {e}")
             return ""
 
-    def refine_transcript(self, raw_transcript: str) -> str:
+    def refine_transcript(self, raw_transcript: str, language: str = "en") -> str:
         """
-        Use Gemini to refine punctuation and correct spelling of medical terms.
+        Use Gemini model chain to refine punctuation, correct spelling of medical terms, and translate Hinglish/Hindi clinical phrases.
         """
         if not raw_transcript or not raw_transcript.strip():
             return ""
@@ -93,22 +118,36 @@ class SpeechAgent:
         if not self.gemini_client:
             return raw_transcript
 
-        print("[SpeechAgent] Refining transcript using Gemini...")
+        print(f"[SpeechAgent] Refining transcript using Gemini (Language: {language})...")
         prompt = (
-            "You are a medical speech transcription assistant. The following text is a transcript of a doctor speaking. "
-            "Your job is to clean up spelling (especially Indian medical names and drug brands like Combiflam, Pan 40, Dolo 650), "
-            "insert proper punctuation and casing, and format numbers clearly. "
-            "Do NOT add any new medical information. Output ONLY the cleaned transcript text.\n\n"
+            "You are an expert clinical medical speech transcription assistant specializing in Indian clinical consultations.\n"
+            "The following text is a doctor's consultation transcript spoken in English, Hindi, or Hinglish.\n"
+            "Your job is to:\n"
+            "1. Clean up medical drug names (e.g. Dolo 650, Combiflam, Pan 40, Azithromycin, Augmentin, Amoxicillin, Telma 40, Pantocid).\n"
+            "2. Translate spoken Hindi symptoms and dosage instructions into standard clinical English terms "
+            "(e.g., '3 din se bukhar' -> 'fever for 3 days', 'subah shaam' -> 'Twice Daily (1-0-1)', 'khana khane ke baad' -> 'After Meals', 'khali pet' -> 'Before Food').\n"
+            "3. Insert proper punctuation and casing.\n"
+            "Do NOT alter prescribed dosages or medicine names. Output ONLY the refined clinical transcript text.\n\n"
             f"Raw Transcript:\n{raw_transcript}"
         )
 
-        target_model = getattr(config, "LLM_MODEL", "gemini-2.5-flash")
-        try:
-            response = self.gemini_client.models.generate_content(
-                model=target_model,
-                contents=prompt
-            )
-            return response.text.strip() if response and response.text else raw_transcript
-        except Exception as err:
-            print(f"[SpeechAgent] Transcript refinement error: {err}")
-            return raw_transcript
+        target_model = getattr(config, "LLM_MODEL", "gemini-2.0-flash")
+        fallback_models = ["gemini-2.0-flash", "gemma-4-26b-a4b-it", "gemini-1.5-flash"]
+        models_to_try = []
+        for m in [target_model] + fallback_models:
+            if m not in models_to_try:
+                models_to_try.append(m)
+
+        for model_name in models_to_try:
+            try:
+                response = self.gemini_client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
+                refined = response.text.strip() if response and response.text else ""
+                if refined:
+                    return refined
+            except Exception as err:
+                print(f"[SpeechAgent] Model '{model_name}' transcript refinement warning: {err}")
+
+        return raw_transcript

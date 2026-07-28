@@ -13,12 +13,17 @@ import {
   Shield,
   User,
   ChevronUp,
+  ShoppingBag,
+  Receipt,
+  Cpu,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { useUIStore } from '@/store/uiStore';
 
 const NAV = [
   { to: '/console', icon: Stethoscope, label: 'New Consult', roles: ['doctor', 'admin'] },
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['doctor', 'admin'] },
+  { to: '/receipts', icon: Receipt, label: 'Patient Receipts Portal', roles: ['doctor', 'admin', 'patient'] },
   { to: '/history', icon: ClipboardList, label: 'History', roles: ['doctor', 'admin', 'patient'] },
   { to: '/patients', icon: Users, label: 'Patients', roles: ['doctor', 'admin'] },
   { to: '/settings', icon: Settings, label: 'Settings', roles: ['doctor', 'admin', 'patient'] },
@@ -29,6 +34,9 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
+
+  const isTelemetryOpen = useUIStore((s) => s.isTelemetryOpen);
+  const toggleTelemetry = useUIStore((s) => s.toggleTelemetry);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -114,6 +122,41 @@ export default function Sidebar() {
             )}
           </NavLink>
         ))}
+
+        {/* Sidebar Telemetry Action Button */}
+        <div style={{ marginTop: 'auto', paddingTop: '12px' }}>
+          <button
+            onClick={toggleTelemetry}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              width: '100%',
+              padding: '10px 12px',
+              borderRadius: '8px',
+              background: isTelemetryOpen ? 'rgba(18, 137, 127, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+              border: isTelemetryOpen ? '1px solid rgba(18, 137, 127, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+              color: isTelemetryOpen ? '#2DD4BF' : 'rgba(232,236,243,0.7)',
+              cursor: 'pointer',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '12px',
+              fontWeight: 600,
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Cpu size={16} color={isTelemetryOpen ? '#2DD4BF' : '#A78BFA'} />
+            <span style={{ flex: 1, textAlign: 'left' }}>AI Telemetry</span>
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: isTelemetryOpen ? '#2DD4BF' : 'rgba(255, 255, 255, 0.3)',
+                boxShadow: isTelemetryOpen ? '0 0 6px #2DD4BF' : 'none',
+              }}
+            />
+          </button>
+        </div>
       </nav>
 
       {/* Bottom-left Account Management Pill & Popover Menu */}

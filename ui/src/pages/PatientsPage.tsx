@@ -687,6 +687,105 @@ export default function PatientsPage() {
         onConfirm={handleConfirmBatchDelete}
         loading={deleteLoading}
       />
+
+      {/* Animated Floating Glassmorphism Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(16, 26, 46, 0.94)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '16px',
+            padding: '12px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            color: '#FFF',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+            zIndex: 9000,
+          }}
+        >
+          <span style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '13px', color: '#12897F' }}>
+            {selectedIds.length} Patient{selectedIds.length === 1 ? '' : 's'} Selected
+          </span>
+
+          <button
+            onClick={() => {
+              const selectedDocs = patients.filter((p) => selectedIds.includes(p._id));
+              const headers = ['Name', 'Phone', 'DOB', 'Diagnosis', 'Date'];
+              const rows = selectedDocs.map((d) => [
+                `"${d.patient_name || ''}"`,
+                `"${d.phone || ''}"`,
+                `"${d.dob || ''}"`,
+                `"${d.diagnosis || ''}"`,
+                `"${d.consultation_date || ''}"`,
+              ]);
+              const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+              const encodedUri = encodeURI(csvContent);
+              const link = document.createElement('a');
+              link.setAttribute('href', encodedUri);
+              link.setAttribute('download', `Patients_Export_${Date.now()}.csv`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              addToast({ type: 'success', title: 'Export Downloaded', message: `Exported ${selectedDocs.length} patient records.` });
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 14px',
+              borderRadius: '8px',
+              background: 'rgba(255,255,255,0.12)',
+              color: '#FFF',
+              border: 'none',
+              fontFamily: 'Space Grotesk',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <Download size={14} /> Export CSV
+          </button>
+
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 14px',
+              borderRadius: '8px',
+              background: '#E15554',
+              color: '#FFF',
+              border: 'none',
+              fontFamily: 'Space Grotesk',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <Trash2 size={14} /> Delete Selected
+          </button>
+
+          <button
+            onClick={() => setSelectedIds([])}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 }

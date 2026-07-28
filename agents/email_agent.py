@@ -3,7 +3,9 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+
+import config as app_config
 
 class EmailAgent:
     """
@@ -13,17 +15,26 @@ class EmailAgent:
     def __init__(self):
         pass
 
-    def send_prescription_email(self, pdf_path: str, patient_email: str, patient_name: str, config: Dict[str, Any]) -> bool:
+    def send_prescription_email(self, pdf_path: str, patient_email: Optional[str] = None, patient_name: Optional[str] = "Patient", config: Optional[Dict[str, Any]] = None) -> bool:
         """
         Sends the encrypted prescription PDF to the patient.
         """
-        simulation_mode = config.get("email_simulation_mode", True)
-        smtp_host = config.get("smtp_host", "smtp.gmail.com")
-        smtp_port = int(config.get("smtp_port", 587))
-        smtp_user = config.get("smtp_user", "saksham2435157@gmail.com")
-        smtp_pass = config.get("smtp_pass", "")
-        sender_email = config.get("sender_email", smtp_user)
+        if config is None:
+            config = {}
+        
+        target_email = patient_email or config.get("patient_email") or getattr(app_config, "DEFAULT_PATIENT_EMAIL", "saksham.kj.3736@gmail.com")
+        
+        smtp_user = config.get("smtp_user") or getattr(app_config, "SMTP_USER", "saksham2435157@gmail.com")
+        smtp_pass = config.get("smtp_pass") or getattr(app_config, "SMTP_PASS", os.getenv("GMAIL_APP_PASSWORD", ""))
+        smtp_host = config.get("smtp_host") or getattr(app_config, "SMTP_HOST", "smtp.gmail.com")
+        smtp_port = int(config.get("smtp_port") or getattr(app_config, "SMTP_PORT", 587))
+        sender_email = config.get("sender_email") or smtp_user
         hospital_name = config.get("hospital_name", "ScriptIQ Medical Center")
+
+        # If SMTP pass is present, force simulation_mode to False unless explicitly set True
+        simulation_mode = config.get("email_simulation_mode")
+        if simulation_mode is None:
+            simulation_mode = not bool(smtp_pass)
 
         subject = f"Your Prescription from {hospital_name}"
         body = f"""
@@ -60,7 +71,7 @@ class EmailAgent:
             print("\n" + "="*50)
             print("[SIMULATION MODE] EMAIL DISPATCH INITIATED")
             print("="*50)
-            print(f"To: {patient_email}")
+            print(f"To: {target_email}")
             print(f"From: {sender_email}")
             print(f"Subject: {subject}")
             print(f"Attachment: {os.path.basename(pdf_path) if pdf_path else 'None'}")
@@ -72,7 +83,7 @@ class EmailAgent:
         # Actual SMTP Dispatch
         msg = MIMEMultipart()
         msg['From'] = f"{hospital_name} <{sender_email}>"
-        msg['To'] = patient_email
+        msg['To'] = target_email
         msg['Subject'] = subject
 
         msg.attach(MIMEText(body, 'html'))
@@ -91,7 +102,7 @@ class EmailAgent:
             server.login(smtp_user, smtp_pass)
             server.send_message(msg)
             server.quit()
-            print(f"[EmailAgent] Email successfully sent to {patient_email}")
+            print(f"[EmailAgent] Email successfully sent to {target_email}")
             return True
         except Exception as e:
             print(f"[EmailAgent] SMTP Error: {e}")

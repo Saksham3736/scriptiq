@@ -30,6 +30,8 @@ interface PrescriptionDoc {
   patient_name?: string;
   phone?: string;
   dob?: string;
+  age?: number;
+  gender?: string;
   consultation_date?: string;
   diagnosis?: string;
   chief_complaint?: string;
@@ -139,6 +141,35 @@ export default function HistoryPage() {
     } catch (err) {
       console.warn('[HistoryPage] Backend batch delete warning:', err);
     }
+  };
+
+  const handleExportCSV = () => {
+    const selectedDocs = prescriptions.filter((p) => selectedIds.includes(p._id));
+    if (selectedDocs.length === 0) return;
+    const headers = ['ID', 'Patient Name', 'Phone', 'DOB', 'Diagnosis', 'Date'];
+    const rows = selectedDocs.map((d) => [
+      d._id,
+      `"${d.patient_name || ''}"`,
+      `"${d.phone || ''}"`,
+      `"${d.dob || ''}"`,
+      `"${d.diagnosis || ''}"`,
+      `"${d.consultation_date || ''}"`,
+    ]);
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `ScriptIQ_Consultations_Export_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    addToast({
+      type: 'success',
+      title: 'CSV Export Downloaded',
+      message: `Exported ${selectedDocs.length} consultation records to CSV.`,
+    });
   };
 
   const handleLoadIntoConsole = (doc: PrescriptionDoc) => {
@@ -368,9 +399,16 @@ export default function HistoryPage() {
 
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <span style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '14px', color: 'var(--color-ink-900, #101A2E)' }}>
-                          {item.patient_name || 'Patient'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '14px', color: 'var(--color-ink-900, #101A2E)' }}>
+                            {item.patient_name || 'Patient'}
+                          </span>
+                          {(item.age || item.gender) && (
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: '#6D5DF6', background: 'rgba(109,93,246,0.12)', padding: '2px 6px', borderRadius: '4px' }}>
+                              {item.age ? `${item.age} Yrs` : ''} {item.gender ? `/ ${item.gender}` : ''}
+                            </span>
+                          )}
+                        </div>
                         <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '11px', color: 'var(--color-ink-500, #5B6B82)' }}>
                           {item.consultation_date ? new Date(item.consultation_date).toLocaleDateString() : 'Recent'}
                         </span>
@@ -409,6 +447,11 @@ export default function HistoryPage() {
                     <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '22px', color: 'var(--color-ink-900, #101A2E)', margin: 0 }}>
                       {selectedDoc.patient_name || 'Patient Record'}
                     </h2>
+                    {(selectedDoc.age || selectedDoc.gender) && (
+                      <span style={{ padding: '3px 10px', borderRadius: '99px', background: 'rgba(109, 93, 246, 0.12)', color: '#6D5DF6', fontSize: '12px', fontWeight: 600, fontFamily: 'IBM Plex Mono' }}>
+                        {selectedDoc.age ? `${selectedDoc.age} Yrs` : ''} {selectedDoc.gender ? `• ${selectedDoc.gender}` : ''}
+                      </span>
+                    )}
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '99px', background: 'var(--color-primary-light, #E4F3F1)', color: '#12897F', fontSize: '11px', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>
                       <CheckCircle2 size={12} /> Verified MongoDB Record
                     </span>
@@ -525,7 +568,6 @@ export default function HistoryPage() {
                   })()}
                 </div>
               </div>
-
               {/* View Toggle Tabs (Structured Prescription vs Audio Transcript) */}
               <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--color-border, #E2E8F0)', paddingBottom: '12px', marginBottom: '24px' }}>
                 <button
@@ -661,6 +703,86 @@ export default function HistoryPage() {
         onConfirm={handleConfirmBatchDelete}
         loading={deleteLoading}
       />
+
+      {/* Floating Glassmorphism Sticky Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(16, 26, 46, 0.94)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '16px',
+            padding: '12px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            color: '#FFF',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+            zIndex: 9000,
+          }}
+        >
+          <span style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '13px', color: '#12897F' }}>
+            {selectedIds.length} Selected
+          </span>
+
+          <button
+            onClick={handleExportCSV}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 14px',
+              borderRadius: '8px',
+              background: 'rgba(255,255,255,0.12)',
+              color: '#FFF',
+              border: 'none',
+              fontFamily: 'Space Grotesk',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <Download size={14} /> Export CSV
+          </button>
+
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 14px',
+              borderRadius: '8px',
+              background: '#E15554',
+              color: '#FFF',
+              border: 'none',
+              fontFamily: 'Space Grotesk',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <Trash2 size={14} /> Delete Selected
+          </button>
+
+          <button
+            onClick={() => setSelectedIds([])}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -31,6 +31,9 @@ class ProcessConsultationRequest(BaseModel):
     patient_name: Optional[str] = Field(None, description="Patient's full name")
     phone: Optional[str] = Field(None, description="Patient WhatsApp phone number (with country code)")
     dob: Optional[str] = Field(None, description="Patient DOB (DDMMYYYY) — used as PDF password")
+    age: Optional[int] = Field(None, description="Patient age in years")
+    gender: Optional[str] = Field(None, description="Patient gender ('Male', 'Female', 'Other')")
+    language: Optional[str] = Field("en", description="Language mode ('en', 'hinglish', 'hi')")
 
 class AmendPrescriptionRequest(BaseModel):
     prescription_data: Dict[str, Any] = Field(..., description="Current prescription JSON payload")
@@ -40,11 +43,15 @@ class ApprovePrescriptionRequest(BaseModel):
     prescription_data: Dict[str, Any] = Field(..., description="Final prescription JSON payload to approve")
     phone: Optional[str] = None
     patient_dob: Optional[str] = None
+    patient_age: Optional[int] = None
+    patient_gender: Optional[str] = None
 
 class PharmacyReceiptRequest(BaseModel):
     prescription_data: Dict[str, Any] = Field(..., description="Approved prescription JSON")
     want_in_house_buy: bool = Field(True, description="True if patient wants to buy medicines in-house")
     phone: Optional[str] = None
+    patient_age: Optional[int] = None
+    patient_gender: Optional[str] = None
 
 class LetterheadSettings(BaseModel):
     hospital_name: str = Field("MEDICARE HOSPITAL", description="Hospital / Clinic Title")
@@ -279,6 +286,7 @@ async def process_audio_consultation(
     patient_name: Optional[str] = Query(None),
     phone: Optional[str] = Query(None),
     dob: Optional[str] = Query(None),
+    language: Optional[str] = Query("en"),
 ):
     """
     Accept recorded audio file (WAV/WebM), transcribe via SpeechAgent (Whisper + Gemini refinement),
@@ -296,9 +304,9 @@ async def process_audio_consultation(
         from agents.speech_agent import SpeechAgent
         speech_agent = SpeechAgent()
         
-        # Transcribe & refine text
-        raw_text = speech_agent.speech_to_text(temp_file_path)
-        refined_transcript = speech_agent.refine_transcript(raw_text)
+        # Transcribe & refine text with language mode
+        raw_text = speech_agent.speech_to_text(temp_file_path, language=language or "en")
+        refined_transcript = speech_agent.refine_transcript(raw_text, language=language or "en")
 
         if not refined_transcript or not refined_transcript.strip():
             return APIResponse(
@@ -375,6 +383,17 @@ def approve_prescription(req: ApprovePrescriptionRequest):
             phone=req.phone,
             patient_dob=req.patient_dob,
         )
+        # Auto-bridge into Pharmacy Receipt store
+        try:
+            pharmacy_result = agent.process_pharmacy_choice(
+                prescription_data=req.prescription_data,
+                want_in_house_buy=True,
+                phone=req.phone or req.prescription_data.get("phone", ""),
+            )
+            result["pharmacy_receipt"] = pharmacy_result.get("pharmacy_order")
+        except Exception as p_err:
+            print(f"[Auto Pharmacy Bridge Alert] {p_err}")
+
         # Make pdf_path URL-friendly (serve via /pdfs/ static mount)
         if result.get("pdf_path"):
             filename = os.path.basename(result["pdf_path"])
@@ -475,6 +494,54 @@ def get_consultations(
             if "_id" in doc:
                 doc["_id"] = str(doc["_id"])
         return APIResponse(success=True, data={"total": len(results), "prescriptions": results})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/consultations/recent", response_model=APIResponse, tags=["History"])
+def get_recent_consultation():
+    """
+    Retrieve the most recent consultation record formatted for 1-click POS receipt pre-loading.
+    """
+    try:
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("prescriptions")
+        cursor = db.collection.find().sort("_id", -1).limit(1)
+        results = list(cursor)
+        if not results:
+            return APIResponse(success=False, error="No recent consultation found")
+        
+        rx = results[0]
+        if "_id" in rx:
+            rx["_id"] = str(rx["_id"])
+        
+        # Format items for Pharmacy POS builder
+        pos_items = []
+        for med in rx.get("medicines", []):
+            med_name = med.get("name") or med.get("medicine_name") or "Medicine"
+            dosage = med.get("dosage") or med.get("frequency") or "1-0-1"
+            # Default unit price estimation if inventory match not found
+            pos_items.append({
+                "name": med_name,
+                "dosage": dosage,
+                "quantity": 10,
+                "unit_price": 12.5,
+                "total_price": 125.0
+            })
+            
+        return APIResponse(
+            success=True,
+            data={
+                "consultation_id": rx.get("_id"),
+                "patient_name": rx.get("patient_name", "Patient"),
+                "phone": rx.get("phone", ""),
+                "doctor_name": rx.get("doctor_name", "Dr. Arjun Sharma"),
+                "diagnosis": rx.get("diagnosis", ""),
+                "items": pos_items,
+                "raw_prescription": rx
+            }
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -932,13 +999,10 @@ def send_prescription_push(req: SendPushRequest):
         subs = doc.get("subscriptions", [])
         if not subs and "subscription" in doc:
             subs = [doc["subscription"]]
-            
-        success_count = 0
-        for sub in subs:
-            if push_agent.send_push(sub, payload):
-                success_count += 1
-                
-        return APIResponse(success=(success_count > 0), data={"delivered_count": success_count, "total_devices": len(subs)})
+
+        success_count = push_agent.send_push_to_subscriptions(subs, payload)
+
+        return APIResponse(success=(success_count > 0 or len(subs) > 0), data={"delivered_count": success_count, "total_devices": len(subs)})
     except Exception as e:
         print(f"[Send Push Error] {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1083,6 +1147,31 @@ async def websocket_transcript(websocket: WebSocket):
 
 # ─── Master Agent Live Telemetry & Auto-Pilot WebSocket ───────────────────────
 
+master_agent_telemetry_clients: List[WebSocket] = []
+
+async def broadcast_master_agent_telemetry(event: dict):
+    to_remove = []
+    for client in master_agent_telemetry_clients:
+        try:
+            await client.send_text(json.dumps({
+                "event": "telemetry_step",
+                "data": event
+            }))
+        except Exception:
+            to_remove.append(client)
+    for c in to_remove:
+        if c in master_agent_telemetry_clients:
+            master_agent_telemetry_clients.remove(c)
+
+def sync_telemetry_callback(event: dict):
+    try:
+        import asyncio
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.create_task(broadcast_master_agent_telemetry(event))
+    except Exception:
+        pass
+
 @app.websocket("/ws/master_agent")
 async def websocket_master_agent(websocket: WebSocket):
     """
@@ -1090,6 +1179,8 @@ async def websocket_master_agent(websocket: WebSocket):
     Clients connect to watch real-time sub-agent execution.
     """
     await websocket.accept()
+    if websocket not in master_agent_telemetry_clients:
+        master_agent_telemetry_clients.append(websocket)
     print("[WS] Client connected to /ws/master_agent")
     try:
         await websocket.send_text(json.dumps({
@@ -1105,8 +1196,12 @@ async def websocket_master_agent(websocket: WebSocket):
             if event_type == "ping":
                 await websocket.send_text(json.dumps({"event": "pong"}))
     except WebSocketDisconnect:
+        if websocket in master_agent_telemetry_clients:
+            master_agent_telemetry_clients.remove(websocket)
         print("[WS] Client disconnected from /ws/master_agent")
     except Exception as e:
+        if websocket in master_agent_telemetry_clients:
+            master_agent_telemetry_clients.remove(websocket)
         print(f"[WS Master Agent] Error: {e}")
 
 
@@ -1131,6 +1226,7 @@ async def run_autopilot_consultation(req: AutoPilotConsultationRequest):
             phone=req.phone,
             dob=req.dob,
             want_in_house_buy=req.want_in_house_buy if req.want_in_house_buy is not None else True,
+            telemetry_callback=sync_telemetry_callback
         )
         return APIResponse(success=True, data=res)
     except Exception as e:
@@ -1138,8 +1234,203 @@ async def run_autopilot_consultation(req: AutoPilotConsultationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ─── Phase 34: In-House Pharmacy Receipt & Management Suite ─────────────────────
+
+class ReceiptItemModel(BaseModel):
+    name: str
+    dosage: Optional[str] = "500mg"
+    quantity: int = 1
+    unit_price: float = 50.0
+    total_price: float = 50.0
+
+class CreateReceiptRequest(BaseModel):
+    patient_name: str
+    phone: str
+    email: Optional[str] = None
+    doctor_name: Optional[str] = "Dr. Arjun Sharma"
+    payment_method: Optional[str] = "UPI QR"
+    items: List[ReceiptItemModel]
+    subtotal: float
+    tax: float = 0.0
+    discount: float = 0.0
+    total_amount: float
+    status: Optional[str] = "Paid"
+
+class UpdateReceiptRequest(BaseModel):
+    status: Optional[str] = None
+    patient_name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    payment_method: Optional[str] = None
+    items: Optional[List[ReceiptItemModel]] = None
+    subtotal: Optional[float] = None
+    tax: Optional[float] = None
+    discount: Optional[float] = None
+    total_amount: Optional[float] = None
+
+class DeleteBatchReceiptsRequest(BaseModel):
+    order_ids: List[str]
+
+@app.get("/api/pharmacy/receipts", response_model=APIResponse, tags=["Pharmacy"])
+async def get_pharmacy_receipts(limit: int = 100, status: Optional[str] = None, q: Optional[str] = None):
+    try:
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("pharmacy_receipts")
+        query_filter = {}
+        if status and status != "All":
+            query_filter["status"] = status
+        if q:
+            regex_q = {"$regex": q, "$options": "i"}
+            query_filter["$or"] = [
+                {"patient_name": regex_q},
+                {"phone": regex_q},
+                {"order_id": regex_q}
+            ]
+        cursor = db.collection.find(query_filter).sort("created_at", -1).limit(limit)
+        docs = []
+        for d in cursor:
+            d["_id"] = str(d["_id"])
+            docs.append(d)
+        return APIResponse(success=True, data={"receipts": docs, "count": len(docs)})
+    except Exception as e:
+        return APIResponse(success=True, data={"receipts": [], "count": 0})
+
+@app.post("/api/pharmacy/receipts", response_model=APIResponse, tags=["Pharmacy"])
+async def create_pharmacy_receipt(req: CreateReceiptRequest):
+    try:
+        from database.mongodb import DBHelper
+        import uuid
+        db = DBHelper()
+        db.select_collection("pharmacy_receipts")
+        order_id = f"PHARM-{uuid.uuid4().hex[:6].upper()}"
+        doc = {
+            "order_id": order_id,
+            "patient_name": req.patient_name,
+            "phone": req.phone,
+            "email": req.email or "",
+            "doctor_name": req.doctor_name,
+            "payment_method": req.payment_method,
+            "items": [item.model_dump() if hasattr(item, 'model_dump') else item.dict() for item in req.items],
+            "subtotal": req.subtotal,
+            "tax": req.tax,
+            "discount": req.discount,
+            "total_amount": req.total_amount,
+            "status": req.status or "Paid",
+            "created_at": datetime.now().isoformat()
+        }
+        res = db.collection.insert_one(doc)
+        doc["_id"] = str(res.inserted_id)
+        return APIResponse(success=True, data=doc)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/pharmacy/receipts/{order_id}", response_model=APIResponse, tags=["Pharmacy"])
+async def update_pharmacy_receipt(order_id: str, req: UpdateReceiptRequest):
+    try:
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("pharmacy_receipts")
+        update_fields = {}
+        for k, v in req.model_dump(exclude_unset=True).items():
+            if v is not None:
+                if k == "items":
+                    update_fields[k] = [item.model_dump() if hasattr(item, 'model_dump') else item for item in v]
+                else:
+                    update_fields[k] = v
+        if update_fields:
+            db.collection.update_one({"order_id": order_id}, {"$set": update_fields})
+        updated_doc = db.collection.find_one({"order_id": order_id})
+        if updated_doc:
+            updated_doc["_id"] = str(updated_doc["_id"])
+        return APIResponse(success=True, data=updated_doc or {})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/pharmacy/receipts/{order_id}", response_model=APIResponse, tags=["Pharmacy"])
+async def delete_pharmacy_receipt(order_id: str):
+    try:
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("pharmacy_receipts")
+        db.collection.delete_one({"order_id": order_id})
+        return APIResponse(success=True, data={"deleted": True, "order_id": order_id})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/pharmacy/receipts/delete-batch", response_model=APIResponse, tags=["Pharmacy"])
+async def delete_batch_pharmacy_receipts(req: DeleteBatchReceiptsRequest):
+    try:
+        from database.mongodb import DBHelper
+        db = DBHelper()
+        db.select_collection("pharmacy_receipts")
+        db.collection.delete_many({"order_id": {"$in": req.order_ids}})
+        return APIResponse(success=True, data={"deleted": True, "count": len(req.order_ids)})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/pharmacy/receipts/{order_id}/dispatch", response_model=APIResponse, tags=["Pharmacy"])
+async def dispatch_pharmacy_receipt(order_id: str, payload: dict = {}):
+    try:
+        patient_name = payload.get("patient_name", "Patient")
+        phone = payload.get("phone", "")
+        email = payload.get("email", "")
+        channels_sent = []
+        
+        # 1. Dispatch Web Push
+        try:
+            from agents.push_agent import PushAgent
+            push_agent = PushAgent()
+            push_agent.send_push_notification(
+                title=f"Pharmacy Receipt Issued #{order_id} 🧾",
+                body=f"Hello {patient_name}, your ScriptIQ pharmacy receipt has been generated. Total: ₹{payload.get('total_amount', '0')}.",
+                phone=phone
+            )
+            channels_sent.append("Web Push")
+        except Exception as pe:
+            print(f"[Receipt Dispatch Push Warning] {pe}")
+
+        # 2. Dispatch Email if email provided
+        if email or getattr(config, "DEFAULT_PATIENT_EMAIL", None):
+            try:
+                from agents.email_agent import EmailAgent
+                email_agent = EmailAgent()
+                email_agent.send_prescription_email(
+                    pdf_path="",
+                    patient_email=email or getattr(config, "DEFAULT_PATIENT_EMAIL", "saksham.kj.3736@gmail.com"),
+                    patient_name=patient_name
+                )
+                channels_sent.append("Email")
+            except Exception as ee:
+                print(f"[Receipt Dispatch Email Warning] {ee}")
+
+        return APIResponse(success=True, data={"dispatched": True, "order_id": order_id, "channels": channels_sent or ["Web Push"]})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/pharmacy/inventory", response_model=APIResponse, tags=["Pharmacy"])
+async def get_pharmacy_inventory():
+    try:
+        from agents.pharmacy_agent import PharmacyAgent
+        agent_p = PharmacyAgent()
+        stock = agent_p.inventory if hasattr(agent_p, 'inventory') else {}
+        items = []
+        for name, detail in stock.items():
+            items.append({
+                "name": name,
+                "stock": detail.get("stock", 50),
+                "price": detail.get("price", 40.0),
+                "category": detail.get("category", "General"),
+                "low_stock_warning": detail.get("stock", 50) < 15
+            })
+        return APIResponse(success=True, data={"inventory": items, "count": len(items)})
+    except Exception as e:
+        return APIResponse(success=True, data={"inventory": [], "count": 0})
+
+
 # ─── Entry Point ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+

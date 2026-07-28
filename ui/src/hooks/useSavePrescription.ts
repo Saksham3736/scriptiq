@@ -28,6 +28,8 @@ export function useSavePrescription() {
           prescription_data: draft,
           phone: draft.phone,
           patient_dob: draft.dob,
+          patient_age: draft.age,
+          patient_gender: draft.gender,
         }),
       });
 

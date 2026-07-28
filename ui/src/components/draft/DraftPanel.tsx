@@ -11,7 +11,7 @@ import ConfidenceBadge from './ConfidenceBadge';
 import DrugInteractionBanner from './DrugInteractionBanner';
 import SendPrescriptionModal from '../delivery/SendPrescriptionModal';
 import AILoadingStatusBadge from '../ui/AILoadingStatusBadge';
-import StatusTimeline from '../ui/StatusTimeline';
+import AIDraftExtractionBanner from './AIDraftExtractionBanner';
 import PatientIntakeSpace from './PatientIntakeSpace';
 import { useUIStore } from '@/store/uiStore';
 
@@ -129,8 +129,8 @@ export default function DraftPanel() {
       {/* Scrollable fields */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-        {/* Prescription Lifecycle Status Stepper */}
-        <StatusTimeline />
+        {/* Live AI Extraction Processing Shimmer Bar & Telemetry Status Banner */}
+        <AIDraftExtractionBanner />
 
         {/* Doctor Console Voice & Typed Patient Intake Space */}
         <PatientIntakeSpace />
@@ -189,6 +189,37 @@ export default function DraftPanel() {
             onChange={(v) => updateField('phone', v)}
             placeholder="+91 98765 43210"
           />
+          <FieldChip
+            label="Age (Years)"
+            value={draft.age !== undefined && draft.age !== null ? String(draft.age) : ''}
+            onChange={(v) => updateField('age', v ? parseInt(v, 10) || undefined : undefined)}
+            placeholder="e.g., 40"
+          />
+          <div>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--color-ink-500, #5B6B82)', marginBottom: '4px', fontFamily: 'Inter, sans-serif' }}>
+              Gender
+            </label>
+            <select
+              value={draft.gender || 'Male'}
+              onChange={(e) => updateField('gender', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                border: '1.5px solid var(--color-border, #E3E8EE)',
+                background: 'var(--color-bg-subtle, #FAFBFC)',
+                color: 'var(--color-ink-900, #101A2E)',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '13px',
+                outline: 'none',
+                height: '38px',
+              }}
+            >
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
           <div style={{ gridColumn: '1 / -1' }}>
             <FieldChip
               label="Patient Email"

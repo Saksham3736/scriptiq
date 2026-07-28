@@ -14,7 +14,7 @@ export interface Medicine {
 
 export interface PrescriptionDraft {
   patient_name?: string;
-  age?: string;
+  age?: number | string;
   gender?: string;
   chief_complaint?: string;
   phone?: string;

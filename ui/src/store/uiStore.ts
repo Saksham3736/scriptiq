@@ -19,6 +19,7 @@ interface UIState {
   prescriptionStatus: PrescriptionLifecycleStatus;
   globalLoading: boolean;
   isAutoPilotEnabled: boolean;
+  isTelemetryOpen: boolean;
 
   // Actions
   addToast: (toast: Omit<ToastItem, 'id'>) => string;
@@ -27,6 +28,8 @@ interface UIState {
   setGlobalLoading: (loading: boolean) => void;
   toggleAutoPilot: () => void;
   setAutoPilot: (enabled: boolean) => void;
+  toggleTelemetry: () => void;
+  setTelemetryOpen: (open: boolean) => void;
   clearToasts: () => void;
 }
 
@@ -35,6 +38,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   prescriptionStatus: 'Draft',
   globalLoading: false,
   isAutoPilotEnabled: true, // Enabled by default for seamless zero-touch workflow
+  isTelemetryOpen: false,
 
   addToast: (toast) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
@@ -79,6 +83,14 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   setAutoPilot: (enabled) => {
     set({ isAutoPilotEnabled: enabled });
+  },
+
+  toggleTelemetry: () => {
+    set((state) => ({ isTelemetryOpen: !state.isTelemetryOpen }));
+  },
+
+  setTelemetryOpen: (open) => {
+    set({ isTelemetryOpen: open });
   },
 
   clearToasts: () => {

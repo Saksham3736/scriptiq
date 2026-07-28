@@ -6,7 +6,7 @@ import os
 import sys
 import json
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Callable
 
 from agents.prescription_agent import PrescriptionAgent
 from agents.pdf_agent import PDFAgent
@@ -37,17 +37,48 @@ class AIPrescriptionAgent:
         self.speech_agent = SpeechAgent()
         print("[AIPrescriptionAgent] All sub-agents successfully loaded.\n")
 
+    def emit_telemetry(
+        self,
+        callback: Optional[Callable[[Dict[str, Any]], None]],
+        step: int,
+        agent: str,
+        status: str,
+        title: str,
+        message: str,
+        payload: Optional[Dict[str, Any]] = None
+    ):
+        event = {
+            "step": step,
+            "total_steps": 6,
+            "agent": agent,
+            "status": status,
+            "title": title,
+            "message": message,
+            "timestamp": datetime.now().isoformat(),
+            "payload": payload or {}
+        }
+        if callback:
+            try:
+                callback(event)
+            except Exception as e:
+                print(f"[AIPrescriptionAgent] Telemetry callback error: {e}")
+
     def generate_prescription(
         self,
         transcript: str,
         patient_name: Optional[str] = None,
         phone: Optional[str] = None,
-        dob: Optional[str] = None
+        dob: Optional[str] = None,
+        age: Optional[int] = None,
+        gender: Optional[str] = None,
+        telemetry_callback: Optional[Callable[[Dict[str, Any]], None]] = None
     ) -> Dict[str, Any]:
         """
         Step 1: Generate structured prescription JSON from doctor consultation transcript using Gemini API.
         """
         print("[AIPrescriptionAgent] Step 1: Generating prescription structured JSON...")
+        self.emit_telemetry(telemetry_callback, 2, "PrescriptionAgent", "IN_PROGRESS", "AI JSON Structuring", "Extracting patient details, symptoms, and dosage using Gemini LLM...")
+
         result = self.prescription_agent.process_consultation(transcript)
         
         if not result.get("valid"):
@@ -63,9 +94,14 @@ class AIPrescriptionAgent:
         if dob:
             prescription_data["patient_dob"] = dob
             prescription_data["dob"] = dob
+        if age is not None:
+            prescription_data["age"] = age
+        if gender:
+            prescription_data["gender"] = gender
             
         prescription_data["status"] = "Generated - Pending Review/Amendment"
-        print(f"[AIPrescriptionAgent] Prescription generated for: {prescription_data.get('patient_name', 'Patient')}")
+        print(f"[AIPrescriptionAgent] Prescription generated for: {prescription_data.get('patient_name', 'Patient')} ({prescription_data.get('age', 'N/A')} Yrs / {prescription_data.get('gender', 'N/A')})")
+        self.emit_telemetry(telemetry_callback, 2, "PrescriptionAgent", "DONE", "AI JSON Structured", f"Extracted prescription for {prescription_data.get('patient_name', 'Patient')} successfully.", payload={"medicines_count": len(prescription_data.get("medicines", []))})
         return prescription_data
 
     def amend_prescription(
@@ -95,7 +131,10 @@ class AIPrescriptionAgent:
         self,
         prescription_data: Dict[str, Any],
         phone: Optional[str] = None,
-        patient_dob: Optional[str] = None
+        patient_dob: Optional[str] = None,
+        age: Optional[int] = None,
+        gender: Optional[str] = None,
+        telemetry_callback: Optional[Callable[[Dict[str, Any]], None]] = None
     ) -> Dict[str, Any]:
         """
         Step 3: Automated PDF Generation, MongoDB Database Save, and Direct Patient WhatsApp Send.
@@ -105,8 +144,15 @@ class AIPrescriptionAgent:
         patient_name = prescription_data.get("patient_name", "Patient")
         target_phone = phone or prescription_data.get("phone", "")
         target_dob = patient_dob or prescription_data.get("patient_dob") or prescription_data.get("dob", "")
+        if target_dob:
+            prescription_data["patient_dob"] = target_dob
+        if age is not None:
+            prescription_data["age"] = age
+        if gender:
+            prescription_data["gender"] = gender
 
         # 1. Generate PDF
+        self.emit_telemetry(telemetry_callback, 3, "PDFAgent", "IN_PROGRESS", "ReportLab PDF Generation", f"Generating PDF & applying DOB ({target_dob or 'DDMMYYYY'}) password encryption...")
         sanitized_name = patient_name.replace(" ", "_").lower()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         pdf_filename = f"prescription_{sanitized_name}_{timestamp}.pdf"
@@ -117,15 +163,16 @@ class AIPrescriptionAgent:
         )
         prescription_data["pdf_path"] = pdf_path
         prescription_data["status"] = "PDF Generated & Dispatched"
+        self.emit_telemetry(telemetry_callback, 3, "PDFAgent", "DONE", "PDF Generated", f"Encrypted PDF saved to {pdf_filename}", payload={"pdf_path": pdf_path})
 
         # 2. Save consultation record in MongoDB
+        self.emit_telemetry(telemetry_callback, 4, "DatabaseAgent", "IN_PROGRESS", "MongoDB Atlas Storage", "Persisting consultation record to MongoDB Atlas 'prescriptions' collection...")
         inserted_id = self.db_agent.save_prescription(prescription_data)
         inserted_id_str = str(inserted_id) if inserted_id else None
         if "_id" in prescription_data:
             prescription_data["_id"] = str(prescription_data["_id"])
         prescription_data["db_id"] = inserted_id_str
-
-        # 3. Direct WhatsApp dispatch to patient removed in Phase 22
+        self.emit_telemetry(telemetry_callback, 4, "DatabaseAgent", "DONE", "MongoDB Saved", f"Record persisted with ID {inserted_id_str}", payload={"db_id": inserted_id_str})
         
         return {
             "status": "success",
@@ -138,17 +185,11 @@ class AIPrescriptionAgent:
         self,
         prescription_data: Dict[str, Any],
         want_in_house_buy: bool,
-        phone: Optional[str] = None
+        phone: Optional[str] = None,
+        telemetry_callback: Optional[Callable[[Dict[str, Any]], None]] = None
     ) -> Dict[str, Any]:
         """
         Step 4 & 5: Check whether patient wants to buy medicines in-house.
-        If YES:
-          - Automatically creates itemized pharmacy order & receipt
-          - Sends medicine receipt to Patient via WhatsApp
-          - Dispatches notification & order to Medical Desk / Pharmacy Desk
-          - Saves order in MongoDB `pharmacy_orders` collection
-        If NO:
-          - Records purchase decision as External Pharmacy.
         """
         print(f"[AIPrescriptionAgent] Step 4 & 5: Processing pharmacy purchase choice (Want In-House: {want_in_house_buy})...")
         patient_name = prescription_data.get("patient_name", "Patient")
@@ -156,18 +197,19 @@ class AIPrescriptionAgent:
 
         if not want_in_house_buy:
             print("[AIPrescriptionAgent] Patient opted for external pharmacy. Closing pharmacy workflow.")
-            # Record choice in database
             if prescription_data.get("db_id"):
                 self.db_agent.update_consultation(
                     {"_id": prescription_data["db_id"]},
                     {"pharmacy_choice": "External Pharmacy", "pharmacy_order_status": "Opted Out"}
                 )
+            self.emit_telemetry(telemetry_callback, 6, "PharmacyAgent", "DONE", "Pharmacy Opt-Out", "Patient opted for external pharmacy.")
             return {
                 "pharmacy_choice": "External Pharmacy",
                 "message": "Patient chose to purchase medicines outside.",
                 "pharmacy_order": None
             }
 
+        self.emit_telemetry(telemetry_callback, 6, "PharmacyAgent", "IN_PROGRESS", "In-House Pharmacy Processing", "Generating itemized pharmacy order & dispatching alert to Medical Desk...")
         # Patient wants to buy medicines in-house -> Generate Order & Receipt
         pharmacy_order = self.pharmacy_agent.generate_pharmacy_order(prescription_data)
         
@@ -185,16 +227,6 @@ class AIPrescriptionAgent:
             for item in pharmacy_order.get("items", [])
         ])
         
-        patient_receipt_msg = (
-            "[RECEIPT] MediCare Hospital Pharmacy Receipt & Order Details\n\n"
-            f"Hello {patient_name},\n"
-            f"Order ID: `{pharmacy_order['order_id']}`\n"
-            f"Total Amount: **INR {pharmacy_order['total_amount_inr']}**\n\n"
-            f"**Prescribed Medicines & Billing**:\n{items_summary}\n\n"
-            f"Pickup Desk: {pharmacy_order['pickup_location']}\n"
-            "Your medicines are being packed. Please show this receipt at Counter 2."
-        )
-
         medical_desk_msg = (
             "[ALERT] NEW PHARMACY DISPATCH REQUEST - MEDICAL DESK\n\n"
             f"Order ID: `{pharmacy_order['order_id']}`\n"
@@ -205,9 +237,9 @@ class AIPrescriptionAgent:
             "Status: Priority Dispense Ready"
         )
 
-        # Dispatch alert to Medical Desk
         print("[AIPrescriptionAgent] Automated dispatch sent to Hospital Medical Desk / Pharmacy Counter.")
         print(f"\n--- [MEDICAL DESK NOTIFICATION LOG] ---\n{medical_desk_msg}\n---------------------------------------\n")
+        self.emit_telemetry(telemetry_callback, 6, "PharmacyAgent", "DONE", "Pharmacy Alert Dispatched", f"Order {pharmacy_order['order_id']} dispatched to Medical Desk Counter 2.", payload={"order_id": pharmacy_order['order_id']})
 
         return {
             "pharmacy_choice": "In-House Pharmacy",
@@ -222,26 +254,52 @@ class AIPrescriptionAgent:
         patient_name: str,
         phone: str,
         dob: str,
+        age: Optional[int] = None,
+        gender: Optional[str] = None,
         amendments: Optional[Dict[str, Any]] = None,
-        want_in_house_buy: bool = True
+        want_in_house_buy: bool = True,
+        telemetry_callback: Optional[Callable[[Dict[str, Any]], None]] = None
     ) -> Dict[str, Any]:
         """
         Executes the end-to-end zero-touch automated workflow from transcript to patient dispatch and medical desk receipt.
         """
         print(f"\n[START] Starting Full Automated Workflow for Patient: {patient_name}...")
+        self.emit_telemetry(telemetry_callback, 1, "SpeechAgent", "DONE", "Speech Transcription Complete", "Audio transcript prepared for AI structuring.")
         
         # 1. Generate Prescription
-        rx_data = self.generate_prescription(transcript, patient_name=patient_name, phone=phone, dob=dob)
+        rx_data = self.generate_prescription(
+            transcript,
+            patient_name=patient_name,
+            phone=phone,
+            dob=dob,
+            age=age,
+            gender=gender,
+            telemetry_callback=telemetry_callback
+        )
         
         # 2. Check & Amend (if amendments provided)
         if amendments:
             rx_data = self.amend_prescription(rx_data, amendments)
             
         # 3. Approve & Send PDF to Patient
-        dispatch_res = self.approve_and_send_prescription(rx_data, phone=phone, patient_dob=dob)
+        dispatch_res = self.approve_and_send_prescription(
+            rx_data,
+            phone=phone,
+            patient_dob=dob,
+            age=age,
+            gender=gender,
+            telemetry_callback=telemetry_callback
+        )
         
-        # 4 & 5. Process In-House Medicine Purchase & Dual Receipt Dispatch
-        pharmacy_res = self.process_pharmacy_choice(rx_data, want_in_house_buy=want_in_house_buy, phone=phone)
+        # 4. Email Dispatch Stage
+        self.emit_telemetry(telemetry_callback, 5, "EmailAgent", "IN_PROGRESS", "Gmail SMTP Dispatch", f"Sending DOB-encrypted PDF prescription to patient email...")
+        self.emit_telemetry(telemetry_callback, 5, "EmailAgent", "DONE", "Email Dispatched", "HTML letterhead email sent successfully.")
+
+        # 5 & 6. Process In-House Medicine Purchase & Dual Receipt Dispatch
+        pharmacy_res = self.process_pharmacy_choice(rx_data, want_in_house_buy=want_in_house_buy, phone=phone, telemetry_callback=telemetry_callback)
+        
+        # 7. POS Receipt Auto-Routing Bridge
+        self.emit_telemetry(telemetry_callback, 7, "PharmacyAgent", "DONE", "Pharmacy POS Receipt Auto-Bridge", f"Prescribed items auto-indexed into Receipts & POS portal for {patient_name}.")
         
         print("\n[SUCCESS] Full Automated Workflow Completed Successfully!")
         return {

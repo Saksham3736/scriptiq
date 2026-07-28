@@ -171,8 +171,16 @@ export default function TopBar() {
         )}
       </div>
 
-      {/* Right — AI Processing Status + Search Autocomplete + Auto-Pilot Toggle + Theme Toggle + Bell + User */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Center — AI Control Capsule */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-2, 8px)',
+        padding: 'var(--space-1, 4px) var(--space-2, 8px)',
+        borderRadius: '99px',
+        background: 'var(--color-bg-subtle, #F1F5F9)',
+        border: '1px solid var(--color-border, #E2E8F0)',
+      }}>
         <AILoadingStatusBadge isProcessing={isProcessing} />
 
         {/* Auto-Pilot Mode Switch */}
@@ -180,27 +188,58 @@ export default function TopBar() {
           onClick={toggleAutoPilot}
           title={isAutoPilotEnabled ? "Auto-Pilot ACTIVE: Voice/text automatically generates PDF & automated dispatch." : "Auto-Pilot OFF: Click to enable zero-touch automated processing."}
           style={{
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: '6px',
-            padding: '5px 12px',
+            gap: 'var(--space-1, 4px)',
+            height: 'var(--btn-height-sm, 32px)',
+            padding: '0 var(--space-3, 12px)',
             borderRadius: '99px',
-            background: isAutoPilotEnabled ? 'var(--color-primary-light, #E4F3F1)' : 'var(--color-bg-subtle, #F6F8FA)',
-            border: isAutoPilotEnabled ? '1.5px solid #12897F' : '1.5px solid var(--color-border, #E3E8EE)',
-            color: isAutoPilotEnabled ? '#12897F' : 'var(--color-ink-500, #5B6B82)',
-            fontFamily: 'Space Grotesk, sans-serif',
+            background: isAutoPilotEnabled ? 'var(--color-primary-light, #E4F3F1)' : 'var(--color-bg-surface, #FFFFFF)',
+            border: isAutoPilotEnabled ? '1.5px solid var(--color-primary, #12897F)' : '1px solid var(--color-border, #E2E8F0)',
+            color: isAutoPilotEnabled ? 'var(--color-primary, #12897F)' : 'var(--color-ink-500, #64748B)',
+            fontFamily: 'var(--font-heading, Space Grotesk, sans-serif)',
             fontSize: '11px',
             fontWeight: 600,
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
+            transition: 'var(--motion-fast, 100ms cubic-bezier(0.16, 1, 0.3, 1))',
             boxShadow: isAutoPilotEnabled ? '0 2px 8px rgba(18, 137, 127, 0.2)' : 'none',
           }}
         >
-          <Zap size={13} color={isAutoPilotEnabled ? '#12897F' : '#64748B'} fill={isAutoPilotEnabled ? '#12897F' : 'none'} />
+          <Zap size={13} color={isAutoPilotEnabled ? 'var(--color-primary, #12897F)' : '#64748B'} fill={isAutoPilotEnabled ? 'var(--color-primary, #12897F)' : 'none'} />
           <span>{isAutoPilotEnabled ? 'Auto-Pilot ON' : 'Auto-Pilot OFF'}</span>
         </button>
 
+        {/* Language Selector Dropdown */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <select
+            value={useRecordingStore((s) => s.language)}
+            onChange={(e) => useRecordingStore.getState().setLanguage(e.target.value as any)}
+            title="Select Consultation Audio & Speech STT Language"
+            style={{
+              height: 'var(--btn-height-sm, 32px)',
+              padding: '0 var(--space-2, 8px)',
+              borderRadius: '99px',
+              border: '1px solid var(--color-border, #E2E8F0)',
+              background: 'var(--color-bg-surface, #FFFFFF)',
+              color: 'var(--color-ink-900, #0F172A)',
+              fontSize: '11px',
+              fontWeight: 600,
+              fontFamily: 'var(--font-heading, Space Grotesk, sans-serif)',
+              cursor: 'pointer',
+              outline: 'none',
+            }}
+          >
+            <option value="en">🇬🇧 English</option>
+            <option value="hinglish">🇮🇳 Hinglish</option>
+            <option value="hi">🇮🇳 Hindi</option>
+          </select>
+        </div>
+
         <PatientSearchAutocomplete />
+      </div>
+
+      {/* Right — User Profile & Utilities Capsule */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2, 8px)' }}>
 
         {/* Theme Toggle Button */}
         <button

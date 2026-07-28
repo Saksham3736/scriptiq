@@ -12,7 +12,7 @@
 |---|---|
 | **Product Name** | ScriptIQ |
 | **Project Root** | `s:/AI-prescription-agent/` |
-| **Phase** | Phase 28 Complete (GitHub Production Repository Deployed — https://github.com/Saksham3736/scriptiq.git) |
+| **Phase** | Phase 29 Complete (System Core Repair & End-to-End Delivery Realization) |
 | **LLM Model** | `gemini-2.0-flash` (primary), `gemma-4-26b-a4b-it` (fallback 1) |
 | **Database** | MongoDB Atlas (`Agent_Doctor` db) |
 | **Backend** | Python (agents + `ai_prescription_agent.py`) → FastAPI (`server.py`) |
@@ -211,7 +211,19 @@ Per `structure.md §9 Build Order`:
 25. **P31: Automated ICD-10 Medical Billing Auto-Coder** (Planned) — ICD-10 diagnosis database & Gemini auto-coder mapping with 1-click autocomplete chips
 26. **P32: Interactive Vitals & Chronic Disease Analytics** (Planned) — Recharts longitudinal vitals tracking (BP, Glucose, Weight, SpO2) in Patient Dossier
 27. **P33: Offline-First PWA with IndexedDB Queue** (Planned) — IndexedDB audio blob queue (`idb-keyval`) and background sync on Wi-Fi reconnection
-28. **P34: Pediatric & Renal Dosage Safety Calculator** (Planned) — mg/kg pediatric dosage and GFR clearance calculation engine inside `MedicineRow.tsx`
+28. **P34: In-House Pharmacy Receipt & Template Management Suite** — `/receipts` POS velocity mode, UPI QR payments, 80mm thermal receipts, template customizer, and batch deletion REST endpoints.
+29. **P35: Seamless Prescription-to-Receipt POS Bridge & Floating Real-Time AI Telemetry Drawer** — Direct MongoDB receipt creation on prescription approval, 1-Click `⚡ Load Recent Prescription` POS item pre-loader (`GET /api/consultations/recent`), Master Agent Phase 7 receipt auto-routing, and sidebar dockable `AutoPilotTelemetryConsole.tsx` with live process auto-expansion.
+30. **P36: Universal Patient Age & Gender Clinical Demographics Integration** — Pass-through binding of `age` and `gender` across Pydantic schemas, `server.py` endpoints, `ai_prescription_agent.py` master orchestrator, ReportLab PDF tables (`Age / Gender: {age} Yrs / {gender}`), Doctor Console intake state (`PatientIntakeSpace.tsx`), History dossier cards, Patient Portal, and Pharmacy POS billing.
+31. **P37: Removal of Redundant Status Stepper UX & Consolidation into AI Telemetry Drawer** — Removal of bulky horizontal `<StatusTimeline />` banner from `DraftPanel.tsx` and full consolidation of lifecycle progress into the sidebar-docked `AutoPilotTelemetryConsole.tsx` master agent stream.
+32. **P38: Live AI Processing Shimmer & Telemetry Active Status Banner** — Dual-state `<AIDraftExtractionBanner.tsx>` component rendering an animated shimmer progress line and rotating step indicators during extraction (`isProcessing`), and a compact status pill badge (`"🤖 AI Telemetry Active & Monitoring"`) with 1-click sidebar drawer trigger after completion.
+33. **P39: Isolated 80mm Thermal Receipt Print Engine & UI Element Hiding** — Implemented `@media print` CSS element isolation suppressing all surrounding application UI elements (Sidebar, TopBar, POS controls, input fields, action buttons) so that clicking the Print button (`<Printer />`) outputs ONLY the official 80mm thermal receipt (`#thermal-receipt`) cleanly to local hardware/virtual printers.
+34. **P40: Official Letterhead Receipt Page (`/receipt/:orderId`) POS Print Mapping & Master System Inventory** — Connected POS Print button on `ReceiptsManagementPage.tsx` to issue receipt via REST API (`POST /api/pharmacy/receipts`) and launch the official letterhead receipt page (`/receipt/${orderId}?autoprint=true`) in a new tab with automatic print invocation. Formatted complete 4-part system feature inventory in `availability_of_features.md` and created ordered master roadmap `index.new.md`.
+35. **P41: Refund, Returns & Credit Voucher Studio UI Wireup** (Planned) — Wire "Return / Refund" button to open `ProcessReturnModal.tsx` for partial/full drug returns and credit vouchers (`REFUND-YYYYMMDD-XXXX`).
+36. **P42: Interactive Receipt Editor & Pricing Override Suite** (Planned) — Wire "Edit Receipt" button in history table to open `EditReceiptModal.tsx` for price overrides and discounts (0–50%).
+37. **P43: Interactive Popover Receipt Inspector** (Planned) — Wire history table row click events to open `ReceiptDetailModal.tsx` popover inspector.
+38. **P44: Manual AI Extraction Model Selector & Fallback Console** (Planned) — Add AI Model Selector dropdown in `TopBar.tsx` and `DraftPanel.tsx`.
+39. **P45: 1-Click Patient Web Push Test Trigger in Doctor Console** (Planned) — Add "Test Push Notification" button inside `SendPrescriptionModal.tsx`.
+40. **P46: Interactive Medication Alarm Timers & Scheduled Push Reminders** (Planned) — Wire visual dosage cards in `PatientPortal.tsx` to set active browser alarm timers.
 
 ---
 

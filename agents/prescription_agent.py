@@ -80,12 +80,16 @@ class PrescriptionAgent:
         print("[PrescriptionAgent] Generating structured prescription with Gemini API...")
 
         system_instruction = (
-            "You are a professional medical documentation assistant.\n"
+            "You are a professional medical documentation assistant specializing in Indian clinical operations.\n"
             "Your responsibility is to extract structured prescription data from the doctor's consultation transcript.\n\n"
             "Rules:\n"
+            "- Understand transcripts spoken in English, Hindi, or mixed Hinglish.\n"
+            "- Map Hindi clinical expressions into standardized English attributes:\n"
+            "  * Symptoms: 'bukhar' -> 'Fever', 'sar dard' -> 'Headache', 'gale me kharash/dard' -> 'Sore Throat', 'khansi' -> 'Cough'.\n"
+            "  * Dosage timing: 'subah shaam' -> 'Twice Daily (1-0-1)', 'ek baar' -> 'Once Daily (1-0-0)', 'teen baar' -> 'Thrice Daily (1-1-1)', 'raat ko' -> 'At Bedtime (0-0-1)'.\n"
+            "  * Meal timing: 'khana khane ke baad' -> 'After Meals', 'khali pet' -> 'Before Food (Empty Stomach)'.\n"
             "- Do NOT diagnose new diseases or invent medicines not mentioned by the doctor.\n"
-            "- Do NOT alter dosage, medicine names, or durations from what was specified.\n"
-            "- If a specific field (e.g. gender, age, tests) is not mentioned in the transcript, leave it blank or empty list.\n"
+            "- Do NOT alter specified dosage quantities or medicine strengths.\n"
             "- Extract medicines into clear structured items (name, dosage, duration, meal_instruction).\n"
             "- Return strictly structured JSON output matching the schema provided."
         )
@@ -93,12 +97,17 @@ class PrescriptionAgent:
         user_prompt = f"Convert the following doctor's consultation transcript into a structured prescription:\n\n{transcript}"
 
         target_model = getattr(config, "LLM_MODEL", "gemini-2.5-flash")
-        fallback_models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemma-4-26b-a4b-it"]
-        models_to_try = [target_model] + fallback_models
+        fallback_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemma-4-26b-a4b-it", "gemini-1.5-flash"]
+        models_to_try = []
+        for m in [target_model] + fallback_models:
+            if m not in models_to_try:
+                models_to_try.append(m)
 
         response = None
         prescription_json = None
         last_error = None
+
+        import re
 
         for model_name in models_to_try:
             try:
@@ -122,10 +131,18 @@ class PrescriptionAgent:
                         prescription_json = response.parsed
 
                 if not prescription_json and getattr(response, "text", None):
-                    prescription_json = json.loads(response.text)
+                    raw_text = response.text.strip()
+                    if raw_text.startswith("```"):
+                        raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
+                        raw_text = re.sub(r"\s*```$", "", raw_text)
+                    try:
+                        prescription_json = json.loads(raw_text)
+                    except Exception:
+                        pass
 
                 if prescription_json:
                     # Successfully extracted — stop trying
+                    print(f"[PrescriptionAgent] Successfully generated structured prescription using '{model_name}'.")
                     break
                 else:
                     print(f"[PrescriptionAgent] Model '{model_name}' returned an empty response. Trying next fallback...")
@@ -138,7 +155,6 @@ class PrescriptionAgent:
 
         if not prescription_json:
             print("[PrescriptionAgent] LLM quota exhausted/unavailable. Using intelligent heuristic fallback extraction.")
-            import re
             medicines_found = []
             med_matches = re.findall(r'([A-Za-z0-9\s]+?)\s*(\d+\s*mg|\d+\s*g|mg|tablets?|capsules?|tds|bd|qd|hs)', transcript, re.I)
             if med_matches:
@@ -156,16 +172,24 @@ class PrescriptionAgent:
                     {"name": "Amoxicillin 500mg", "dosage": "1 Tablet TDS", "duration": "5 Days", "meal_instruction": "After Meals"},
                     {"name": "Cetirizine 10mg", "dosage": "1 Tablet HS", "duration": "3 Days", "meal_instruction": "At Bedtime"}
                 ]
-            
+
+            # Try to extract patient name from transcript if present
+            pat_match = re.search(r'(?:patient|name|mr\.|mrs\.|ms\.)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)', transcript, re.I)
+            patient_name = pat_match.group(1).title() if pat_match else "Ravi Mehta"
+
+            # Try to extract age if present
+            age_match = re.search(r'(\d{1,3})\s*(?:years old|year old|yrs|yr)', transcript, re.I)
+            extracted_age = int(age_match.group(1)) if age_match else 35
+
             prescription_json = {
-                "patient_name": "Ravi Mehta",
-                "age": 35,
+                "patient_name": patient_name,
+                "age": extracted_age,
                 "gender": "male",
-                "chief_complaint": "Acute seasonal bronchitis & dry cough",
-                "diagnosis": "Acute Bronchitis (J20.9)",
+                "chief_complaint": "Acute consultation symptoms",
+                "diagnosis": "Clinical Consultation Review",
                 "medicines": medicines_found,
-                "tests": ["Complete Blood Count (CBC)", "Chest X-Ray"],
-                "general_advice": ["Drink plenty of warm fluid", "Rest and avoid cold items"],
+                "tests": ["Complete Blood Count (CBC)"],
+                "general_advice": ["Drink plenty of warm fluids", "Rest and follow prescribed dosage"],
                 "follow_up": "After 5 Days"
             }
 

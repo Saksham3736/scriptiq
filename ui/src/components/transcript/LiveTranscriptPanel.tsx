@@ -95,6 +95,27 @@ export default function LiveTranscriptPanel({ onExtractionComplete }: Transcript
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <select
+            value={useRecordingStore((s) => s.language)}
+            onChange={(e) => useRecordingStore.getState().setLanguage(e.target.value as any)}
+            title="Audio STT Language Mode"
+            style={{
+              padding: '3px 8px',
+              borderRadius: '6px',
+              border: '1px solid var(--color-border, #E3E8EE)',
+              background: 'var(--color-bg-subtle, #F6F8FA)',
+              color: 'var(--color-ink-900, #101A2E)',
+              fontSize: '11px',
+              fontWeight: 600,
+              fontFamily: 'Space Grotesk, sans-serif',
+              cursor: 'pointer',
+              outline: 'none',
+            }}
+          >
+            <option value="en">🇬🇧 EN</option>
+            <option value="hinglish">🇮🇳 Hinglish</option>
+            <option value="hi">🇮🇳 Hindi</option>
+          </select>
           <span style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: isConnected ? '#12897F' : '#5B6B82' }}>
             {isConnected ? <Wifi size={13} color="#12897F" /> : <WifiOff size={13} color="#5B6B82" />}
             {isConnected ? 'Live WS' : 'Offline WS'}

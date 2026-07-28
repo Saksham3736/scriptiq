@@ -292,18 +292,68 @@ export default function PatientDashboardPage() {
                       )}
                     </div>
 
-                    {/* Prescribed medicines list */}
+                    {/* Prescribed medicines list with visual dosage badges & meal timing tags */}
                     {(p.medicines || []).length > 0 && (
                       <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--color-border, #E3E8EE)' }}>
                         <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-ink-900, #101A2E)', marginBottom: '8px' }}>
-                          Prescribed Medicines:
+                          Prescribed Medicines & Dosage Visual Schedule:
                         </p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                          {p.medicines.map((m: any, mIdx: number) => (
-                            <span key={mIdx} style={{ padding: '4px 10px', borderRadius: '6px', background: 'var(--color-bg-surface, #FFFFFF)', border: '1px solid var(--color-border, #E3E8EE)', fontSize: '12px', color: 'var(--color-ink-900, #101A2E)', fontFamily: 'IBM Plex Mono, monospace' }}>
-                              💊 {m.name} ({m.dosage || 'As directed'})
-                            </span>
-                          ))}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {p.medicines.map((m: any, mIdx: number) => {
+                            const dosageText = String(m.dosage || '');
+                            const isTwice = dosageText.includes('1-0-1') || dosageText.toLowerCase().includes('twice');
+                            const isOnce = dosageText.includes('1-0-0') || dosageText.toLowerCase().includes('once');
+                            const isNight = dosageText.includes('0-0-1') || dosageText.toLowerCase().includes('bedtime');
+                            const isBeforeFood = (m.meal_instruction || '').toLowerCase().includes('before') || (m.meal_instruction || '').toLowerCase().includes('khali');
+
+                            return (
+                              <div key={mIdx} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px 14px',
+                                borderRadius: '8px',
+                                background: 'var(--color-bg-surface, #FFFFFF)',
+                                border: '1px solid var(--color-border, #E3E8EE)',
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ fontSize: '14px' }}>💊</span>
+                                  <div>
+                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#12897F', fontFamily: 'Space Grotesk, sans-serif' }}>
+                                      {m.name}
+                                    </span>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-ink-500, #5B6B82)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                                      {m.dosage} {m.duration ? `· ${m.duration}` : ''}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  {/* Meal Instruction Badge */}
+                                  {m.meal_instruction && (
+                                    <span style={{
+                                      padding: '3px 8px',
+                                      borderRadius: '99px',
+                                      fontSize: '10px',
+                                      fontWeight: 600,
+                                      background: isBeforeFood ? '#FCF1DE' : '#E4F3F1',
+                                      color: isBeforeFood ? '#D97706' : '#12897F',
+                                      border: isBeforeFood ? '1px solid #F59E0B' : '1px solid #12897F',
+                                    }}>
+                                      {m.meal_instruction}
+                                    </span>
+                                  )}
+
+                                  {/* Visual Dosage Badges */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#F1F5F9', padding: '3px 8px', borderRadius: '6px', fontSize: '11px' }}>
+                                    <span title="Morning">🌅 {isOnce || isTwice ? '1' : '0'}</span>
+                                    <span title="Afternoon">☀️ 0</span>
+                                    <span title="Evening/Night">🌙 {isTwice || isNight ? '1' : '0'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
