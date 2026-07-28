@@ -8,13 +8,17 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Environment variables (secret keys)
+# Environment variables & Private Keys (Secrets)
 .env
+*.pem
+*.key
 
-# Generated Output / Prescriptions
-output/prescriptions/*
+# Generated Output / Prescriptions / Test Audio
+output/*
 !output/prescriptions/.gitkeep
 temp_audio/
+*.wav
+*.mp3
 
 # Frontend dependencies and builds
 node_modules/
@@ -22,7 +26,7 @@ node_modules/
 dist/
 **/dist/
 
-# IDEs
+# IDEs & System files
 .vscode/
 .idea/
 *.suo
@@ -30,3 +34,4 @@ dist/
 *.njsproj
 *.sln
 *.swp
+.DS_Store
