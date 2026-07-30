@@ -7,6 +7,15 @@ export interface APIResponse<T = unknown> {
   error?: string;
 }
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
+export function getApiUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${cleanPath}`;
+}
+
 export async function fetchAndValidate<T>(
   url: string,
   options: RequestInit = {},
@@ -19,7 +28,8 @@ export async function fetchAndValidate<T>(
       headers.set('Authorization', `Bearer ${token}`);
     }
 
-    const res = await fetch(url, { ...options, headers });
+    const fullUrl = getApiUrl(url);
+    const res = await fetch(fullUrl, { ...options, headers });
     if (res.status === 401) {
       console.warn('[apiClient] 401 Unauthorized — Logging out user');
       useAuthStore.getState().logout();
