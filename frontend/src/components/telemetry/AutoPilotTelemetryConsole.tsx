@@ -42,7 +42,7 @@ const DEFAULT_INITIAL_EVENTS: TelemetryEvent[] = [
     agent: 'SpeechAgent',
     status: 'DONE',
     title: 'Audio STT & Refinement',
-    message: 'Faster-Whisper STT engine online & normalized.',
+    message: 'Gemini Cloud Multimodal STT engine online & normalized.',
     timestamp: '00:00:01',
   },
   {

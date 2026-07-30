@@ -4,9 +4,6 @@ websockets
 python-multipart
 pydantic
 google-genai
-faster-whisper
-sounddevice
-numpy
 reportlab
 pymongo
 python-dotenv

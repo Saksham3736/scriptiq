@@ -5,7 +5,7 @@ import { create } from 'zustand';
 export type RecordingStatus = 'idle' | 'recording' | 'paused' | 'processing' | 'done' | 'error';
 export type InputMode = 'voice' | 'text';
 export type LanguageMode = 'en' | 'hinglish' | 'hi';
-export type AIModelMode = 'gemini-2.5-flash' | 'gemini-3.6-flash' | 'gemma-4-26b' | 'heuristic-regex';
+export type AIModelMode = 'gemini-2.5-flash' | 'gemini-3.5-flash' | 'gemini-3-flash' | 'gemini-2.5-flash-lite' | 'heuristic-regex';
 
 interface RecordingState {
   status: RecordingStatus;

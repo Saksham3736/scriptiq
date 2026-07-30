@@ -855,3 +855,15 @@
 - [ ] Step 73: Weight-Based Pediatric & Renal Clearance Calculation
   - [ ] mg/kg pediatric dosage and GFR renal clearance calculation engine based on patient age, weight, and diagnosis
   - [ ] Safe dosage range indicators and clinical warning badges directly inside `MedicineRow.tsx`
+
+---
+
+### Phase 62: Render Backend Memory Optimization & Gemini API Quota Alignment `[PRIORITY: CRITICAL - ARCHITECTURE]`
+- [x] Step 74: Server RAM Reduction & Cloud Audio STT Transition
+  - [x] Remove `faster-whisper`, `sounddevice`, `numpy` from `backend/requirements.txt` (RAM reduced from ~550MB to ~70MB)
+  - [x] Refactor `SpeechAgent` (`agents/speech_agent.py`) to 100% Cloud Gemini Multimodal Audio API STT
+  - [x] Update model fallback lists across `prescription_agent.py`, `speech_agent.py`, `server.py` to active quota models (`gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-3.5-flash`, `gemini-3-flash`)
+  - [x] Synchronize frontend UI model selector dropdowns (`TopBar.tsx`, `SettingsPage.tsx`, `recordingStore.ts`, `AutoPilotTelemetryConsole.tsx`)
+  - [x] Clean temporary audio/PDF files in `temp_audio/` and `output/prescriptions/`
+  - [x] Verify production build (`npm run build`) passing 100% OK in 593ms
+

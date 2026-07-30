@@ -47,15 +47,18 @@ class PrescriptionAgent:
 
     def _map_to_api_model(self, model_name: str) -> str:
         mapping = {
-            "gemini-2.5-flash": "gemini-2.0-flash",
-            "gemini-3.6-flash": "gemini-2.0-flash",
-            "gemma-4-26b": "gemma-2-27b-it",
+            "gemini-2.5-flash": "gemini-2.5-flash",
+            "gemini-3.5-flash": "gemini-3.5-flash",
+            "gemini-3.6-flash": "gemini-3.5-flash",
+            "gemini-3-flash": "gemini-3-flash",
+            "gemma-4-26b": "gemini-2.5-flash-lite",
         }
         return mapping.get(model_name, model_name)
 
     def _heuristic_fallback(self, transcript: str) -> dict:
         print("[PrescriptionAgent] Executing intelligent heuristic fallback extraction.")
         medicines_found = []
+        import re
         med_matches = re.findall(r'([A-Za-z0-9\s]+?)\s*(\d+\s*mg|\d+\s*g|mg|tablets?|capsules?|tds|bd|qd|hs)', transcript, re.I)
         if med_matches:
             for m in med_matches:
@@ -96,7 +99,7 @@ class PrescriptionAgent:
     def generate_prescription(self, transcript: str, model_override: str = None) -> dict:
         """
         Send transcript to Gemini API and receive structured prescription JSON matching PrescriptionSchema.
-        Supports model_override: 'gemini-2.5-flash', 'gemini-3.6-flash', 'gemma-4-26b', 'heuristic-regex'.
+        Supports model_override: 'gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-2.5-flash-lite', 'heuristic-regex'.
         """
         if not transcript or not transcript.strip():
             raise ValueError("Transcript is empty. Please provide a valid consultation transcript.")
@@ -118,10 +121,6 @@ class PrescriptionAgent:
             "Your responsibility is to extract structured prescription data from the doctor's consultation transcript.\n\n"
             "Rules:\n"
             "- Understand transcripts spoken in English, Hindi, or mixed Hinglish.\n"
-            "- Map Hindi clinical expressions into standardized English attributes:\n"
-            "  * Symptoms: 'bukhar' -> 'Fever', 'sar dard' -> 'Headache', 'gale me kharash/dard' -> 'Sore Throat', 'khansi' -> 'Cough'.\n"
-            "  * Dosage timing: 'subah shaam' -> 'Twice Daily (1-0-1)', 'ek baar' -> 'Once Daily (1-0-0)', 'teen baar' -> 'Thrice Daily (1-1-1)', 'raat ko' -> 'At Bedtime (0-0-1)'.\n"
-            "  * Meal timing: 'khana khane ke baad' -> 'After Meals', 'khali pet' -> 'Before Food (Empty Stomach)'.\n"
             "- Do NOT diagnose new diseases or invent medicines not mentioned by the doctor.\n"
             "- Do NOT alter specified dosage quantities or medicine strengths.\n"
             "- Extract medicines into clear structured items (name, dosage, duration, meal_instruction).\n"
@@ -130,7 +129,7 @@ class PrescriptionAgent:
 
         user_prompt = f"Convert the following doctor's consultation transcript into a structured prescription:\n\n{transcript}"
 
-        fallback_models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemma-2-27b-it"]
+        fallback_models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash", "gemini-1.5-flash"]
         raw_models_to_try = [target_model] + fallback_models
         models_to_try = []
         for rm in raw_models_to_try:

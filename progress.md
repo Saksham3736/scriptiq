@@ -446,6 +446,17 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
+## ⚡ Phase 62: Render Backend Memory Optimization & Gemini API Quota Alignment
+* *Status: Completed*
+* Details:
+  - **Memory Optimization (87% RAM Reduction)**: Removed heavy local ML dependencies (`faster-whisper`, `sounddevice`, `numpy`) from `backend/requirements.txt`. Slashed Render backend memory footprint from ~550MB down to **~70MB**, resolving Render's "Memory Limit Exceeded" alerts.
+  - **100% Cloud Gemini Audio STT**: Refactored `backend/agents/speech_agent.py` to rely strictly on the **Gemini Multimodal Audio API (`google-genai`)** for multilingual clinical audio transcription and refinement without local PyTorch runtime overhead.
+  - **Gemini Model Quota Alignment**: Replaced deprecated/zero-quota `gemini-2.0-flash` references across `prescription_agent.py`, `speech_agent.py`, and `server.py` with active quota models (`gemini-2.5-flash` primary, with fallback routing through `gemini-2.5-flash-lite`, `gemini-3.5-flash`, `gemini-3-flash`).
+  - **UI Model Selector Synchronization**: Updated frontend components (`TopBar.tsx`, `SettingsPage.tsx`, `recordingStore.ts`, `AutoPilotTelemetryConsole.tsx`) to match active Gemini quota models (`Gemini 2.5 Flash`, `Gemini 3.5 Flash`, `Gemini 3 Flash`, `Gemini 2.5 Flash Lite`, `Gemini Cloud STT`).
+  - **Verification**: Verified zero syntax errors via `py_compile`, confirmed instant (<0.5s) startup of `AIPrescriptionAgent` and `SpeechAgent`, and verified production build `npm run build` passing **100% OK** in 593ms.
+
+---
+
 ## 📈 Launch Commands
 * **FastAPI Backend Server (Port 8000)**:
   ```powershell

@@ -17,8 +17,8 @@ You are working on **ScriptIQ** (AI Prescription & Clinical Operations Suite).
    - **Backend**: Python FastAPI (`backend/server.py`), MongoDB Atlas (`backend/database/mongodb.py`), Render Deployment (`https://scriptiq-backend.onrender.com`).
    - **Frontend**: React 18, Vite, TypeScript, TailwindCSS/Vanilla CSS Tokens, Zustand State Stores (`frontend/src/`), Vercel Deployment (`https://scriptiq-sk.vercel.app`).
    - **AI Agent Pool**:
-     - `SpeechAgent`: Audio STT & clinical term normalization (`backend/agents/speech_agent.py`).
-     - `PrescriptionAgent`: Gemini API structured JSON extraction (`gemini-2.0-flash`, `gemma-4-26b`) with DOB (`patient_dob`), email parsing, and instant fallback (`backend/agents/prescription_agent.py`).
+     - `SpeechAgent`: 100% Cloud Audio STT & clinical term normalization (`backend/agents/speech_agent.py`).
+     - `PrescriptionAgent`: Gemini API structured JSON extraction (`gemini-2.5-flash`, `gemini-2.5-flash-lite`, `gemini-3.5-flash`) with DOB (`patient_dob`), email parsing, and instant fallback (`backend/agents/prescription_agent.py`).
      - `PDFAgent`: ReportLab PDF generation with dynamic letterhead and 3-tier password encryption (`DOB` -> `Phone-Last-4` -> `1234`).
      - `EmailAgent`: Production Gmail SMTP HTML email dispatch with PDF security banner (`scriptiq.sk@gmail.com` -> `saksham.kj.3736@gmail.com`).
      - `PushAgent`: Multi-device Web Push notifications (`pywebpush`, VAPID keys, WNS/FCM `ttl=86400`).

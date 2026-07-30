@@ -44,9 +44,9 @@ export default function SettingsPage() {
   const [headerLayout, setHeaderLayout] = useState('center');
 
   // AI & Speech Settings State
-  const [llmModel, setLlmModel] = useState('gemini-2.0-flash');
-  const [fallbackModel, setFallbackModel] = useState('gemma-4-26b-a4b-it');
-  const [sttModel, setSttModel] = useState('tiny');
+  const [llmModel, setLlmModel] = useState('gemini-2.5-flash');
+  const [fallbackModel, setFallbackModel] = useState('gemini-3.5-flash');
+  const [sttModel, setSttModel] = useState('gemini-cloud');
   const [autoRefine, setAutoRefine] = useState(true);
 
   const [encryptPdf, setEncryptPdf] = useState(true);
@@ -395,24 +395,25 @@ export default function SettingsPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   <FormField label="Primary Language Model (LLM)">
                     <select value={llmModel} onChange={(e) => setLlmModel(e.target.value)} style={inputStyle}>
-                      <option value="gemini-2.0-flash">Google Gemini 2.0 Flash (Recommended)</option>
-                      <option value="gemini-1.5-flash">Google Gemini 1.5 Flash</option>
-                      <option value="gemma-4-26b-a4b-it">Gemma 4 26B Local / Cloud</option>
+                      <option value="gemini-2.5-flash">Google Gemini 2.5 Flash (Recommended)</option>
+                      <option value="gemini-3.5-flash">Google Gemini 3.5 Flash</option>
+                      <option value="gemini-3-flash">Google Gemini 3 Flash</option>
+                      <option value="gemini-2.5-flash-lite">Google Gemini 2.5 Flash Lite</option>
                     </select>
                   </FormField>
 
                   <FormField label="Automated Fallback Model">
                     <select value={fallbackModel} onChange={(e) => setFallbackModel(e.target.value)} style={inputStyle}>
-                      <option value="gemma-4-26b-a4b-it">Gemma 4 26B (High Accuracy Fallback)</option>
+                      <option value="gemini-3.5-flash">Gemini 3.5 Flash (High Accuracy Fallback)</option>
+                      <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
+                      <option value="gemini-3-flash">Gemini 3 Flash</option>
                       <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                     </select>
                   </FormField>
 
-                  <FormField label="Speech-to-Text (STT) Whisper Model Size">
+                  <FormField label="Speech-to-Text (STT) Engine">
                     <select value={sttModel} onChange={(e) => setSttModel(e.target.value)} style={inputStyle}>
-                      <option value="tiny">Whisper Tiny (Fastest Real-time STT)</option>
-                      <option value="small">Whisper Small (Higher Accuracy)</option>
-                      <option value="base">Whisper Base (Balanced)</option>
+                      <option value="gemini-cloud">Gemini Cloud Multimodal STT (Zero RAM / Fast)</option>
                     </select>
                   </FormField>
 

@@ -1,6 +1,5 @@
 import os
 import wave
-from faster_whisper import WhisperModel
 from google import genai
 import config
 
@@ -8,12 +7,10 @@ class SpeechAgent:
     def __init__(self, model_size="small"):
         """
         Initialize the Speech Agent.
-        Uses Gemini Multimodal Audio API for direct audio-to-text decoding,
-        with faster-whisper (small/base model) as a high-accuracy local fallback.
+        Uses Gemini Multimodal Audio API for direct audio-to-text decoding and clinical refinement.
         """
         self.model_size = model_size
-        self._whisper_model = None
-        print(f"[SpeechAgent] Initialized with model configuration size: '{model_size}'")
+        print(f"[SpeechAgent] Initialized SpeechAgent (Cloud Audio STT)")
         
         # Initialize Gemini Client if API key is present
         self.gemini_client = None
@@ -22,16 +19,6 @@ class SpeechAgent:
             self.gemini_client = genai.Client(api_key=config.GEMINI_API_KEY)
         else:
             print("[SpeechAgent] Warning: Gemini API Key not set.")
-
-    @property
-    def whisper_model(self):
-        """
-        Lazy-load Whisper model on demand.
-        """
-        if self._whisper_model is None:
-            print(f"[SpeechAgent] Lazily loading Whisper model ({self.model_size})...")
-            self._whisper_model = WhisperModel(self.model_size, device="cpu", compute_type="float32")
-        return self._whisper_model
 
     def speech_to_text(self, audio_path: str, language: str = "en") -> str:
         """
@@ -43,8 +30,8 @@ class SpeechAgent:
 
         # 1. Try Gemini Multimodal Audio transcription with fallback model chain
         if self.gemini_client:
-            target_model = getattr(config, "LLM_MODEL", "gemini-2.0-flash")
-            fallback_models = ["gemini-2.0-flash", "gemma-4-26b-a4b-it", "gemini-1.5-flash"]
+            target_model = getattr(config, "LLM_MODEL", "gemini-2.5-flash")
+            fallback_models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash", "gemini-1.5-flash"]
             models_to_try = []
             for m in [target_model] + fallback_models:
                 if m not in models_to_try:
@@ -87,26 +74,8 @@ class SpeechAgent:
                 except Exception as e:
                     print(f"[SpeechAgent] Model '{model_name}' STT warning: {e}. Trying next fallback...")
 
-        # 2. High-accuracy local Whisper fallback with medical initial prompt
-        try:
-            whisper_lang = "hi" if language in ["hi", "hinglish"] else "en"
-            medical_vocab_prompt = (
-                "Doctor consultation prescription transcript: Dolo 650mg, Pan 40, Combiflam, Azithromycin 500mg, "
-                "Augmentin 625mg, Amoxicillin, Cetirizine 10mg, Paracetamol, PCM, BD, TDS, HS, OD, QID, "
-                "Twice Daily, Once Daily, After Meals, Before Food, Empty Stomach, Fever, Headache, Cough."
-            )
-            segments, info = self.whisper_model.transcribe(
-                audio_path,
-                beam_size=5,
-                language=whisper_lang,
-                initial_prompt=medical_vocab_prompt
-            )
-            raw_transcript = " ".join([segment.text for segment in segments]).strip()
-            print(f"[SpeechAgent] Whisper transcript ({whisper_lang}): '{raw_transcript}'")
-            return raw_transcript
-        except Exception as e:
-            print(f"[SpeechAgent] Whisper transcription error: {e}")
-            return ""
+        print("[SpeechAgent] Speech-to-text unable to decode audio via Gemini API client.")
+        return ""
 
     def refine_transcript(self, raw_transcript: str, language: str = "en") -> str:
         """
@@ -131,8 +100,8 @@ class SpeechAgent:
             f"Raw Transcript:\n{raw_transcript}"
         )
 
-        target_model = getattr(config, "LLM_MODEL", "gemini-2.0-flash")
-        fallback_models = ["gemini-2.0-flash", "gemma-4-26b-a4b-it", "gemini-1.5-flash"]
+        target_model = getattr(config, "LLM_MODEL", "gemini-2.5-flash")
+        fallback_models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.5-flash", "gemini-3-flash", "gemini-1.5-flash"]
         models_to_try = []
         for m in [target_model] + fallback_models:
             if m not in models_to_try:

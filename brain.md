@@ -12,12 +12,12 @@
 |---|---|
 | **Product Name** | ScriptIQ |
 | **Project Root** | `s:/AI-prescription-agent/` |
-| **Phase** | Phase 29 Complete (System Core Repair & End-to-End Delivery Realization) |
-| **LLM Model** | `gemini-2.0-flash` (primary), `gemma-4-26b-a4b-it` (fallback 1) |
+| **Phase** | Phase 62 Complete (Render Backend Memory Optimization & Gemini API Quota Alignment) |
+| **LLM Model** | `gemini-2.5-flash` (primary), `gemini-2.5-flash-lite` (fallback 1), `gemini-3.5-flash` (fallback 2) |
 | **Database** | MongoDB Atlas (`Agent_Doctor` db) |
 | **Backend** | Python (agents + `ai_prescription_agent.py`) → FastAPI (`server.py`) |
 | **Frontend** | React 18 + Vite + TypeScript (React Router v6 + Zustand) |
-| **Testing** | `tests/test_ai_prescription_agent.py` (unittest) |
+| **Testing** | `tests/test_pdf.py`, `tests/test_email.py` (unittest) |
 | **Virtual Env** | `.venv\Scripts\python.exe` |
 | **Config** | `config.py` → `.env` |
 | **Active Buffer** | [`next.md`](file:///s:/AI-prescription-agent/next.md) (holds active plan & user tweaks before migrating to `progress.md`) |
@@ -36,7 +36,7 @@
 
 ## 2. What ScriptIQ Does (In One Paragraph)
 
-ScriptIQ is an AI-powered clinical assistant. A doctor speaks or types during a consultation. The **Master Agent** (`ai_prescription_agent.py`) captures that input, converts speech to text via `SpeechAgent` (Whisper + Gemini transcript cleanup), extracts structured clinical data (symptoms, diagnosis, medicines, dosage, tests, advice, follow-up) via `PrescriptionAgent` using `gemma-4-26b-a4b-it`, lets the doctor check and amend the draft in a single unified stage, then auto-generates a DOB-password-protected PDF (`PDFAgent`), saves everything to MongoDB Atlas (`DatabaseAgent`), and dispatches the prescription directly to the patient via WhatsApp (`WhatsAppAgent`). If the patient wants to buy medicines in-house, the Master Agent auto-generates an itemized medicine receipt (`PharmacyAgent`), saves the order to MongoDB, sends the receipt to the patient via WhatsApp, and dispatches a priority alert to the hospital medical desk — all without the doctor doing anything manually after the initial approval.
+ScriptIQ is an AI-powered clinical assistant. A doctor speaks or types during a consultation. The **Master Agent** (`ai_prescription_agent.py`) captures that input, converts speech to text via `SpeechAgent` (100% Cloud Gemini Multimodal Audio STT with medical term normalization), extracts structured clinical data (symptoms, diagnosis, medicines, dosage, tests, advice, follow-up) via `PrescriptionAgent` using `gemini-2.5-flash`, lets the doctor check and amend the draft in a single unified stage, then auto-generates a DOB-password-protected PDF (`PDFAgent`), saves everything to MongoDB Atlas (`DatabaseAgent`), and dispatches the prescription directly to the patient via Gmail SMTP (`EmailAgent`) and Web Push notifications (`PushAgent`). If the patient wants to buy medicines in-house, the Master Agent auto-generates an itemized medicine receipt (`PharmacyAgent`), saves the order to MongoDB, sends the receipt to the patient via email, and dispatches a priority alert to the hospital medical desk — all without the doctor doing anything manually after the initial approval.
 
 ---
 
@@ -46,11 +46,11 @@ ScriptIQ is an AI-powered clinical assistant. A doctor speaks or types during a 
 
 | File | What it does |
 |---|---|
-| [`config.py`](file:///s:/AI-prescription-agent/config.py) | Loads all env vars: `MONGODB_URI`, `DB_NAME`, `GEMINI_API_KEY`, `LLM_MODEL` (="gemma-4-26b-a4b-it"), `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` |
+| [`config.py`](file:///s:/AI-prescription-agent/config.py) | Loads all env vars: `MONGODB_URI`, `DB_NAME`, `GEMINI_API_KEY`, `LLM_MODEL` (="gemini-2.5-flash"), `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` |
 | [`ai_prescription_agent.py`](file:///s:/AI-prescription-agent/ai_prescription_agent.py) | **Master orchestrator.** `AIPrescriptionAgent` class. Methods: `generate_prescription()`, `amend_prescription()`, `approve_and_send_prescription()`, `process_pharmacy_choice()`, `run_full_automated_workflow()`. Has `if __name__ == "__main__"` test block. |
-| [`agents/__init__.py`](file:///s:/AI-prescription-agent/agents/__init__.py) | Exports all 6 agents. Note: imports `SpeechAgent` which requires `sounddevice` — use `.venv\Scripts\python.exe` only. |
-| [`agents/speech_agent.py`](file:///s:/AI-prescription-agent/agents/speech_agent.py) | Speech-to-text via `faster-whisper` + Gemini transcript cleanup. Uses `config.LLM_MODEL` with fallback chain. `sounddevice` is required. |
-| [`agents/prescription_agent.py`](file:///s:/AI-prescription-agent/agents/prescription_agent.py) | Pydantic `PrescriptionSchema` + `Medicine` models. Gemini structured JSON extraction. Tries `gemma-4-26b-a4b-it` → `gemini-2.0-flash` → `gemini-1.5-flash`. **Key fix:** `response.parsed.model_dump()` checked before `json.loads(response.text)` since some models return `None` for `.text`. |
+| [`agents/__init__.py`](file:///s:/AI-prescription-agent/agents/__init__.py) | Exports all sub-agents cleanly. |
+| [`agents/speech_agent.py`](file:///s:/AI-prescription-agent/agents/speech_agent.py) | 100% Cloud Speech-to-text via Gemini Multimodal Audio API + clinical term normalization. Zero local PyTorch/Whisper RAM overhead (~70MB server RAM). |
+| [`agents/prescription_agent.py`](file:///s:/AI-prescription-agent/agents/prescription_agent.py) | Pydantic `PrescriptionSchema` + `Medicine` models. Gemini structured JSON extraction. Tries `gemini-2.5-flash` → `gemini-2.5-flash-lite` → `gemini-3.5-flash` → `gemini-3-flash` → local heuristic regex parser. |
 | [`agents/pdf_agent.py`](file:///s:/AI-prescription-agent/agents/pdf_agent.py) | ReportLab PDF generation with aspect-ratio scaled hospital logo, doctor letterhead, medicine table, DOB-password encryption. ~511 lines. `output_dir = "output/prescriptions"`. |
 | [`agents/database_agent.py`](file:///s:/AI-prescription-agent/agents/database_agent.py) | `DatabaseAgent` wraps `DBHelper`. Default collection: `prescriptions`. Methods: `save_prescription()`, `get_patient_history()`, `update_consultation()`, `delete_consultation()`. |
 | [`agents/whatsapp_agent.py`](file:///s:/AI-prescription-agent/agents/whatsapp_agent.py) | Meta WhatsApp Cloud API (live) or simulation mode. Sends prescription + DOB password unlock key. Accepts `custom_message` for pharmacy receipts. Generates `wa.me` click-links. |
