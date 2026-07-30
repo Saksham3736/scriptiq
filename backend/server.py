@@ -299,6 +299,7 @@ async def process_audio_consultation(
     phone: Optional[str] = Query(None),
     dob: Optional[str] = Query(None),
     language: Optional[str] = Query("en"),
+    llm_model: Optional[str] = Query("gemini-2.5-flash"),
 ):
     """
     Accept recorded audio file (WAV/WebM), transcribe via SpeechAgent (Whisper + Gemini refinement),
@@ -328,11 +329,12 @@ async def process_audio_consultation(
             )
 
         # Generate prescription draft using LLM
-        prescription_data = agent.generate_prescription(
+        prescription_data = agent.process_consultation(
             transcript=refined_transcript,
             patient_name=patient_name,
             phone=phone,
             dob=dob,
+            model_override=llm_model,
         )
 
         return APIResponse(

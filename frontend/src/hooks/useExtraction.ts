@@ -38,7 +38,9 @@ export function useExtraction() {
         const formData = new FormData();
         formData.append('file', audioBlob, 'consultation.webm');
 
-        const audioRes = await fetch(`/api/consultation/audio?language=${selectedLanguage}`, {
+        const selectedModel = useRecordingStore.getState().selectedModel || 'gemini-2.5-flash';
+
+        const audioRes = await fetch(`/api/consultation/audio?language=${selectedLanguage}&llm_model=${selectedModel}`, {
           method: 'POST',
           body: formData,
         });
