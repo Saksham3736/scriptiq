@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useDraftStore } from '@/store/draftStore';
 import { useRecordingStore } from '@/store/recordingStore';
 import { useUIStore } from '@/store/uiStore';
+import { useAuthStore } from '@/store/authStore';
+import { getApiUrl } from '@/utils/apiClient';
 import { calculateAgeFromDOB } from '@/utils/validators';
 
 export function useExtraction() {
@@ -18,6 +20,15 @@ export function useExtraction() {
   const setTranscript = useRecordingStore((s) => s.setTranscript);
   const addToast = useUIStore((s) => s.addToast);
   const setPrescriptionStatus = useUIStore((s) => s.setPrescriptionStatus);
+
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = useAuthStore.getState().token;
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+  };
 
   const extractConsultation = async (
     text?: string,
@@ -40,8 +51,9 @@ export function useExtraction() {
 
         const selectedModel = useRecordingStore.getState().selectedModel || 'gemini-2.5-flash';
 
-        const audioRes = await fetch(`/api/consultation/audio?language=${selectedLanguage}&llm_model=${selectedModel}`, {
+        const audioRes = await fetch(getApiUrl(`/api/consultation/audio?language=${selectedLanguage}&llm_model=${selectedModel}`), {
           method: 'POST',
+          headers: getAuthHeaders(),
           body: formData,
         });
         const audioJson = await audioRes.json();
@@ -67,9 +79,9 @@ export function useExtraction() {
 
         const selectedModel = useRecordingStore.getState().selectedModel || 'gemini-2.5-flash';
 
-        const res = await fetch('/api/consultation/process', {
+        const res = await fetch(getApiUrl('/api/consultation/process'), {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           body: JSON.stringify({ transcript: text, language: selectedLanguage, llm_model: selectedModel }),
         });
         const json = await res.json();
@@ -101,9 +113,9 @@ export function useExtraction() {
       // Auto-Pilot Execution Chain: if enabled, zero-touch approve & PDF generation
       if (extractedData && useUIStore.getState().isAutoPilotEnabled) {
         try {
-          const saveRes = await fetch('/api/prescription/approve', {
+          const saveRes = await fetch(getApiUrl('/api/prescription/approve'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
             body: JSON.stringify({
               prescription_data: extractedData,
               phone: extractedData.phone || '919876543210',
@@ -137,7 +149,17 @@ export function useExtraction() {
       return true;
     } catch (err: any) {
       console.error('[useExtraction Error]', err);
-      setError(err.message || 'Failed to extract prescription');
+      const isNetworkFail = err.name === 'TypeError' || err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError');
+      const errorMsg = isNetworkFail
+        ? 'Backend server offline or unreachable. Please start backend server (uvicorn server:app --port 8000) or check network connection.'
+        : (err.message || 'Failed to extract prescription');
+
+      setError(errorMsg);
+      addToast({
+        type: 'error',
+        title: 'Extraction Network Error',
+        message: errorMsg,
+      });
       setStatus('error' as any);
       return false;
     } finally {
