@@ -56,6 +56,14 @@ export function useExtraction() {
           headers: getAuthHeaders(),
           body: formData,
         });
+
+        // Surface real backend errors (FastAPI returns {detail} on 4xx/5xx)
+        if (!audioRes.ok) {
+          const errBody = await audioRes.json().catch(() => ({}));
+          const detail = errBody.detail || errBody.error || `Server error ${audioRes.status}`;
+          throw new Error(`Audio processing failed: ${detail}`);
+        }
+
         const audioJson = await audioRes.json();
 
         if (audioJson.success && audioJson.data?.prescription) {
@@ -84,6 +92,14 @@ export function useExtraction() {
           headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           body: JSON.stringify({ transcript: text, language: selectedLanguage, llm_model: selectedModel }),
         });
+
+        // Surface real backend errors — FastAPI returns {detail} on 4xx/5xx, not {error}
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          const detail = errBody.detail || errBody.error || `Server error ${res.status}`;
+          throw new Error(`Extraction failed (${res.status}): ${detail}`);
+        }
+
         const json = await res.json();
 
         if (json.success && json.data) {
