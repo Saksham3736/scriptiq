@@ -34,6 +34,7 @@ class ProcessConsultationRequest(BaseModel):
     age: Optional[int] = Field(None, description="Patient age in years")
     gender: Optional[str] = Field(None, description="Patient gender ('Male', 'Female', 'Other')")
     language: Optional[str] = Field("en", description="Language mode ('en', 'hinglish', 'hi')")
+    llm_model: Optional[str] = Field("gemini-2.5-flash", description="LLM extraction model ('gemini-2.5-flash', 'gemini-3.6-flash', 'gemma-4-26b', 'heuristic-regex')")
 
 class AmendPrescriptionRequest(BaseModel):
     prescription_data: Dict[str, Any] = Field(..., description="Current prescription JSON payload")
@@ -271,18 +272,20 @@ async def get_me(authorization: Optional[str] = Header(None)):
 def process_consultation(req: ProcessConsultationRequest):
     """
     Accept doctor's consultation transcript and extract structured prescription JSON.
-    Uses gemma-4-26b-a4b-it with automatic fallback chain.
-    Runs in a worker threadpool so it never blocks the main server loop.
+    Supports model override: gemini-2.5-flash, gemini-3.6-flash, gemma-4-26b, heuristic-regex.
     """
     if not req.transcript or not req.transcript.strip():
         raise HTTPException(status_code=400, detail="Transcript cannot be empty.")
 
     try:
-        prescription_data = agent.generate_prescription(
+        prescription_data = agent.process_consultation(
             transcript=req.transcript,
             patient_name=req.patient_name,
             phone=req.phone,
             dob=req.dob,
+            age=req.age,
+            gender=req.gender,
+            model_override=req.llm_model,
         )
         return APIResponse(success=True, data=prescription_data)
     except Exception as e:

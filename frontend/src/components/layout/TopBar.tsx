@@ -235,6 +235,33 @@ export default function TopBar() {
           </select>
         </div>
 
+        {/* AI Extraction Model Selector Dropdown */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <select
+            value={useRecordingStore((s) => s.selectedModel || 'gemini-2.5-flash')}
+            onChange={(e) => useRecordingStore.getState().setSelectedModel(e.target.value as any)}
+            title="Select AI Extraction LLM Engine / Model"
+            style={{
+              height: 'var(--btn-height-sm, 32px)',
+              padding: '0 var(--space-2, 8px)',
+              borderRadius: '99px',
+              border: '1.5px solid #12897F',
+              background: '#E4F3F1',
+              color: '#12897F',
+              fontSize: '11px',
+              fontWeight: 700,
+              fontFamily: 'var(--font-heading, Space Grotesk, sans-serif)',
+              cursor: 'pointer',
+              outline: 'none',
+            }}
+          >
+            <option value="gemini-2.5-flash">⚡ Gemini 2.5 Flash</option>
+            <option value="gemini-3.6-flash">🚀 Gemini 3.6 Flash</option>
+            <option value="gemma-4-26b">🧠 Gemma 4 26B</option>
+            <option value="heuristic-regex">⚡ Rule Engine (Regex)</option>
+          </select>
+        </div>
+
         <PatientSearchAutocomplete />
       </div>
 

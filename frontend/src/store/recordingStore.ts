@@ -5,11 +5,13 @@ import { create } from 'zustand';
 export type RecordingStatus = 'idle' | 'recording' | 'paused' | 'processing' | 'done' | 'error';
 export type InputMode = 'voice' | 'text';
 export type LanguageMode = 'en' | 'hinglish' | 'hi';
+export type AIModelMode = 'gemini-2.5-flash' | 'gemini-3.6-flash' | 'gemma-4-26b' | 'heuristic-regex';
 
 interface RecordingState {
   status: RecordingStatus;
   mode: InputMode;
   language: LanguageMode;
+  selectedModel: AIModelMode;
   elapsedMs: number;
   transcript: string;         // full raw transcript
   partialText: string;        // live streaming partial
@@ -20,6 +22,7 @@ interface RecordingState {
   setStatus: (status: RecordingStatus) => void;
   setMode: (mode: InputMode) => void;
   setLanguage: (lang: LanguageMode) => void;
+  setSelectedModel: (model: AIModelMode) => void;
   setElapsedMs: (ms: number) => void;
   appendTranscript: (chunk: string) => void;
   setPartialText: (text: string) => void;
@@ -34,6 +37,7 @@ export const useRecordingStore = create<RecordingState>((set) => ({
   status: 'idle',
   mode: 'voice',
   language: 'en',
+  selectedModel: 'gemini-2.5-flash',
   elapsedMs: 0,
   transcript: '',
   partialText: '',
@@ -44,6 +48,7 @@ export const useRecordingStore = create<RecordingState>((set) => ({
   setStatus: (status) => set({ status }),
   setMode: (mode) => set({ mode }),
   setLanguage: (language) => set({ language }),
+  setSelectedModel: (selectedModel) => set({ selectedModel }),
   setElapsedMs: (ms) => set({ elapsedMs: ms }),
   appendTranscript: (chunk) =>
     set((s) => ({ transcript: s.transcript ? s.transcript + ' ' + chunk : chunk })),

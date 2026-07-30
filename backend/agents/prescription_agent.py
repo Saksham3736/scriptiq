@@ -45,41 +45,25 @@ class PrescriptionAgent:
         else:
             print("[PrescriptionAgent] Warning: Gemini API Key not set. Fallback mode will be enabled for unconfigured environment.")
 
-    def generate_prescription(self, transcript: str) -> dict:
+    def generate_prescription(self, transcript: str, model_override: str = None) -> dict:
         """
         Send transcript to Gemini API and receive structured prescription JSON matching PrescriptionSchema.
+        Supports model_override: 'gemini-2.5-flash', 'gemini-3.6-flash', 'gemma-4-26b', 'heuristic-regex'.
         """
         if not transcript or not transcript.strip():
             raise ValueError("Transcript is empty. Please provide a valid consultation transcript.")
 
+        # If heuristic-regex mode requested, run local rule engine directly
+        if model_override == "heuristic-regex":
+            print("[PrescriptionAgent] Running Heuristic Rule Engine extraction mode...")
+            return self._heuristic_fallback(transcript)
+
         if not self.gemini_client:
             print("[PrescriptionAgent] Gemini API Key not configured. Using structured fallback output for testing.")
-            return {
-                "patient_name": "Rahul Sharma",
-                "age": 24,
-                "gender": "male",
-                "chief_complaint": "fever and sore throat since two days",
-                "diagnosis": "Viral Fever",
-                "medicines": [
-                    {
-                        "name": "Dolo 650",
-                        "dosage": "Twice Daily",
-                        "duration": "5 Days",
-                        "meal_instruction": "After Meals"
-                    },
-                    {
-                        "name": "Azithromycin 500",
-                        "dosage": "Once Daily",
-                        "duration": "3 Days",
-                        "meal_instruction": "After Food"
-                    }
-                ],
-                "tests": ["Complete Blood Count (CBC)"],
-                "general_advice": ["Drink plenty of warm water and rest"],
-                "follow_up": "After 5 Days"
-            }
+            return self._heuristic_fallback(transcript)
 
-        print("[PrescriptionAgent] Generating structured prescription with Gemini API...")
+        target_model = model_override or getattr(config, "LLM_MODEL", "gemini-2.5-flash")
+        print(f"[PrescriptionAgent] Generating structured prescription with model: {target_model}...")
 
         system_instruction = (
             "You are a professional medical documentation assistant specializing in Indian clinical operations.\n"
@@ -98,8 +82,7 @@ class PrescriptionAgent:
 
         user_prompt = f"Convert the following doctor's consultation transcript into a structured prescription:\n\n{transcript}"
 
-        target_model = getattr(config, "LLM_MODEL", "gemini-2.5-flash")
-        fallback_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemma-4-26b-a4b-it", "gemini-1.5-flash"]
+        fallback_models = ["gemini-2.5-flash", "gemini-3.6-flash", "gemma-4-26b-a4b-it", "gemma-4-26b", "gemini-2.0-flash"]
         models_to_try = []
         for m in [target_model] + fallback_models:
             if m not in models_to_try:
@@ -220,11 +203,11 @@ class PrescriptionAgent:
 
         return True
 
-    def process_consultation(self, transcript: str) -> dict:
+    def process_consultation(self, transcript: str, model_override: str = None) -> dict:
         """
         Full workflow method to generate and validate prescription from raw transcript.
         """
-        prescription_data = self.generate_prescription(transcript)
+        prescription_data = self.generate_prescription(transcript, model_override=model_override)
         is_valid = self.validate_prescription(prescription_data)
         
         return {

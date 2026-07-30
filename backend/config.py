@@ -10,7 +10,7 @@ DB_NAME = os.getenv("DB_NAME", "ai_prescription")
 
 # Gemini / Gemma API Config
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.0-flash")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
 
 # JWT Authentication Config
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "scriptiq-super-secret-jwt-key-2026")

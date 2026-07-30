@@ -319,8 +319,8 @@
   - Bind history table row click events on `ReceiptsManagementPage.tsx` to open `ReceiptDetailModal.tsx` popover inspector for quick itemized breakdown, tax details, and thermal print buttons without navigating away
 
 ## Phase 44: Manual AI Extraction Model Selector & Fallback Console `[PRIORITY: HIGH - AI CONTROL]`
-- [ ] **Sub-Phase 44A: Doctor Model Selector Dropdown (`TopBar.tsx` & `DraftPanel.tsx`)**
-  - Add AI Model Selector dropdown (`Gemini 2.0 Flash` vs `Gemma 4 26B` vs `Gemini 1.5 Flash` vs `Heuristic Regex`) in `TopBar.tsx` and `DraftPanel.tsx`, allowing doctors to manually pick or switch AI extraction models for consultation processing
+- [x] **Sub-Phase 44A: Doctor Model Selector Dropdown (`TopBar.tsx` & `DraftPanel.tsx`)**
+  - [x] Add AI Model Selector dropdown (`Gemini 2.5 Flash`, `Gemini 3.6 Flash`, `Gemma 4 26B`, `Rule Engine Regex`) in `TopBar.tsx` and `DraftPanel.tsx`, setting `gemini-2.5-flash` as default extraction engine
 
 ## Phase 45: 1-Click Patient Web Push Test Trigger in Doctor Console `[PRIORITY: HIGH - NOTIFICATIONS]`
 - [ ] **Sub-Phase 45A: Console Notification Testing CTA (`SendPrescriptionModal.tsx`)**

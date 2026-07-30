@@ -776,6 +776,14 @@
 
 ---
 
+## Phase 44: Manual AI Extraction Model Selector & Fallback Console `[PRIORITY: HIGH - AI CONTROL]`
+- [x] Step 64: Doctor Model Selector Dropdown & Engine Configuration
+  - [x] Set default AI extraction model to `gemini-2.5-flash` in `config.py`
+  - [x] Add dropdown selector for `Gemini 2.5 Flash`, `Gemini 3.6 Flash`, `Gemma 4 26B`, and `Rule Engine Regex` in `TopBar.tsx`
+  - [x] Wire `llm_model` parameter through `useExtraction.ts`, `server.py`, `ai_prescription_agent.py`, and `prescription_agent.py`
+
+---
+
 ## Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite `[PRIORITY: HIGH - PHARMACY STORAGE & UX]`
 - [ ] Step 64: REST API Receipt Deletion & "⚡ Re-Load into POS Builder" Button
   - [ ] Endpoint `DELETE /api/pharmacy/receipts/{order_id}` with typed confirmation modal in `ReceiptsManagementPage.tsx`

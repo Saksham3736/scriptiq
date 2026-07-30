@@ -63,10 +63,12 @@ export function useExtraction() {
           throw new Error('No consultation transcript or audio recorded.');
         }
 
+        const selectedModel = useRecordingStore.getState().selectedModel || 'gemini-2.5-flash';
+
         const res = await fetch('/api/consultation/process', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ transcript: text, language: selectedLanguage }),
+          body: JSON.stringify({ transcript: text, language: selectedLanguage, llm_model: selectedModel }),
         });
         const json = await res.json();
 

@@ -63,7 +63,7 @@ class AIPrescriptionAgent:
             except Exception as e:
                 print(f"[AIPrescriptionAgent] Telemetry callback error: {e}")
 
-    def generate_prescription(
+    def process_consultation(
         self,
         transcript: str,
         patient_name: Optional[str] = None,
@@ -71,15 +71,16 @@ class AIPrescriptionAgent:
         dob: Optional[str] = None,
         age: Optional[int] = None,
         gender: Optional[str] = None,
+        model_override: Optional[str] = None,
         telemetry_callback: Optional[Callable[[Dict[str, Any]], None]] = None
     ) -> Dict[str, Any]:
         """
         Step 1: Generate structured prescription JSON from doctor consultation transcript using Gemini API.
         """
-        print("[AIPrescriptionAgent] Step 1: Generating prescription structured JSON...")
-        self.emit_telemetry(telemetry_callback, 2, "PrescriptionAgent", "IN_PROGRESS", "AI JSON Structuring", "Extracting patient details, symptoms, and dosage using Gemini LLM...")
+        print(f"[AIPrescriptionAgent] Step 1: Generating prescription structured JSON with model override: {model_override or 'default'}...")
+        self.emit_telemetry(telemetry_callback, 2, "PrescriptionAgent", "IN_PROGRESS", "AI JSON Structuring", f"Extracting patient details & dosage using LLM model: {model_override or getattr(config, 'LLM_MODEL', 'gemini-2.5-flash')}...")
 
-        result = self.prescription_agent.process_consultation(transcript)
+        result = self.prescription_agent.process_consultation(transcript, model_override=model_override)
         
         if not result.get("valid"):
             print("[AIPrescriptionAgent] Warning: Initial validation flagged issues, but returning raw payload for doctor check.")

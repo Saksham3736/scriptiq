@@ -4,7 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-* **Current Phase**: Phase 51 Complete — Universal Route & API Authentication Security Guard (`RequireRole.tsx`, `App.tsx`, `LoginPage.tsx`, `PatientLoginPage.tsx`)
+* **Current Phase**: Phase 44 Complete — Manual AI Extraction Model Selector & Fallback Console (`gemini-2.5-flash`, `gemini-3.6-flash`, `gemma-4-26b`, `heuristic-regex`)
 * **Completed & Active Phases**: 
   * Phase 1 to 30: Baseline Systems, Auth, Telemetry, PDF Encryption & Multi-Channel Engine (100% Complete)
   * Phase 34: In-House Pharmacy Receipt & Template Management Suite (`ReceiptsManagementPage.tsx`, POS velocity mode, UPI QR, thermal 80mm printing) (100% Complete)
@@ -14,6 +14,7 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 38: Live AI Processing Shimmer & Telemetry Active Status Banner (`AIDraftExtractionBanner.tsx`) (100% Complete)
   * Phase 39: Isolated 80mm Thermal Receipt Print Engine & UI Element Hiding (100% Complete)
   * Phase 40: Official Letterhead Receipt Page (`/receipt/:orderId`) POS Print Mapping & Master Feature Inventory (`availability_of_features.md`, `index.new.md`) (100% Complete)
+  * Phase 44: Manual AI Extraction Model Selector & Fallback Console (`gemini-2.5-flash` default, `gemini-3.6-flash`, `gemma-4-26b`, `heuristic-regex`) (100% Complete)
   * Phase 47: Patient Fallback Identifier PDF Encryption Suite (DOB -> Last 4 Phone digits -> `1234`) & Explicit Email Password Callout Banner (100% Complete)
   * Phase 48: Production Monorepo Restructuring & Dual-Platform Cloud Deployment Suite (`frontend/`, `backend/`, `tests/`, `vercel.json`, `render.yaml`, `.env.example`, `DEPLOYMENT.md`) (100% Complete)
   * Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation (`calculateAgeFromDOB`) & Transcript Email Parsing (100% Complete)
@@ -429,6 +430,19 @@ This document records all architectural decisions, actions, command executions, 
   - Added smart `RootRedirect` catch-all handler routing unauthenticated users to `/login` and authenticated users directly to their workspace.
   - Implemented auto-redirect in `LoginPage.tsx` and `PatientLoginPage.tsx` so logged-in users bypass the login screen.
   - Verified with production build `npm run build` passing **100% OK** in 945ms.
+
+---
+
+## 🤖 Phase 44: Manual AI Extraction Model Selector & Fallback Console
+* *Status: Completed*
+* Details:
+  - Set default LLM model to `gemini-2.5-flash` in `backend/config.py`.
+  - Added doctor AI Model Selector dropdown badge in `TopBar.tsx` supporting:
+    - ⚡ `Gemini 2.5 Flash` (Default)
+    - 🚀 `Gemini 3.6 Flash` (Next-Gen Speed)
+    - 🧠 `Gemma 4 26B` (Open Source)
+    - ⚡ `Rule Engine` (Local Regex Fallback)
+  - Wired `llm_model` parameter through `recordingStore.ts`, `useExtraction.ts`, `server.py`, `ai_prescription_agent.py`, and `prescription_agent.py`.
 
 ---
 
