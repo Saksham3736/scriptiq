@@ -24,3 +24,5 @@ services:
         sync: false
       - key: SENDER_EMAIL
         value: scriptiq.sk@gmail.com
+      - key: FRONTEND_URL
+        value: https://scriptiq-sk.vercel.app

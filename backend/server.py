@@ -137,6 +137,7 @@ def health_check():
         "status": "healthy",
         "service": "ScriptIQ API Server",
         "version": "1.0.0",
+        "frontend_url": getattr(config, "FRONTEND_URL", "https://scriptiq-sk.vercel.app"),
         "timestamp": datetime.now().isoformat()
     }
 
