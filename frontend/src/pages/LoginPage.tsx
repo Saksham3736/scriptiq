@@ -216,7 +216,8 @@ export default function LoginPage() {
               return (
                 <button
                   key={role}
-                  onClick={() => { setSelectedRole(role); setEmail(`${role}@scriptiq.in`); }}
+                  type="button"
+                  onClick={() => { setSelectedRole(role); setEmail(''); setPassword(''); setPhone(''); setOtp(''); }}
                   style={{
                     display:'flex', flexDirection:'column', alignItems:'center', gap:'6px',
                     padding:'12px 8px', borderRadius:'10px', border:`1.5px solid ${active ? c.color : '#E3E8EE'}`,
@@ -239,7 +240,7 @@ export default function LoginPage() {
           </p>
 
           {/* Form */}
-          <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
+          <form onSubmit={handleLogin} autoComplete="off" style={{ display:'flex', flexDirection:'column', gap:'14px' }}>
             {selectedRole === 'patient' ? (
               patientStep === 'phone' ? (
                 <div>
@@ -248,6 +249,7 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="text"
+                    autoComplete="off"
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
                     placeholder="e.g. 9888478606"
@@ -267,19 +269,17 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="text"
+                    autoComplete="off"
                     maxLength={4}
                     value={otp}
                     onChange={e => setOtp(e.target.value)}
-                    placeholder="1234"
+                    placeholder="Enter OTP"
                     style={{
                       width:'100%', padding:'10px 14px', borderRadius:'8px',
                       border:'1.5px solid #6D5DF6', fontFamily:'IBM Plex Mono,monospace', fontSize:'18px', color:'#101A2E',
                       outline:'none', textAlign:'center', letterSpacing:'6px', boxSizing:'border-box',
                     }}
                   />
-                  <span style={{ fontSize:'11px', color:'#5B6B82', display:'block', marginTop:'4px', textAlign:'center' }}>
-                    Demo OTP is pre-filled: 1234
-                  </span>
                 </div>
               )
             ) : (
@@ -290,8 +290,10 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="email"
+                    autoComplete="new-password"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
+                    placeholder="Enter email address"
                     style={{
                       width:'100%', padding:'10px 14px', borderRadius:'8px',
                       border:'1.5px solid #E3E8EE', fontFamily:'Inter,sans-serif', fontSize:'14px', color:'#101A2E',
@@ -308,8 +310,10 @@ export default function LoginPage() {
                   <div style={{ position:'relative' }}>
                     <input
                       type={showPass ? 'text' : 'password'}
+                      autoComplete="new-password"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
+                      placeholder="Enter password"
                       style={{
                         width:'100%', padding:'10px 42px 10px 14px', borderRadius:'8px',
                         border:'1.5px solid #E3E8EE', fontFamily:'Inter,sans-serif', fontSize:'14px', color:'#101A2E',
