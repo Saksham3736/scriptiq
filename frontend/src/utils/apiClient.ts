@@ -11,8 +11,17 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export function getApiUrl(path: string): string {
   if (!path) return '';
+  // Absolute URLs pass through unchanged
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  // Always use relative paths for /api/* and /pdfs/* routes.
+  // • On Vercel production: vercel.json rewrites /api/* → https://scriptiq-backend.onrender.com/api/*
+  // • On local dev: vite.config.ts proxy forwards /api/* → http://localhost:8000
+  // Prepending VITE_API_BASE_URL would double the /api prefix if it includes /api, causing 404.
+  if (cleanPath.startsWith('/api/') || cleanPath.startsWith('/pdfs/') || cleanPath.startsWith('/assets/')) {
+    return cleanPath;
+  }
+  // For any other path, honour the configured base URL
   return `${API_BASE_URL}${cleanPath}`;
 }
 
