@@ -14,6 +14,7 @@ import AILoadingStatusBadge from '../ui/AILoadingStatusBadge';
 import AIDraftExtractionBanner from './AIDraftExtractionBanner';
 import PatientIntakeSpace from './PatientIntakeSpace';
 import { useUIStore } from '@/store/uiStore';
+import { calculateAgeFromDOB } from '@/utils/validators';
 
 import {
   Plus, Pill, FlaskConical, Heart, Calendar, FileText, Trash2, X, Check, ShoppingBag, ExternalLink,
@@ -190,10 +191,22 @@ export default function DraftPanel() {
             placeholder="+91 98765 43210"
           />
           <FieldChip
+            label="Date of Birth (DOB)"
+            value={draft.dob || (draft as any).patient_dob || ''}
+            onChange={(v) => {
+              updateField('dob', v);
+              const autoAge = calculateAgeFromDOB(v);
+              if (autoAge !== null) {
+                updateField('age', autoAge);
+              }
+            }}
+            placeholder="DDMMYYYY (e.g. 15081989)"
+          />
+          <FieldChip
             label="Age (Years)"
             value={draft.age !== undefined && draft.age !== null ? String(draft.age) : ''}
             onChange={(v) => updateField('age', v ? parseInt(v, 10) || undefined : undefined)}
-            placeholder="e.g., 40"
+            placeholder="Auto-calculated from DOB"
           />
           <div>
             <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--color-ink-500, #5B6B82)', marginBottom: '4px', fontFamily: 'Inter, sans-serif' }}>
@@ -220,7 +233,7 @@ export default function DraftPanel() {
               <option value="Other">Other</option>
             </select>
           </div>
-          <div style={{ gridColumn: '1 / -1' }}>
+          <div>
             <FieldChip
               label="Patient Email"
               value={draft.email || ''}

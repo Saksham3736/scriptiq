@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mic, MicOff, Type, UserCheck, Sparkles, AlertCircle } from 'lucide-react';
 import { useDraftStore } from '@/store/draftStore';
+import { calculateAgeFromDOB } from '@/utils/validators';
 
 export default function PatientIntakeSpace() {
   const { draft, updateField, setDraft } = useDraftStore();
@@ -266,8 +267,15 @@ export default function PatientIntakeSpace() {
             <input
               type="text"
               value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              placeholder="DDMMYYYY"
+              onChange={(e) => {
+                const newDob = e.target.value;
+                setDob(newDob);
+                const autoAge = calculateAgeFromDOB(newDob);
+                if (autoAge !== null) {
+                  setAge(String(autoAge));
+                }
+              }}
+              placeholder="DDMMYYYY (e.g. 15081989)"
               style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>

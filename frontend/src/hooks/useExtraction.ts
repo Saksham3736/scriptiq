@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDraftStore } from '@/store/draftStore';
 import { useRecordingStore } from '@/store/recordingStore';
 import { useUIStore } from '@/store/uiStore';
+import { calculateAgeFromDOB } from '@/utils/validators';
 
 export function useExtraction() {
   const [loading, setLoading] = useState(false);
@@ -71,6 +72,19 @@ export function useExtraction() {
 
         if (json.success && json.data) {
           extractedData = json.data;
+          if (extractedData.patient_dob && !extractedData.dob) {
+            extractedData.dob = extractedData.patient_dob;
+          }
+          if (extractedData.patient_email && !extractedData.email) {
+            extractedData.email = extractedData.patient_email;
+          }
+          const dobVal = extractedData.dob || extractedData.patient_dob;
+          if (dobVal && (!extractedData.age || extractedData.age === '')) {
+            const autoAge = calculateAgeFromDOB(dobVal);
+            if (autoAge !== null) {
+              extractedData.age = autoAge;
+            }
+          }
           setDraft(extractedData);
         } else {
           throw new Error(json.error || 'Extraction failed');

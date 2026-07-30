@@ -54,3 +54,34 @@ export const PharmacyOrderZodSchema = z.object({
 
 export type PrescriptionFormData = z.infer<typeof PrescriptionZodSchema>;
 export type MedicineFormData = z.infer<typeof MedicineZodSchema>;
+
+/**
+ * Calculates exact age in years from DOB string (supports DDMMYYYY, DD/MM/YYYY, YYYY-MM-DD).
+ */
+export function calculateAgeFromDOB(dobStr: string): number | null {
+  if (!dobStr) return null;
+  const digits = dobStr.replace(/\D/g, '');
+  if (digits.length === 8) {
+    let day = parseInt(digits.slice(0, 2), 10);
+    let month = parseInt(digits.slice(2, 4), 10);
+    let year = parseInt(digits.slice(4, 8), 10);
+
+    // Support YYYYMMDD if first 4 digits look like year
+    if (parseInt(digits.slice(0, 4), 10) > 1900) {
+      year = parseInt(digits.slice(0, 4), 10);
+      month = parseInt(digits.slice(4, 6), 10);
+      day = parseInt(digits.slice(6, 8), 10);
+    }
+
+    if (year > 1900 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      const today = new Date();
+      let age = today.getFullYear() - year;
+      const m = today.getMonth() + 1 - month;
+      if (m < 0 || (m === 0 && today.getDate() < day)) {
+        age--;
+      }
+      return age >= 0 ? age : null;
+    }
+  }
+  return null;
+}

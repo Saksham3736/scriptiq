@@ -756,9 +756,9 @@
 ---
 
 ## Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation & Transcript Email Parsing `[PRIORITY: CRITICAL - CLINICAL INTAKE]`
-- [ ] Step 61: Auto-Calculate Age from DOB & Transcript Email Address Extraction
-  - [ ] Auto-calculate age in years from DOB in `DraftPanel.tsx` / `PatientIntakeSpace.tsx`
-  - [ ] Parse patient email address from transcript in `PrescriptionAgent`
+- [x] Step 61: Auto-Calculate Age from DOB & Transcript Email Address Extraction
+  - [x] Auto-calculate age in years from DOB in `DraftPanel.tsx` / `PatientIntakeSpace.tsx`
+  - [x] Parse patient email address from transcript in `PrescriptionAgent`
 
 ---
 

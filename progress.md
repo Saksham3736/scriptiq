@@ -4,7 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-* **Current Phase**: Phase 48 Complete — Production Monorepo Restructuring & Dual-Platform Cloud Deployment Suite (Vercel + Render)
+* **Current Phase**: Phase 49 Complete — Clinical Intake Engine Fixes (DOB Extraction, Auto-Age Calculation & Transcript Email Parsing)
 * **Completed & Active Phases**: 
   * Phase 1 to 30: Baseline Systems, Auth, Telemetry, PDF Encryption & Multi-Channel Engine (100% Complete)
   * Phase 34: In-House Pharmacy Receipt & Template Management Suite (`ReceiptsManagementPage.tsx`, POS velocity mode, UPI QR, thermal 80mm printing) (100% Complete)
@@ -16,8 +16,8 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 40: Official Letterhead Receipt Page (`/receipt/:orderId`) POS Print Mapping & Master Feature Inventory (`availability_of_features.md`, `index.new.md`) (100% Complete)
   * Phase 47: Patient Fallback Identifier PDF Encryption Suite (DOB -> Last 4 Phone digits -> `1234`) & Explicit Email Password Callout Banner (100% Complete)
   * Phase 48: Production Monorepo Restructuring & Dual-Platform Cloud Deployment Suite (`frontend/`, `backend/`, `tests/`, `vercel.json`, `render.yaml`, `.env.example`, `DEPLOYMENT.md`) (100% Complete)
+  * Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation (`calculateAgeFromDOB`) & Transcript Email Parsing (100% Complete)
 * **Planned Feature Integration Roadmap**:
-  * Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation & Transcript Email Parsing (`DraftPanel.tsx` & `PatientIntakeSpace.tsx`)
   * Phase 50: PDF Password Encryption Synchronization & Doctor Console Security Badge (`config.py` & `SendPrescriptionModal.tsx`)
   * Phase 51: Receipt Lifecycle Gating & Cashier Payment Status Control (`server.py` & `ReceiptsManagementPage.tsx`)
   * Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite (`DELETE /api/pharmacy/receipts/{order_id}`)
@@ -399,6 +399,17 @@ This document records all architectural decisions, actions, command executions, 
   - Configured `backend/render.yaml` Service Blueprint for automated Render web service builds with Python 3.11 and Uvicorn.
   - Created `.env.example` template and comprehensive `DEPLOYMENT.md` step-by-step cloud deployment guide.
   - Performed deep line-by-line file path & `sys.path` import audit; verified unit test suite `tests/test_pdf.py` and `tests/test_email.py` passing **100% OK**.
+
+---
+
+## 🩺 Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation & Transcript Email Parsing
+* *Status: Completed*
+* Details:
+  - Added `patient_dob` and `patient_email` fields to `PrescriptionSchema` in `backend/agents/prescription_agent.py`.
+  - Upgraded `backend/ai_prescription_agent.py` and `frontend/src/hooks/useExtraction.ts` to preserve extracted DOB and email addresses across the workflow.
+  - Implemented `calculateAgeFromDOB()` utility function in `frontend/src/utils/validators.ts` to dynamically compute patient age in years whenever DOB is entered or extracted.
+  - Added Date of Birth (DOB) `FieldChip` in `DraftPanel.tsx` and `PatientIntakeSpace.tsx` with instant real-time age auto-calculation.
+  - Verified with `tests/test_pdf.py` and `tests/test_email.py` unit test suites passing **100% OK**.
 
 ---
 

@@ -360,11 +360,11 @@
 ---
 
 ## Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation & Transcript Email Parsing `[PRIORITY: CRITICAL - CLINICAL INTAKE]`
-- [ ] **Step 49.1: Auto-Calculate Age from DOB & Intake Form Primary Binding (`DraftPanel.tsx` & `PatientIntakeSpace.tsx`)**
-  - [ ] Add `patient_dob` extraction to `PrescriptionAgent` Pydantic schema
-  - [ ] Implement `calculateAgeFromDOB()` helper auto-calculating age in years whenever DOB is entered/selected, setting DOB as primary intake field
-- [ ] **Step 49.2: Transcript Email Address Extraction (`agents/prescription_agent.py` & `useExtraction.ts`)**
-  - [ ] Add `patient_email` field to `PrescriptionSchema` and map extracted email directly to `draftStore.ts` `draft.email`
+- [x] **Step 49.1: Auto-Calculate Age from DOB & Intake Form Primary Binding (`DraftPanel.tsx` & `PatientIntakeSpace.tsx`)**
+  - [x] Add `patient_dob` extraction to `PrescriptionAgent` Pydantic schema
+  - [x] Implement `calculateAgeFromDOB()` helper auto-calculating age in years whenever DOB is entered/selected, setting DOB as primary intake field
+- [x] **Step 49.2: Transcript Email Address Extraction (`agents/prescription_agent.py` & `useExtraction.ts`)**
+  - [x] Add `patient_email` field to `PrescriptionSchema` and map extracted email directly to `draftStore.ts` `draft.email`
 
 ## Phase 50: PDF Password Encryption Synchronization & Doctor Console Security Badge `[PRIORITY: CRITICAL - SECURITY & PDF]`
 - [ ] **Step 50.1: Shared Password Resolution Engine (`config.py`)**

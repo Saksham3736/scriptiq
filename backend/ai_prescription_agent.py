@@ -91,16 +91,32 @@ class AIPrescriptionAgent:
             prescription_data["patient_name"] = patient_name
         if phone:
             prescription_data["phone"] = phone
-        if dob:
-            prescription_data["patient_dob"] = dob
-            prescription_data["dob"] = dob
+        target_dob = dob or prescription_data.get("patient_dob") or prescription_data.get("dob") or ""
+        if target_dob:
+            prescription_data["patient_dob"] = target_dob
+            prescription_data["dob"] = target_dob
+            # Auto-calculate age from DOB if age is not provided
+            if age is None and not prescription_data.get("age"):
+                clean_digits = "".join(c for c in str(target_dob) if c.isdigit())
+                if len(clean_digits) == 8:
+                    try:
+                        d, m, y = int(clean_digits[:2]), int(clean_digits[2:4]), int(clean_digits[4:])
+                        if y > 1900 and 1 <= m <= 12 and 1 <= d <= 31:
+                            today = datetime.now()
+                            calc_age = today.year - y - ((today.month, today.day) < (m, d))
+                            if calc_age >= 0:
+                                prescription_data["age"] = calc_age
+                    except Exception:
+                        pass
         if age is not None:
             prescription_data["age"] = age
         if gender:
             prescription_data["gender"] = gender
+        if "patient_email" in prescription_data and not prescription_data.get("email"):
+            prescription_data["email"] = prescription_data["patient_email"]
             
         prescription_data["status"] = "Generated - Pending Review/Amendment"
-        print(f"[AIPrescriptionAgent] Prescription generated for: {prescription_data.get('patient_name', 'Patient')} ({prescription_data.get('age', 'N/A')} Yrs / {prescription_data.get('gender', 'N/A')})")
+        print(f"[AIPrescriptionAgent] Prescription generated for: {prescription_data.get('patient_name', 'Patient')} ({prescription_data.get('age', 'N/A')} Yrs / {prescription_data.get('gender', 'N/A')}) | DOB: {prescription_data.get('patient_dob', 'N/A')} | Email: {prescription_data.get('email', 'N/A')}")
         self.emit_telemetry(telemetry_callback, 2, "PrescriptionAgent", "DONE", "AI JSON Structured", f"Extracted prescription for {prescription_data.get('patient_name', 'Patient')} successfully.", payload={"medicines_count": len(prescription_data.get("medicines", []))})
         return prescription_data
 

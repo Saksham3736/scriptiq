@@ -20,6 +20,8 @@ class Medicine(BaseModel):
 
 class PrescriptionSchema(BaseModel):
     patient_name: Optional[str] = Field(default="", description="Name of the patient if mentioned")
+    patient_dob: Optional[str] = Field(default="", description="Date of birth of the patient if mentioned (in DDMMYYYY, DD/MM/YYYY, or YYYY-MM-DD format)")
+    patient_email: Optional[str] = Field(default="", description="Email address of the patient if mentioned in transcript")
     age: Optional[int] = Field(default=None, description="Age of the patient in years if mentioned")
     gender: Optional[str] = Field(default="", description="Gender of the patient if mentioned")
     chief_complaint: Optional[str] = Field(default="", description="Chief complaints or symptoms reported")
