@@ -787,9 +787,9 @@
 
 ---
 
-## Phase 31: Performance, Caching & Offline Resilience `[PRIORITY: MEDIUM - PERFORMANCE]`
+## Phase 54: Performance, Caching & Offline Resilience `[PRIORITY: MEDIUM - PERFORMANCE]`
 
-- [ ] Step 52: Caching & Offline Storage
+- [ ] Step 66: Caching & Offline Storage
   - [ ] Response caching with Redis / in-memory LRU for common drug dosages
   - [ ] Service Worker & IndexedDB offline audio blob recording queue
 
@@ -797,15 +797,15 @@
 
 ## 💡 Recommended Future Roadmap (Bonus Extensions)
 
-### Phase 32: Electronic Health Record (EHR) / FHIR Standard Export `[RECOMMENDED / OPTIONAL BONUS]`
-- [ ] Step 53: HL7 FHIR Interoperability Standard
+### Phase 55: Electronic Health Record (EHR) / FHIR Standard Export `[RECOMMENDED / OPTIONAL BONUS]`
+- [ ] Step 67: HL7 FHIR Interoperability Standard
   - [ ] Build `fhirExporter.py` converting prescriptions to HL7 / FHIR JSON standard resources
   - [ ] REST endpoint `GET /api/prescription/:id/fhir` for hospital EHR system integration
 
 ---
 
-### Phase 33: E-Prescription Aadhaar Digital Signature (e-Sign) `[RECOMMENDED / OPTIONAL BONUS]`
-- [ ] Step 54: Cryptographic Doctor Signature Verification
+### Phase 56: E-Prescription Aadhaar Digital Signature (e-Sign) `[RECOMMENDED / OPTIONAL BONUS]`
+- [ ] Step 68: Cryptographic Doctor Signature Verification
   - [ ] Aadhaar e-Sign / PKI digital signature verification module for Telemedicine Guidelines 2020 compliance
   - [ ] Embed cryptographic signature stamp on PDF exports
 
@@ -813,35 +813,35 @@
 
 ## 🚀 Enterprise Expansion Roadmap (Senior UX & Clinical Solutions)
 
-### Phase 34: Real-Time Speaker Diarization Engine `[PRIORITY: HIGH - CLINICAL CONTEXT]`
-- [ ] Step 55: Doctor vs. Patient Speech Channeling
+### Phase 57: Real-Time Speaker Diarization Engine `[PRIORITY: HIGH - CLINICAL CONTEXT]`
+- [ ] Step 69: Doctor vs. Patient Speech Channeling
   - [ ] Dual-channel audio stream separation & PyAnnote / Whisper diarization backend integration in `agents/speech_agent.py`
   - [ ] Colored dual-bubble transcript stream in `LiveTranscriptPanel.tsx` (`[Doctor]` vs `[Patient]`)
 
 ---
 
-### Phase 35: Automated ICD-10 Medical Billing Auto-Coder `[PRIORITY: HIGH - HOSPITAL BILLING]`
-- [ ] Step 56: ICD-10 Clinical Coding & Differential Diagnosis
+### Phase 58: Automated ICD-10 Medical Billing Auto-Coder `[PRIORITY: HIGH - HOSPITAL BILLING]`
+- [ ] Step 70: ICD-10 Clinical Coding & Differential Diagnosis
   - [ ] ICD-10 clinical diagnosis code database & Gemini auto-coder mapping in `agents/prescription_agent.py`
   - [ ] 1-Click ICD-10 autocomplete chips and differential diagnosis popover in `DraftPanel.tsx`
 
 ---
 
-### Phase 36: Interactive Vitals & Chronic Disease Progression Analytics `[PRIORITY: HIGH - CLINICAL TRENDS]`
-- [ ] Step 57: Longitudinal Patient Vitals Analytics
+### Phase 59: Interactive Vitals & Chronic Disease Progression Analytics `[PRIORITY: HIGH - CLINICAL TRENDS]`
+- [ ] Step 71: Longitudinal Patient Vitals Analytics
   - [ ] Recharts interactive vitals tracking (BP, HbA1c, Blood Glucose, Weight, SpO2) across historical consultations
   - [ ] Patient Dossier health progression trends dashboard in `PatientsPage.tsx`
 
 ---
 
-### Phase 37: Offline-First PWA with IndexedDB Audio Sync Queue `[PRIORITY: HIGH - OFFLINE RESILIENCE]`
-- [ ] Step 58: Offline Audio Queue & Background Sync
+### Phase 60: Offline-First PWA with IndexedDB Audio Sync Queue `[PRIORITY: HIGH - OFFLINE RESILIENCE]`
+- [ ] Step 72: Offline Audio Queue & Background Sync
   - [ ] Service Worker offline caching & IndexedDB storage queue (`idb-keyval`) for audio blobs when clinic Wi-Fi drops
   - [ ] Automatic background sync engine pushing offline consultations to MongoDB Atlas upon network reconnection
 
 ---
 
-### Phase 38: Pediatric & Renal Clinical Dosage Safety Calculator `[PRIORITY: HIGH - PATIENT SAFETY]`
-- [ ] Step 59: Weight-Based Pediatric & Renal Clearance Calculation
+### Phase 61: Pediatric & Renal Clinical Dosage Safety Calculator `[PRIORITY: HIGH - PATIENT SAFETY]`
+- [ ] Step 73: Weight-Based Pediatric & Renal Clearance Calculation
   - [ ] mg/kg pediatric dosage and GFR renal clearance calculation engine based on patient age, weight, and diagnosis
   - [ ] Safe dosage range indicators and clinical warning badges directly inside `MedicineRow.tsx`

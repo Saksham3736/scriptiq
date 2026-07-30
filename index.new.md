@@ -390,38 +390,40 @@
 ---
 
 # PART V: Enterprise Expansion & Future Roadmap (Phases 54–60)
-- [ ] **Step 49.1: Docker Containerization & Infrastructure Config**
+
+## Phase 54: Production Containerization & Infrastructure Blueprint `[PRIORITY: MEDIUM]`
+- [ ] **Step 54.1: Docker Containerization & Infrastructure Config**
   - [ ] Backend FastAPI `Dockerfile` (Python 3.11 + ffmpeg + dependencies)
   - [ ] Frontend SPA `Dockerfile` (Nginx static build bundle)
   - [ ] `docker-compose.yml` for local container stack deployment
   - [ ] GitHub Actions CI workflow (`.github/workflows/ci.yml`) for automated linting, testing, and deployment
 
-## Phase 48: Performance Caching & Offline Storage Queue `[PRIORITY: MEDIUM]`
-- [ ] **Step 48.1: Response Caching & Offline Audio Synchronization**
+## Phase 55: Performance Caching & Offline Storage Queue `[PRIORITY: MEDIUM]`
+- [ ] **Step 55.1: Response Caching & Offline Audio Synchronization**
   - [ ] In-memory LRU / Redis cache for clinical drug lookups and common dosages
   - [ ] Service Worker IndexedDB offline audio queue (`idb-keyval`) for recording audio during Wi-Fi outages
 
-## Phase 49: HL7 / FHIR EHR Interoperability Standard Export `[RECOMMENDED BONUS]`
-- [ ] **Step 49.1: HL7 FHIR JSON Resource Exporter**
+## Phase 56: HL7 / FHIR EHR Interoperability Standard Export `[RECOMMENDED BONUS]`
+- [ ] **Step 56.1: HL7 FHIR JSON Resource Exporter**
   - [ ] Exporter converting prescriptions to HL7 / FHIR JSON standard resources (`Patient`, `MedicationRequest`, `Condition`)
   - [ ] REST endpoint `GET /api/prescription/:id/fhir` for hospital EHR integration
 
-## Phase 50: Cryptographic Aadhaar Digital Signature (e-Sign Verification) `[RECOMMENDED BONUS]`
-- [ ] **Step 50.1: Doctor PKI Signature Stamp**
+## Phase 57: Cryptographic Aadhaar Digital Signature (e-Sign Verification) `[RECOMMENDED BONUS]`
+- [ ] **Step 57.1: Doctor PKI Signature Stamp**
   - [ ] Cryptographic Aadhaar e-Sign verification module complying with Telemedicine Guidelines 2020
   - [ ] Embed verifiable cryptographic signature stamp on PDF exports
 
-## Phase 51: Dual-Channel Speaker Diarization Engine `[PRIORITY: HIGH - CLINICAL]`
-- [ ] **Step 51.1: Doctor vs. Patient Channel Separation**
+## Phase 58: Dual-Channel Speaker Diarization Engine `[PRIORITY: HIGH - CLINICAL]`
+- [ ] **Step 58.1: Doctor vs. Patient Channel Separation**
   - [ ] PyAnnote / Whisper speaker diarization separating doctor and patient speech audio channels
   - [ ] Dual-bubble color-coded transcript stream (`[Doctor]` vs `[Patient]`) in `LiveTranscriptPanel.tsx`
 
-## Phase 52: Automated ICD-10 Clinical Coding & Billing Auto-Coder `[PRIORITY: HIGH - BILLING]`
-- [ ] **Step 52.1: ICD-10 Clinical Diagnosis Autocomplete**
+## Phase 59: Automated ICD-10 Clinical Coding & Billing Auto-Coder `[PRIORITY: HIGH - BILLING]`
+- [ ] **Step 59.1: ICD-10 Clinical Diagnosis Autocomplete**
   - [ ] ICD-10 diagnosis database and Gemini LLM auto-coder in `PrescriptionAgent`
   - [ ] 1-click ICD-10 billing code chips in `DraftPanel.tsx`
 
-## Phase 53: Longitudinal Patient Vitals Analytics & Pediatric Dosage Calculator `[PRIORITY: HIGH - SAFETY]`
-- [ ] **Step 53.1: Interactive Vitals Analytics & Clinical Safety Calculator**
+## Phase 60: Longitudinal Patient Vitals Analytics & Pediatric Dosage Calculator `[PRIORITY: HIGH - SAFETY]`
+- [ ] **Step 60.1: Interactive Vitals Analytics & Clinical Safety Calculator**
   - [ ] Recharts longitudinal vitals tracking (BP, Blood Glucose, Weight, SpO2) in Patient Dossier
   - [ ] Weight-based mg/kg pediatric dosage and GFR renal clearance safety calculator in `MedicineRow.tsx`
