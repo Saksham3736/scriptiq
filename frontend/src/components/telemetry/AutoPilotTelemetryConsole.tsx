@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useUIStore } from '@/store/uiStore';
+import { resolveWsUrl } from '@/hooks/useRecordingSocket';
 import {
   Activity,
   CheckCircle2,
@@ -77,7 +78,7 @@ export default function AutoPilotTelemetryConsole() {
   const terminalEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const wsUrl = `ws://${window.location.hostname}:8000/ws/master_agent`;
+    const wsUrl = resolveWsUrl('/ws/master_agent');
     let ws: WebSocket | null = null;
 
     try {

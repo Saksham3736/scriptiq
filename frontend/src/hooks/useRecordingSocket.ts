@@ -13,6 +13,22 @@ export interface UseRecordingSocketReturn {
   disconnectSocket: () => void;
 }
 
+export function resolveWsUrl(path: string): string {
+  if (import.meta.env.VITE_WS_URL) {
+    const base = import.meta.env.VITE_WS_URL.replace(/\/$/, '');
+    return `${base}${path.startsWith('/') ? path : '/' + path}`;
+  }
+  if (import.meta.env.VITE_API_BASE_URL) {
+    const wsBase = import.meta.env.VITE_API_BASE_URL.replace(/^http/, 'ws').replace(/\/$/, '');
+    return `${wsBase}${path.startsWith('/') ? path : '/' + path}`;
+  }
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (isLocal) {
+    return `ws://${window.location.hostname}:8000${path.startsWith('/') ? path : '/' + path}`;
+  }
+  return `wss://scriptiq-backend.onrender.com${path.startsWith('/') ? path : '/' + path}`;
+}
+
 export function useRecordingSocket(wsUrl?: string): UseRecordingSocketReturn {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
@@ -25,9 +41,7 @@ export function useRecordingSocket(wsUrl?: string): UseRecordingSocketReturn {
 
   const getUrl = useCallback(() => {
     if (wsUrl) return wsUrl;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname || 'localhost';
-    return `${protocol}//${host}:8000/ws/transcript`;
+    return resolveWsUrl('/ws/transcript');
   }, [wsUrl]);
 
   const connectSocket = useCallback(() => {
