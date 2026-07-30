@@ -8,10 +8,10 @@ import requests
 import json
 from dotenv import load_dotenv
 
-# Ensure root workspace is in sys.path
-WORKSPACE_ROOT = os.path.dirname(os.path.abspath(__file__))
-if WORKSPACE_ROOT not in sys.path:
-    sys.path.insert(0, WORKSPACE_ROOT)
+# Ensure backend workspace is in sys.path
+BACKEND_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend"))
+if BACKEND_ROOT not in sys.path:
+    sys.path.insert(0, BACKEND_ROOT)
 
 load_dotenv()
 
