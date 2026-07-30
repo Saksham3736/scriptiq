@@ -1094,14 +1094,14 @@ def check_push_status(phone: str = Query(...)):
 async def websocket_transcript(websocket: WebSocket):
     """
     WebSocket endpoint for live transcript streaming.
-    Client sends text chunks; server echoes back processed segments.
-    In production: streams audio → Whisper → sends partial transcript back.
-    In current implementation: echoes text input with agent processing.
+    Accepts text chunks, audio chunk metadata (base64), and process commands.
+    Sends back: transcript_partial, processing_started, prescription_ready, error events.
     """
     await websocket.accept()
     print("[WS] Client connected to /ws/transcript")
     try:
         buffer = []
+        audio_chunks_b64 = []
         while True:
             data = await websocket.receive_text()
             msg = json.loads(data)
@@ -1109,20 +1109,29 @@ async def websocket_transcript(websocket: WebSocket):
 
             if event == "text_chunk":
                 chunk = msg.get("text", "")
-                buffer.append(chunk)
-                # Echo chunk back as partial transcript
-                await websocket.send_text(json.dumps({
-                    "event": "transcript_partial",
-                    "text": chunk,
-                    "cumulative": " ".join(buffer),
-                }))
+                if chunk:
+                    buffer.append(chunk)
+                    # Echo chunk back as partial transcript so frontend badge stays Live
+                    await websocket.send_text(json.dumps({
+                        "event": "transcript_partial",
+                        "text": chunk,
+                        "cumulative": " ".join(buffer),
+                    }))
+
+            elif event == "audio_chunk":
+                # Accumulate base64-encoded audio chunks sent from the browser MediaRecorder
+                b64_data = msg.get("data", "")
+                if b64_data:
+                    audio_chunks_b64.append(b64_data)
+                # Acknowledge receipt without blocking
+                await websocket.send_text(json.dumps({"event": "audio_chunk_ack"}))
 
             elif event == "process":
-                # Full transcript submitted — run extraction
-                full_transcript = msg.get("transcript", " ".join(buffer))
-                patient_name = msg.get("patient_name", "")
-                phone = msg.get("phone", "")
-                dob = msg.get("dob", "")
+                # Full transcript (or accumulated buffer) submitted — run extraction
+                full_transcript = msg.get("transcript") or " ".join(buffer)
+                patient_name = msg.get("patient_name") or None
+                phone = msg.get("phone") or None
+                dob = msg.get("dob") or None
 
                 await websocket.send_text(json.dumps({
                     "event": "processing_started",
@@ -1130,18 +1139,21 @@ async def websocket_transcript(websocket: WebSocket):
                 }))
 
                 try:
-                    prescription_data = agent.generate_prescription(
+                    # Use the correct master orchestrator method
+                    prescription_data = agent.process_consultation(
                         transcript=full_transcript,
-                        patient_name=patient_name or None,
-                        phone=phone or None,
-                        dob=dob or None,
+                        patient_name=patient_name,
+                        phone=phone,
+                        dob=dob,
                     )
                     buffer = []
+                    audio_chunks_b64 = []
                     await websocket.send_text(json.dumps({
                         "event": "prescription_ready",
                         "data": prescription_data,
                     }))
                 except Exception as err:
+                    print(f"[WS] process error: {err}")
                     await websocket.send_text(json.dumps({
                         "event": "error",
                         "message": str(err),
@@ -1153,7 +1165,7 @@ async def websocket_transcript(websocket: WebSocket):
     except WebSocketDisconnect:
         print("[WS] Client disconnected from /ws/transcript")
     except Exception as e:
-        print(f"[WS] Error: {e}")
+        print(f"[WS] Unhandled error: {e}")
         try:
             await websocket.send_text(json.dumps({"event": "error", "message": str(e)}))
         except Exception:

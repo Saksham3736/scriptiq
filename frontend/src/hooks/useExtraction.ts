@@ -88,12 +88,21 @@ export function useExtraction() {
 
         if (json.success && json.data) {
           extractedData = json.data;
+
+          // ── Field aliasing: backend schema → frontend DraftStore field names ──
+          // Backend returns `general_advice`, DraftStore expects `advice`
+          if (extractedData.general_advice && !extractedData.advice) {
+            extractedData.advice = extractedData.general_advice;
+          }
+          // Backend returns `patient_dob`, DraftStore expects `dob`
           if (extractedData.patient_dob && !extractedData.dob) {
             extractedData.dob = extractedData.patient_dob;
           }
+          // Backend returns `patient_email`, DraftStore expects `email`
           if (extractedData.patient_email && !extractedData.email) {
             extractedData.email = extractedData.patient_email;
           }
+
           const dobVal = extractedData.dob || extractedData.patient_dob;
           if (dobVal && (!extractedData.age || extractedData.age === '')) {
             const autoAge = calculateAgeFromDOB(dobVal);
