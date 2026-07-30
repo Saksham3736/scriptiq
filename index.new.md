@@ -357,7 +357,39 @@
 - [ ] **Step 48.5: Deep File Path & Module Reference Audit Suite (Zero-Path-Error Audit)**
   - [ ] Perform a line-by-line audit across all relocated files to verify relative file paths (`assets/`, `output/prescriptions/`, `vapid_private.pem`, `.env`, `temp_audio/`) and `sys.path` import targets to ensure zero `FileNotFoundError` or `ModuleNotFoundError`
 
-## Phase 49: Production Containerization & Infrastructure Blueprint `[PRIORITY: MEDIUM]`
+---
+
+## Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation & Transcript Email Parsing `[PRIORITY: CRITICAL - CLINICAL INTAKE]`
+- [ ] **Step 49.1: Auto-Calculate Age from DOB & Intake Form Primary Binding (`DraftPanel.tsx` & `PatientIntakeSpace.tsx`)**
+  - [ ] Add `patient_dob` extraction to `PrescriptionAgent` Pydantic schema
+  - [ ] Implement `calculateAgeFromDOB()` helper auto-calculating age in years whenever DOB is entered/selected, setting DOB as primary intake field
+- [ ] **Step 49.2: Transcript Email Address Extraction (`agents/prescription_agent.py` & `useExtraction.ts`)**
+  - [ ] Add `patient_email` field to `PrescriptionSchema` and map extracted email directly to `draftStore.ts` `draft.email`
+
+## Phase 50: PDF Password Encryption Synchronization & Doctor Console Security Badge `[PRIORITY: CRITICAL - SECURITY & PDF]`
+- [ ] **Step 50.1: Shared Password Resolution Engine (`config.py`)**
+  - [ ] Unify password resolution (`DOB` -> `Phone-Last-4` -> `1234`) in a shared helper function called identically by `PDFAgent` and `EmailAgent`, guaranteeing 100% password parity
+- [ ] **Step 50.2: Doctor Console PDF Password Display Badge & 1-Click Copy (`SendPrescriptionModal.tsx` & `DraftPanel.tsx`)**
+  - [ ] Render a visible security badge showing the actual PDF password (`🔒 PDF Password: {pwd}`) with 1-click copy to clipboard in Doctor Console upon PDF generation
+
+## Phase 51: Receipt Lifecycle Gating & Cashier Payment Status Control `[PRIORITY: HIGH - PHARMACY POS]`
+- [ ] **Step 51.1: Gated Receipt Creation & Payment Status Control (`server.py` & `ReceiptsManagementPage.tsx`)**
+  - [ ] Default auto-created receipts to `"Pending Payment"` instead of premature `"Paid"` status to avoid storage distortion
+  - [ ] Require explicit cashier payment collection action (Cash, UPI QR, Card) before marking receipt as `"Paid"`
+
+## Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite `[PRIORITY: HIGH - PHARMACY STORAGE & UX]`
+- [ ] **Step 52.1: REST API Receipt Deletion (`DELETE /api/pharmacy/receipts/{order_id}`)**
+  - [ ] Build REST endpoint `DELETE /api/pharmacy/receipts/{order_id}` and add `<Trash2 />` button with typed confirmation modal in `ReceiptsManagementPage.tsx`
+- [ ] **Step 52.2: "⚡ Re-Load into POS Builder" Action (`ReceiptsManagementPage.tsx`)**
+  - [ ] Add "⚡ Re-Load into POS Builder" button to receipt rows, instantly populating active POS table with medicines, patient details, and prices for re-dispensing or editing
+
+## Phase 53: Patient Receipts Portal — Stock Tab Replacement with Patient Receipts Explorer `[PRIORITY: HIGH - UX]`
+- [ ] **Step 53.1: Replace Stock Inventory Tab with Patient Receipts Explorer (`ReceiptsManagementPage.tsx`)**
+  - [ ] Replace redundant "Stock Inventory" tab in `ReceiptsManagementPage.tsx` with "Patient Receipts Explorer", providing live search by patient name/phone, date range filters, and itemized breakdown inspect popovers
+
+---
+
+# PART V: Enterprise Expansion & Future Roadmap (Phases 54–60)
 - [ ] **Step 49.1: Docker Containerization & Infrastructure Config**
   - [ ] Backend FastAPI `Dockerfile` (Python 3.11 + ffmpeg + dependencies)
   - [ ] Frontend SPA `Dockerfile` (Nginx static build bundle)

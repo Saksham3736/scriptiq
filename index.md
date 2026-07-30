@@ -751,7 +751,39 @@
   - [ ] Move Python server & agents into `backend/` with Render Blueprint (`render.yaml`)
   - [ ] Consolidate unit & integration test scripts into `tests/` directory
   - [ ] Create `.env.example` and `DEPLOYMENT.md` deployment guide
-  - [ ] Step 60.5: Perform deep line-by-line file path & import audit (`assets/`, `output/`, `vapid_private.pem`, `sys.path`) to ensure zero `FileNotFoundError` or `ModuleNotFoundError`
+---
+
+## Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation & Transcript Email Parsing `[PRIORITY: CRITICAL - CLINICAL INTAKE]`
+- [ ] Step 61: Auto-Calculate Age from DOB & Transcript Email Address Extraction
+  - [ ] Auto-calculate age in years from DOB in `DraftPanel.tsx` / `PatientIntakeSpace.tsx`
+  - [ ] Parse patient email address from transcript in `PrescriptionAgent`
+
+---
+
+## Phase 50: PDF Password Encryption Synchronization & Doctor Console Security Badge `[PRIORITY: CRITICAL - SECURITY & PDF]`
+- [ ] Step 62: Password Parity Engine & Doctor Console Security Badge
+  - [ ] Unify password resolution helper in `config.py` ensuring 100% parity between `PDFAgent` and `EmailAgent`
+  - [ ] Render visible security badge with 1-click password copy in `SendPrescriptionModal.tsx` / `DraftPanel.tsx`
+
+---
+
+## Phase 51: Receipt Lifecycle Gating & Cashier Payment Status Control `[PRIORITY: HIGH - PHARMACY POS]`
+- [ ] Step 63: Gated Receipt Creation & Payment Status Control
+  - [ ] Default auto-created receipts to `"Pending Payment"` instead of premature `"Paid"` status
+  - [ ] Require explicit cashier payment action (Cash, UPI QR, Card) before marking receipt as `"Paid"`
+
+---
+
+## Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite `[PRIORITY: HIGH - PHARMACY STORAGE & UX]`
+- [ ] Step 64: REST API Receipt Deletion & "⚡ Re-Load into POS Builder" Button
+  - [ ] Endpoint `DELETE /api/pharmacy/receipts/{order_id}` with typed confirmation modal in `ReceiptsManagementPage.tsx`
+  - [ ] Add "⚡ Re-Load into POS Builder" button to receipt rows for instant re-dispensing / editing
+
+---
+
+## Phase 53: Patient Receipts Portal — Stock Tab Replacement with Patient Receipts Explorer `[PRIORITY: HIGH - UX]`
+- [ ] Step 65: Replace Stock Inventory Tab with Patient Receipts Explorer
+  - [ ] Replace redundant "Stock Inventory" tab in `ReceiptsManagementPage.tsx` with "Patient Receipts Explorer" for live patient search and itemized breakdown inspection
 
 ---
 
