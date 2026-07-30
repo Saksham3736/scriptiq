@@ -333,12 +333,12 @@
 ---
 
 ## Phase 47: Patient Fallback Identifier PDF Encryption Suite (`Option B`) `[PRIORITY: HIGH - SECURITY & UX]`
-- [ ] **Step 47.1: Smart Fallback Password Resolution (`PDFAgent` in `agents/pdf_agent.py`)**
-  - [ ] Implement dual-stage PDF password resolution: primary DOB (`DDMMYYYY`), falling back to last 4 digits of patient's phone number (`DDMMYYYY` -> `Phone-Last-4`) when DOB is not provided
-- [ ] **Step 47.2: Dynamic Password Hint Email & Dispatch Messaging (`agents/email_agent.py`)**
-  - [ ] Dynamically render HTML email body and modal notification badges providing exact password hint (`DOB` vs `Last 4 Phone digits`) to recipient
-- [ ] **Step 47.3: REST API & Diagnostic Test Suite Wireup (`server.py` & `test_phase26_email.py`)**
-  - [ ] Pass `phone` fallback into `PDFAgent.generate_pdf()`, include `pdf_password_type` in API response, and verify with automated unit/integration test suite
+- [x] **Step 47.1: Smart Fallback Password Resolution (`PDFAgent` in `agents/pdf_agent.py`)**
+  - [x] Implement dual-stage PDF password resolution: primary DOB (`DDMMYYYY`), falling back to last 4 digits of patient's phone number (`DDMMYYYY` -> `Phone-Last-4` -> `1234`) when DOB is not provided
+- [x] **Step 47.2: Dynamic Password Hint Email & Dispatch Messaging (`agents/email_agent.py`)**
+  - [x] Dynamically render HTML email body and modal notification badges providing exact password hint banner (`🔒 PDF Security Password: {pdf_password}`) to recipient
+- [x] **Step 47.3: REST API & Diagnostic Test Suite Wireup (`server.py` & `test_phase26_email.py`)**
+  - [x] Pass `phone` fallback into `PDFAgent.generate_pdf()`, include password callout in email, and verify with automated unit/integration test suite
 
 ---
 
