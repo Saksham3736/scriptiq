@@ -354,6 +354,8 @@
   - [ ] Consolidate all root test scripts (`test_phase26_email.py`, `test_primary_objective.py`, `test_phase36_demographics.py`) into `tests/` directory with clean import path resolution
 - [ ] **Step 48.4: Environment Template & Step-by-Step Deployment Guide**
   - [ ] Create `.env.example` and `DEPLOYMENT.md` detailing step-by-step instructions for Vercel & Render project creation and environment configuration
+- [ ] **Step 48.5: Deep File Path & Module Reference Audit Suite (Zero-Path-Error Audit)**
+  - [ ] Perform a line-by-line audit across all relocated files to verify relative file paths (`assets/`, `output/prescriptions/`, `vapid_private.pem`, `.env`, `temp_audio/`) and `sys.path` import targets to ensure zero `FileNotFoundError` or `ModuleNotFoundError`
 
 ## Phase 49: Production Containerization & Infrastructure Blueprint `[PRIORITY: MEDIUM]`
 - [ ] **Step 49.1: Docker Containerization & Infrastructure Config**

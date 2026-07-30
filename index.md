@@ -751,6 +751,7 @@
   - [ ] Move Python server & agents into `backend/` with Render Blueprint (`render.yaml`)
   - [ ] Consolidate unit & integration test scripts into `tests/` directory
   - [ ] Create `.env.example` and `DEPLOYMENT.md` deployment guide
+  - [ ] Step 60.5: Perform deep line-by-line file path & import audit (`assets/`, `output/`, `vapid_private.pem`, `sys.path`) to ensure zero `FileNotFoundError` or `ModuleNotFoundError`
 
 ---
 
