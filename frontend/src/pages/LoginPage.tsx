@@ -22,10 +22,10 @@ export default function LoginPage() {
   const login = useAuthStore((s) => s.login);
 
   const [selectedRole, setSelectedRole] = useState<UserRole>('doctor');
-  const [email, setEmail]       = useState('doctor@scriptiq.in');
-  const [password, setPassword] = useState('scriptiq123');
-  const [phone, setPhone]       = useState('9888478606');
-  const [otp, setOtp]           = useState('1234');
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
+  const [phone, setPhone]       = useState('');
+  const [otp, setOtp]           = useState('');
   const [patientStep, setPatientStep] = useState<'phone' | 'otp'>('phone');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
