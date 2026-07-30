@@ -312,7 +312,7 @@
 
 ## Phase 42: Interactive Receipt Editor & Pricing Override Suite `[PRIORITY: HIGH - PHARMACY]`
 - [ ] **Sub-Phase 42A: Receipt Modification & Discount Action Bar (`EditReceiptModal.tsx`)**
-  - Add "Edit Receipt" action button to history rows in `ReceiptsManagementPage.tsx` launching `EditReceiptModal.tsx`, allowing pharmacists to override prices, adjust quantities, apply discounts (0–50%), and update totals via `POST /api/pharmacy/receipts/{order_id}`
+  - Add "Edit Receipt" action button to history rows in `ReceiptsManagementPage.tsx` launching `EditReceiptModal.tsx`, allowing pharmacists to override prices, adjust quantities, apply discounts (0–50%), and update totals via `POST /api/pharmacy/receipts/{order_id}`{ This should be done in setting page}
 
 ## Phase 43: Interactive Popover Receipt Inspector `[PRIORITY: HIGH - UX ERGONOMICS]`
 - [ ] **Sub-Phase 43A: Inline Row Click Popover Inspector (`ReceiptDetailModal.tsx`)**
