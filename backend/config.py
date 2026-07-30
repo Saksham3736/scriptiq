@@ -29,3 +29,26 @@ SMTP_PASS = os.getenv("SMTP_PASS", os.getenv("GMAIL_APP_PASSWORD", ""))
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "scriptiq.sk@gmail.com")
 DEFAULT_PATIENT_EMAIL = os.getenv("DEFAULT_PATIENT_EMAIL", "saksham.kj.3736@gmail.com")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://scriptiq-sk.vercel.app")
+
+def resolve_pdf_password(dob: str = None, phone: str = None) -> tuple:
+    """
+    Unified PDF password resolution engine.
+    Priority 1: DOB (8 digits, e.g. 15081995) -> label "DOB (DDMMYYYY)"
+    Priority 2: Last 4 digits of phone number -> label "Phone (Last 4 Digits)"
+    Priority 3: Default fallback "1234" -> label "Default Passcode (1234)"
+    Returns (password_string, display_label).
+    """
+    if dob:
+        clean_dob = "".join(c for c in str(dob) if c.isdigit())
+        if len(clean_dob) == 8:
+            return clean_dob, f"DOB ({clean_dob[:2]}/{clean_dob[2:4]}/{clean_dob[4:]})"
+        elif len(clean_dob) >= 4:
+            return clean_dob, f"DOB ({clean_dob})"
+
+    if phone:
+        clean_phone = "".join(c for c in str(phone) if c.isdigit())
+        if len(clean_phone) >= 4:
+            last4 = clean_phone[-4:]
+            return last4, f"Phone (Last 4 Digits: {last4})"
+
+    return "1234", "Default Passcode (1234)"

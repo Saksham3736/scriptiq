@@ -147,6 +147,36 @@ export default function SendPrescriptionModal({
 
                 {createdPdfUrl && (
                   <a
+                {/* 🔒 PDF Security Password Badge with 1-Click Copy */}
+                {(() => {
+                  const dobClean = (draft.dob || (draft as any).patient_dob || '').replace(/\D/g, '');
+                  const phoneClean = (phone || draft.phone || '').replace(/\D/g, '');
+                  const resolvedPassword = dobClean.length >= 4 ? dobClean : (phoneClean.length >= 4 ? phoneClean.slice(-4) : '1234');
+                  const passwordLabel = dobClean.length >= 4 ? 'Patient DOB' : (phoneClean.length >= 4 ? 'Phone Last 4 Digits' : 'Default Passcode');
+                  return (
+                    <div style={{ background: '#E4F3F1', border: '1px solid #12897F', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '14px 0 16px 0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>🔒</span>
+                        <div>
+                          <div style={{ fontSize: '11px', fontWeight: 600, color: '#12897F', textTransform: 'uppercase', letterSpacing: '0.05em' }}>PDF Security Password ({passwordLabel})</div>
+                          <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '16px', fontWeight: 700, color: '#101A2E', marginTop: '2px' }}>{resolvedPassword}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(resolvedPassword);
+                          addToast({ type: 'info', title: 'Password Copied', message: `Copied '${resolvedPassword}' to clipboard!` });
+                        }}
+                        style={{ background: '#12897F', color: '#FFF', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        Copy Password
+                      </button>
+                    </div>
+                  );
+                })()}
+
+                {createdPdfUrl && (
+                  <a
                     href={createdPdfUrl}
                     target="_blank"
                     rel="noreferrer"

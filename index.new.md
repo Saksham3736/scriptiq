@@ -367,10 +367,10 @@
   - [x] Add `patient_email` field to `PrescriptionSchema` and map extracted email directly to `draftStore.ts` `draft.email`
 
 ## Phase 50: PDF Password Encryption Synchronization & Doctor Console Security Badge `[PRIORITY: CRITICAL - SECURITY & PDF]`
-- [ ] **Step 50.1: Shared Password Resolution Engine (`config.py`)**
-  - [ ] Unify password resolution (`DOB` -> `Phone-Last-4` -> `1234`) in a shared helper function called identically by `PDFAgent` and `EmailAgent`, guaranteeing 100% password parity
-- [ ] **Step 50.2: Doctor Console PDF Password Display Badge & 1-Click Copy (`SendPrescriptionModal.tsx` & `DraftPanel.tsx`)**
-  - [ ] Render a visible security badge showing the actual PDF password (`🔒 PDF Password: {pwd}`) with 1-click copy to clipboard in Doctor Console upon PDF generation
+- [x] **Step 50.1: Shared Password Resolution Engine (`config.py`)**
+  - [x] Unify password resolution (`DOB` -> `Phone-Last-4` -> `1234`) in a shared helper function called identically by `PDFAgent` and `EmailAgent`, guaranteeing 100% password parity
+- [x] **Step 50.2: Doctor Console PDF Password Display Badge & 1-Click Copy (`SendPrescriptionModal.tsx` & `DraftPanel.tsx`)**
+  - [x] Render a visible security badge showing the actual PDF password (`🔒 PDF Password: {pwd}`) with 1-click copy to clipboard in Doctor Console upon PDF generation
 
 ## Phase 51: Receipt Lifecycle Gating & Cashier Payment Status Control `[PRIORITY: HIGH - PHARMACY POS]`
 - [ ] **Step 51.1: Gated Receipt Creation & Payment Status Control (`server.py` & `ReceiptsManagementPage.tsx`)**

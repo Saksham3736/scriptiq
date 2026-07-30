@@ -149,18 +149,8 @@ class PDFAgent:
         encrypt_obj = None
         resolved_pwd = None
         if encrypt_pdf_flag:
-            clean_dob = str(dob).replace("/", "").replace("-", "").replace(".", "").strip() if dob else ""
-            if clean_dob and len(clean_dob) >= 4:
-                resolved_pwd = clean_dob
-                pwd_type = "DOB"
-            else:
-                digits_phone = "".join(c for c in str(phone) if c.isdigit())
-                if digits_phone and len(digits_phone) >= 4:
-                    resolved_pwd = digits_phone[-4:]
-                    pwd_type = "Phone-Last-4"
-                else:
-                    resolved_pwd = "1234"
-                    pwd_type = "Emergency-Key"
+            import config as app_config
+            resolved_pwd, pwd_type = app_config.resolve_pdf_password(dob, phone)
             print(f"[PDFAgent] Encrypting PDF with Patient password ({pwd_type}): '{resolved_pwd}'")
             encrypt_obj = StandardEncryption(userPassword=resolved_pwd, ownerPassword=resolved_pwd, canPrint=1, canModify=0)
         else:

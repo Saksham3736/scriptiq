@@ -38,20 +38,12 @@ class EmailAgent:
         else:
             simulation_mode = True
 
-        # Resolve PDF Password for explicit callout
+        # Resolve PDF Password for explicit callout using shared engine
         pdf_password = config.get("pdf_password")
         if not pdf_password:
             dob = config.get("dob") or config.get("patient_dob") or ""
             phone = config.get("phone") or config.get("patient_phone") or ""
-            clean_dob = str(dob).replace("/", "").replace("-", "").replace(".", "").strip() if dob else ""
-            if clean_dob and len(clean_dob) >= 4:
-                pdf_password = clean_dob
-            else:
-                digits_phone = "".join(c for c in str(phone) if c.isdigit())
-                if digits_phone and len(digits_phone) >= 4:
-                    pdf_password = digits_phone[-4:]
-                else:
-                    pdf_password = "1234"
+            pdf_password, _ = app_config.resolve_pdf_password(dob, phone)
 
         password_banner = f"""
         <div style="background-color: #E4F3F1; border-left: 4px solid #12897F; padding: 14px 18px; margin: 18px 0; border-radius: 8px; font-family: sans-serif;">
