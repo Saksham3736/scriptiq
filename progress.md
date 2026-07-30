@@ -4,7 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-* **Current Phase**: Phase 50 Complete — PDF Password Encryption Synchronization & Doctor Console Security Badge (`config.py` & `SendPrescriptionModal.tsx`)
+* **Current Phase**: Phase 51 Complete — Universal Route & API Authentication Security Guard (`RequireRole.tsx`, `App.tsx`, `LoginPage.tsx`, `PatientLoginPage.tsx`)
 * **Completed & Active Phases**: 
   * Phase 1 to 30: Baseline Systems, Auth, Telemetry, PDF Encryption & Multi-Channel Engine (100% Complete)
   * Phase 34: In-House Pharmacy Receipt & Template Management Suite (`ReceiptsManagementPage.tsx`, POS velocity mode, UPI QR, thermal 80mm printing) (100% Complete)
@@ -18,8 +18,8 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 48: Production Monorepo Restructuring & Dual-Platform Cloud Deployment Suite (`frontend/`, `backend/`, `tests/`, `vercel.json`, `render.yaml`, `.env.example`, `DEPLOYMENT.md`) (100% Complete)
   * Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation (`calculateAgeFromDOB`) & Transcript Email Parsing (100% Complete)
   * Phase 50: PDF Password Encryption Synchronization & Doctor Console Security Badge (`config.resolve_pdf_password` & `SendPrescriptionModal.tsx`) (100% Complete)
+  * Phase 51: Universal Route & API Authentication Security Guard (`RequireRole.tsx`, `App.tsx`, `LoginPage.tsx`, `PatientLoginPage.tsx`) (100% Complete)
 * **Planned Feature Integration Roadmap**:
-  * Phase 51: Receipt Lifecycle Gating & Cashier Payment Status Control (`server.py` & `ReceiptsManagementPage.tsx`)
   * Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite (`DELETE /api/pharmacy/receipts/{order_id}`)
   * Phase 53: Patient Receipts Portal — Stock Tab Replacement with Patient Receipts Explorer (`ReceiptsManagementPage.tsx`)
 * **Last Updated**: July 30, 2026
@@ -419,6 +419,16 @@ This document records all architectural decisions, actions, command executions, 
   - Created `resolve_pdf_password(dob, phone)` shared resolution engine in `backend/config.py` used identically by `PDFAgent` and `EmailAgent` ensuring 100% password parity (`DOB` -> `Phone-Last-4` -> `1234`).
   - Added visible `🔒 PDF Security Password` badge with 1-click **Copy Password** button in `SendPrescriptionModal.tsx`.
   - Verified with `tests/test_pdf.py` and `tests/test_email.py` unit test suites passing **100% OK**.
+
+---
+
+## 🛡️ Phase 51: Universal Route & API Authentication Security Guard
+* *Status: Completed*
+* Details:
+  - Enforced RBAC route protection across all doctor/admin workspaces (`/console`, `/dashboard`, `/receipts`, `/history`, `/patients`, `/settings`) and patient dashboard (`/patient/dashboard`) in `App.tsx` and `RequireRole.tsx`.
+  - Added smart `RootRedirect` catch-all handler routing unauthenticated users to `/login` and authenticated users directly to their workspace.
+  - Implemented auto-redirect in `LoginPage.tsx` and `PatientLoginPage.tsx` so logged-in users bypass the login screen.
+  - Verified with production build `npm run build` passing **100% OK** in 945ms.
 
 ---
 

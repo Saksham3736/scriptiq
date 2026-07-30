@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Smartphone, Lock, ArrowRight, ShieldCheck, Activity } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -6,8 +6,20 @@ import { useAuthStore } from '@/store/authStore';
 export default function PatientLoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
 
-  const [phone, setPhone] = useState('9888478606');
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (user?.role === 'patient') {
+        navigate('/patient/dashboard', { replace: true });
+      } else {
+        navigate('/console', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [loading, setLoading] = useState(false);

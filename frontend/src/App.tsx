@@ -18,6 +18,20 @@ import PatientLoginPage from './pages/patient/PatientLoginPage';
 import PatientDashboardPage from './pages/patient/PatientDashboardPage';
 
 import RequireRole from './components/auth/RequireRole';
+import { useAuthStore } from './store/authStore';
+
+function RootRedirect() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  if (user?.role === 'patient') {
+    return <Navigate to="/patient/dashboard" replace />;
+  }
+  return <Navigate to="/console" replace />;
+}
 
 export default function App() {
   return (
@@ -25,13 +39,17 @@ export default function App() {
       <ErrorBoundary>
         <BrowserRouter>
         <Routes>
-          {/* Public Patient Views */}
+          {/* Public Patient & Shared Prescription Views */}
           <Route path="/prescription/:prescriptionId" element={<PrescriptionViewPage />} />
           <Route path="/p/:shareToken" element={<PrescriptionViewPage />} />
           <Route path="/receipt/:orderId" element={<ReceiptViewPage />} />
           <Route path="/patient" element={<PatientPortal />} />
           <Route path="/patient/login" element={<PatientLoginPage />} />
-          <Route path="/patient/dashboard" element={<PatientDashboardPage />} />
+
+          {/* Protected Patient Dashboard */}
+          <Route element={<RequireRole allowedRoles={['patient']} />}>
+            <Route path="/patient/dashboard" element={<PatientDashboardPage />} />
+          </Route>
 
           {/* Login */}
           <Route path="/login" element={<LoginPage />} />
@@ -48,8 +66,9 @@ export default function App() {
             </Route>
           </Route>
 
-          {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/console" replace />} />
+          {/* Smart Root & Catch-All Authentication Redirect */}
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="*" element={<RootRedirect />} />
         </Routes>
       </BrowserRouter>
       </ErrorBoundary>

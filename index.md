@@ -769,10 +769,10 @@
 
 ---
 
-## Phase 51: Receipt Lifecycle Gating & Cashier Payment Status Control `[PRIORITY: HIGH - PHARMACY POS]`
-- [ ] Step 63: Gated Receipt Creation & Payment Status Control
-  - [ ] Default auto-created receipts to `"Pending Payment"` instead of premature `"Paid"` status
-  - [ ] Require explicit cashier payment action (Cash, UPI QR, Card) before marking receipt as `"Paid"`
+## Phase 51: Universal Route & API Authentication Security Guard `[PRIORITY: CRITICAL - SYSTEM SECURITY]`
+- [x] Step 63: Strict Route Protection & Unauthenticated Redirects
+  - [x] Role-based RBAC guards for `/console`, `/dashboard`, `/receipts`, `/history`, `/patients`, `/settings`, `/patient/dashboard`
+  - [x] Smart `RootRedirect` and authenticated session auto-redirect in `LoginPage.tsx` / `PatientLoginPage.tsx`
 
 ---
 

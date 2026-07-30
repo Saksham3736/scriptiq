@@ -372,10 +372,12 @@
 - [x] **Step 50.2: Doctor Console PDF Password Display Badge & 1-Click Copy (`SendPrescriptionModal.tsx` & `DraftPanel.tsx`)**
   - [x] Render a visible security badge showing the actual PDF password (`🔒 PDF Password: {pwd}`) with 1-click copy to clipboard in Doctor Console upon PDF generation
 
-## Phase 51: Receipt Lifecycle Gating & Cashier Payment Status Control `[PRIORITY: HIGH - PHARMACY POS]`
-- [ ] **Step 51.1: Gated Receipt Creation & Payment Status Control (`server.py` & `ReceiptsManagementPage.tsx`)**
-  - [ ] Default auto-created receipts to `"Pending Payment"` instead of premature `"Paid"` status to avoid storage distortion
-  - [ ] Require explicit cashier payment collection action (Cash, UPI QR, Card) before marking receipt as `"Paid"`
+## Phase 51: Universal Route & API Authentication Security Guard `[PRIORITY: CRITICAL - SYSTEM SECURITY]`
+- [x] **Step 51.1: Strict Route Protection & Unauthenticated Redirects (`RequireRole.tsx` & `App.tsx`)**
+  - [x] Protect `/console`, `/dashboard`, `/receipts`, `/history`, `/patients`, `/settings`, and `/patient/dashboard` with role-specific RBAC guards
+  - [x] Create `RootRedirect` smart catch-all handler directing unauthenticated users to `/login` and authenticated users to their workspace
+- [x] **Step 51.2: Authenticated Session Auto-Redirect (`LoginPage.tsx` & `PatientLoginPage.tsx`)**
+  - [x] Auto-redirect already-authenticated users away from login pages straight to their active workspace
 
 ## Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite `[PRIORITY: HIGH - PHARMACY STORAGE & UX]`
 - [ ] **Step 52.1: REST API Receipt Deletion (`DELETE /api/pharmacy/receipts/{order_id}`)**

@@ -14,7 +14,8 @@ export default function RequireRole({ allowedRoles, children }: RequireRoleProps
   const user = useAuthStore((s) => s.user);
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    const targetLogin = allowedRoles.includes('patient') ? '/patient/login' : '/login';
+    return <Navigate to={targetLogin} replace />;
   }
 
   if (user && !allowedRoles.includes(user.role)) {

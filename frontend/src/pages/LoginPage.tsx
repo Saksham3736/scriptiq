@@ -1,6 +1,6 @@
 /* LoginPage.tsx — ScriptIQ branded login */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore, type UserRole } from '@/store/authStore';
 import { Stethoscope, Shield, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
@@ -20,6 +20,18 @@ const ROLE_CONFIG = {
 export default function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (user?.role === 'patient') {
+        navigate('/patient/dashboard', { replace: true });
+      } else {
+        navigate('/console', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const [selectedRole, setSelectedRole] = useState<UserRole>('doctor');
   const [email, setEmail]       = useState('');

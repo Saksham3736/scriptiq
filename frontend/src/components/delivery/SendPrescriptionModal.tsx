@@ -145,8 +145,6 @@ export default function SendPrescriptionModal({
                   </a>
                 )}
 
-                {createdPdfUrl && (
-                  <a
                 {/* 🔒 PDF Security Password Badge with 1-Click Copy */}
                 {(() => {
                   const dobClean = (draft.dob || (draft as any).patient_dob || '').replace(/\D/g, '');
