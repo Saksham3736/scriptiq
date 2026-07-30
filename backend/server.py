@@ -118,19 +118,27 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow Vite dev server and any localhost port
+# CORS — allow Vercel production domains, Vite dev server, and all clients
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/", tags=["Health Check"])
+@app.head("/", tags=["Health Check"])
+def health_check():
+    """
+    Root health check endpoint for Render, Uptime monitors, and Cloud deployments.
+    """
+    return {
+        "status": "healthy",
+        "service": "ScriptIQ API Server",
+        "version": "1.0.0",
+        "timestamp": datetime.now().isoformat()
+    }
 
 # Serve generated PDFs as static files
 output_pdf_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", "prescriptions")
