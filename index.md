@@ -744,12 +744,13 @@
 
 ---
 
-## Phase 30: Cloud CI/CD & Production Environment Config `[PRIORITY: MEDIUM]` *(Docker Deferred)*
+## Phase 48: Production Monorepo Restructuring & Dual-Platform Cloud Deployment Suite (Vercel + Render) `[PRIORITY: HIGH - DEPLOYMENT]`
 
-- [ ] Step 51: Production Configuration & CI Pipeline
-  - [ ] Environment config (`VITE_API_URL`, `VITE_WS_URL`)
-  - [ ] Backend Gunicorn/Uvicorn workers config & HTTPS rate limiting in `server.py`
-  - [ ] GitHub Actions CI pipeline (`.github/workflows/ci.yml`) for automated linting, testing, and deployment
+- [ ] Step 60: Monorepo Folder Organization (`frontend/`, `backend/`, `tests/`)
+  - [ ] Rename `ui/` to `frontend/` with Vercel SPA routing (`vercel.json`)
+  - [ ] Move Python server & agents into `backend/` with Render Blueprint (`render.yaml`)
+  - [ ] Consolidate unit & integration test scripts into `tests/` directory
+  - [ ] Create `.env.example` and `DEPLOYMENT.md` deployment guide
 
 ---
 

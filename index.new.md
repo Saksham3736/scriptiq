@@ -342,10 +342,21 @@
 
 ---
 
-# PART V: Enterprise Expansion & Future Roadmap (Phases 48–54)
+## Phase 48: Production Monorepo Restructuring & Dual-Platform Cloud Deployment Suite (Vercel + Render) `[PRIORITY: HIGH - DEPLOYMENT]`
+- [ ] **Step 48.1: Frontend Folder Standardization & Vercel SPA Setup (`frontend/`)**
+  - [ ] Rename `ui/` folder to `frontend/` and configure `frontend/vercel.json` with SPA route rewrites (`/(.*)` -> `/index.html`)
+  - [ ] Update `vite.config.ts` and React custom hooks (`useSendPrescription.ts`, `useExtraction.ts`) to target `import.meta.env.VITE_API_BASE_URL` with local fallback `http://localhost:8000`
+- [ ] **Step 48.2: Backend Modularization & Render Web Service Blueprint (`backend/`)**
+  - [ ] Restructure Python files into `backend/` directory (`server.py`, `ai_prescription_agent.py`, `config.py`, `auth.py`, `agents/`, `database/`)
+  - [ ] Configure `backend/render.yaml` Blueprint for 1-click deployment on Render with Python 3.11, Uvicorn start command, and environment variable bindings
+  - [ ] Configure FastAPI CORS middleware in `server.py` to allow cross-origin requests from Vercel production domain
+- [ ] **Step 48.3: Unified Test Suite Consolidation (`tests/`)**
+  - [ ] Consolidate all root test scripts (`test_phase26_email.py`, `test_primary_objective.py`, `test_phase36_demographics.py`) into `tests/` directory with clean import path resolution
+- [ ] **Step 48.4: Environment Template & Step-by-Step Deployment Guide**
+  - [ ] Create `.env.example` and `DEPLOYMENT.md` detailing step-by-step instructions for Vercel & Render project creation and environment configuration
 
-## Phase 48: Production Containerization & Cloud CI/CD Pipeline `[PRIORITY: MEDIUM]`
-- [ ] **Step 47.1: Docker Containerization & Infrastructure Config**
+## Phase 49: Production Containerization & Infrastructure Blueprint `[PRIORITY: MEDIUM]`
+- [ ] **Step 49.1: Docker Containerization & Infrastructure Config**
   - [ ] Backend FastAPI `Dockerfile` (Python 3.11 + ffmpeg + dependencies)
   - [ ] Frontend SPA `Dockerfile` (Nginx static build bundle)
   - [ ] `docker-compose.yml` for local container stack deployment
