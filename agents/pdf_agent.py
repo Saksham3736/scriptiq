@@ -139,18 +139,30 @@ class PDFAgent:
         date_str = current_time.strftime("%d %B %Y")
         time_str = current_time.strftime("%I:%M %p")
 
+        phone = prescription_data.get("phone") or ""
+
         # Configure Password Encryption if enabled (default True)
         encrypt_pdf_flag = prescription_data.get("encrypt_pdf")
         if encrypt_pdf_flag is None:
             encrypt_pdf_flag = saved_letterhead.get("encrypt_pdf", True)
 
         encrypt_obj = None
+        resolved_pwd = None
         if encrypt_pdf_flag:
-            clean_pwd = str(dob).replace("/", "").replace("-", "").replace(".", "").strip() if dob else ""
-            if not clean_pwd or len(clean_pwd) < 4:
-                clean_pwd = "15081995"
-            print(f"[PDFAgent] Encrypting PDF with Patient DOB password: '{clean_pwd}'")
-            encrypt_obj = StandardEncryption(userPassword=clean_pwd, ownerPassword=clean_pwd, canPrint=1, canModify=0)
+            clean_dob = str(dob).replace("/", "").replace("-", "").replace(".", "").strip() if dob else ""
+            if clean_dob and len(clean_dob) >= 4:
+                resolved_pwd = clean_dob
+                pwd_type = "DOB"
+            else:
+                digits_phone = "".join(c for c in str(phone) if c.isdigit())
+                if digits_phone and len(digits_phone) >= 4:
+                    resolved_pwd = digits_phone[-4:]
+                    pwd_type = "Phone-Last-4"
+                else:
+                    resolved_pwd = "1234"
+                    pwd_type = "Emergency-Key"
+            print(f"[PDFAgent] Encrypting PDF with Patient password ({pwd_type}): '{resolved_pwd}'")
+            encrypt_obj = StandardEncryption(userPassword=resolved_pwd, ownerPassword=resolved_pwd, canPrint=1, canModify=0)
         else:
             print("[PDFAgent] PDF generation unencrypted (sample preview or encryption disabled).")
 

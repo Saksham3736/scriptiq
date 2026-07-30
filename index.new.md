@@ -332,9 +332,19 @@
 
 ---
 
-# PART V: Enterprise Expansion & Future Roadmap (Phases 47–53)
+## Phase 47: Patient Fallback Identifier PDF Encryption Suite (`Option B`) `[PRIORITY: HIGH - SECURITY & UX]`
+- [ ] **Step 47.1: Smart Fallback Password Resolution (`PDFAgent` in `agents/pdf_agent.py`)**
+  - [ ] Implement dual-stage PDF password resolution: primary DOB (`DDMMYYYY`), falling back to last 4 digits of patient's phone number (`DDMMYYYY` -> `Phone-Last-4`) when DOB is not provided
+- [ ] **Step 47.2: Dynamic Password Hint Email & Dispatch Messaging (`agents/email_agent.py`)**
+  - [ ] Dynamically render HTML email body and modal notification badges providing exact password hint (`DOB` vs `Last 4 Phone digits`) to recipient
+- [ ] **Step 47.3: REST API & Diagnostic Test Suite Wireup (`server.py` & `test_phase26_email.py`)**
+  - [ ] Pass `phone` fallback into `PDFAgent.generate_pdf()`, include `pdf_password_type` in API response, and verify with automated unit/integration test suite
 
-## Phase 47: Production Containerization & Cloud CI/CD Pipeline `[PRIORITY: MEDIUM]`
+---
+
+# PART V: Enterprise Expansion & Future Roadmap (Phases 48–54)
+
+## Phase 48: Production Containerization & Cloud CI/CD Pipeline `[PRIORITY: MEDIUM]`
 - [ ] **Step 47.1: Docker Containerization & Infrastructure Config**
   - [ ] Backend FastAPI `Dockerfile` (Python 3.11 + ffmpeg + dependencies)
   - [ ] Frontend SPA `Dockerfile` (Nginx static build bundle)

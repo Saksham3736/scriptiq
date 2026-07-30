@@ -38,6 +38,32 @@ class EmailAgent:
         else:
             simulation_mode = True
 
+        # Resolve PDF Password for explicit callout
+        pdf_password = config.get("pdf_password")
+        if not pdf_password:
+            dob = config.get("dob") or config.get("patient_dob") or ""
+            phone = config.get("phone") or config.get("patient_phone") or ""
+            clean_dob = str(dob).replace("/", "").replace("-", "").replace(".", "").strip() if dob else ""
+            if clean_dob and len(clean_dob) >= 4:
+                pdf_password = clean_dob
+            else:
+                digits_phone = "".join(c for c in str(phone) if c.isdigit())
+                if digits_phone and len(digits_phone) >= 4:
+                    pdf_password = digits_phone[-4:]
+                else:
+                    pdf_password = "1234"
+
+        password_banner = f"""
+        <div style="background-color: #E4F3F1; border-left: 4px solid #12897F; padding: 14px 18px; margin: 18px 0; border-radius: 8px; font-family: sans-serif;">
+            <p style="margin: 0; font-size: 14px; color: #101A2E; font-weight: 600;">
+                🔒 <strong>PDF Security Password:</strong> <code style="background: #ffffff; padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 18px; color: #12897F; letter-spacing: 1px; border: 1px solid #BCE3DF;">{pdf_password}</code>
+            </p>
+            <p style="margin: 6px 0 0 0; font-size: 12px; color: #5B6B82;">
+                Use this exact password to open your attached prescription PDF document.
+            </p>
+        </div>
+        """
+
         subject = f"Your Prescription from {hospital_name}"
         body = f"""
         <html>
@@ -58,7 +84,7 @@ class EmailAgent:
                 <div class="content">
                     <p>Dear <strong>{patient_name or 'Patient'}</strong>,</p>
                     <p>Your latest prescription is attached to this email as a PDF document.</p>
-                    <p><strong>Note:</strong> If privacy encryption is enabled, the PDF is password-protected. Your password is your Date of Birth in DDMMYYYY format.</p>
+                    {password_banner}
                     <p>Wishing you a speedy recovery!</p>
                 </div>
                 <div class="footer">

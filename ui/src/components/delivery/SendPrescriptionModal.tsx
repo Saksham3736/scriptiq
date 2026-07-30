@@ -283,7 +283,7 @@ export default function SendPrescriptionModal({
 
               {/* Password Protection Note */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#5B6B82', fontFamily: 'IBM Plex Mono' }}>
-                <ShieldCheck size={13} color="#12897F" /> PDF password-encrypted with Patient DOB
+                <ShieldCheck size={13} color="#12897F" /> PDF password-protected (DOB or last 4 digits of phone). Password is sent in email.
               </div>
 
               {error && (

@@ -45,9 +45,9 @@ def run_test():
 
     print("-" * 70)
 
-    # Step 1: Generate Prescription PDF directly via PDFAgent
-    print("\n[Step 1/4] Generating Clinical Prescription PDF...")
-    patient_data = {
+    # Step 1: Generate Prescription PDF (Case A: DOB Provided -> Password '15081989')
+    print("\n[Step 1/4] Generating Clinical Prescription PDF (Case A: DOB Provided)...")
+    patient_data_dob = {
         "patient_name": "Ravi Mehta",
         "age": "35",
         "gender": "Male",
@@ -62,12 +62,6 @@ def run_test():
                 "dosage": "1 Tablet 3 Times Daily",
                 "duration": "5 Days",
                 "instruction": "Take after food"
-            },
-            {
-                "name": "Cetirizine 10mg",
-                "dosage": "1 Tablet at Bedtime",
-                "duration": "3 Days",
-                "instruction": "Take with water"
             }
         ],
         "doctor_name": "Dr. Arjun Sharma",
@@ -75,22 +69,49 @@ def run_test():
     }
 
     pdf_agent = PDFAgent()
-    pdf_filename = "Prescription_Ravi_Mehta_Phase26.pdf"
-    generated_pdf = pdf_agent.generate_pdf(patient_data, output_filename=pdf_filename)
-    print(f"SUCCESS: Generated PDF at: {generated_pdf}")
+    pdf_filename_dob = "Prescription_Ravi_Mehta_Phase26_DOB.pdf"
+    generated_pdf_dob = pdf_agent.generate_pdf(patient_data_dob, output_filename=pdf_filename_dob)
+    print(f"SUCCESS: Generated DOB PDF at: {generated_pdf_dob}")
 
-    # Step 2: Direct EmailAgent SMTP Dispatch Test
-    print("\n[Step 2/4] Direct EmailAgent Dispatch Test...")
+    # Case B: DOB Missing -> Phone Fallback '8606'
+    print("\n[Step 1b/4] Generating Prescription PDF (Case B: DOB Missing -> Phone Fallback '8606')...")
+    patient_data_phone = {
+        "patient_name": "Ravi Mehta (No DOB)",
+        "age": "35",
+        "gender": "Male",
+        "patient_dob": "",
+        "phone": "9888478606",
+        "email": patient_email,
+        "chief_complaint": "Acute seasonal bronchitis & dry cough",
+        "diagnosis": "Acute Bronchitis (J20.9)",
+        "medicines": [
+            {
+                "name": "Amoxicillin 500mg",
+                "dosage": "1 Tablet 3 Times Daily",
+                "duration": "5 Days",
+                "instruction": "Take after food"
+            }
+        ],
+        "doctor_name": "Dr. Arjun Sharma",
+        "clinic_name": "ScriptIQ Medical Center"
+    }
+    pdf_filename_phone = "Prescription_Ravi_Mehta_Phase26_PhoneFallback.pdf"
+    generated_pdf_phone = pdf_agent.generate_pdf(patient_data_phone, output_filename=pdf_filename_phone)
+    print(f"SUCCESS: Generated Phone Fallback PDF at: {generated_pdf_phone}")
+
+    # Step 2: Direct EmailAgent Dispatch Test (Phone Fallback '8606')
+    print("\n[Step 2/4] Direct EmailAgent Dispatch Test (with Phone Fallback Password '8606')...")
     try:
         email_agent = EmailAgent()
         direct_success = email_agent.send_prescription_email(
-            pdf_path=generated_pdf,
+            pdf_path=generated_pdf_phone,
             patient_email=patient_email,
-            patient_name="Ravi Mehta"
+            patient_name="Ravi Mehta",
+            config={"phone": "9888478606", "dob": ""}
         )
         if direct_success:
             if smtp_pass:
-                print(f"SUCCESS: Direct REAL SMTP email dispatched to {patient_email}!")
+                print(f"SUCCESS: Direct REAL SMTP email dispatched to {patient_email} with password banner!")
             else:
                 print(f"INFO: Direct EmailAgent execution completed in SIMULATION MODE.")
         else:
@@ -103,8 +124,8 @@ def run_test():
     # Step 3: FastAPI Server Endpoint Dispatch Test
     print(f"\n[Step 3/4] FastAPI Server Endpoint Test ({BASE_URL}/api/prescription/send-email)...")
     email_payload = {
-        "prescription_data": patient_data,
-        "pdf_path": generated_pdf,
+        "prescription_data": patient_data_phone,
+        "pdf_path": generated_pdf_phone,
         "patient_email": patient_email,
         "patient_name": "Ravi Mehta"
     }

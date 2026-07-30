@@ -50,6 +50,20 @@ class TestPDFAgent(unittest.TestCase):
         self.assertTrue(os.path.exists(pdf_path))
         self.assertGreater(os.path.getsize(pdf_path), 0)
 
+    def test_pdf_generation_phone_fallback(self):
+        sample_no_dob = {
+            "patient_name": "Anita Gupta",
+            "patient_dob": "",
+            "phone": "9888478606",
+            "age": 30,
+            "gender": "Female",
+            "chief_complaint": "Migraine",
+            "diagnosis": "Acute Migraine"
+        }
+        pdf_path = self.agent.generate_pdf(sample_no_dob)
+        self.assertTrue(os.path.exists(pdf_path))
+        self.assertGreater(os.path.getsize(pdf_path), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
