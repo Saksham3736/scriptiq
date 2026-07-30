@@ -373,7 +373,7 @@
   - [x] Build official `/api/prescription/send-email` REST endpoint in `server.py` wrapping `EmailAgent`
   - [x] Attach generated DOB-password encrypted PDF from `output/prescriptions` to HTML prescription email
 - [x] Step 46: End-to-End Email & Web Push Verification Suite (`test_phase26_email.py`)
-  - [x] Execute automated consultation PDF generation, email dispatch from `saksham2435157@gmail.com` to `saksham.kj.3736@gmail.com`, and Web Push dispatch to `9888478606` with 100% SUCCESS.
+  - [x] Execute automated consultation PDF generation, email dispatch from `scriptiq.sk@gmail.com` to `saksham.kj.3736@gmail.com`, and Web Push dispatch to `9888478606` with 100% SUCCESS.
 
 ---
 
@@ -613,8 +613,8 @@
 - [x] Pass patient DOB (`DDMMYYYY`) from consultation payload into ReportLab `StandardEncryption`
 - [x] Enforce PDF password protection automatically on all generated prescription exports
 
-### Phase 29C: Production Gmail SMTP Email Dispatch Integration (`saksham2435157@gmail.com`)
-- [x] Configure live Gmail SMTP TLS connection (`smtp.gmail.com:587`) from `saksham2435157@gmail.com` to `saksham.kj.3736@gmail.com`
+### Phase 29C: Production Gmail SMTP Email Dispatch Integration (`scriptiq.sk@gmail.com`)
+- [x] Configure live Gmail SMTP TLS connection (`smtp.gmail.com:587`) from `scriptiq.sk@gmail.com` to `saksham.kj.3736@gmail.com`
 - [x] Attach DOB-password protected PDF prescription with HTML letterhead email template
 
 ### Phase 29D: Multi-Device Mobile Web Push Notification Engine

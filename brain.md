@@ -196,11 +196,11 @@ Per `structure.md §9 Build Order`:
 15. **P20: High-Security Typed Batch Record Deletion** (Completed) — `POST /api/consultations/delete-batch`, `DeleteConfirmModal.tsx` GitHub-style typed phrase confirmation, multi-select mode in History & Patients pages
 16. **P21: Full Prescription Letterhead Customization Suite** (Completed) — `GET/POST /api/settings/letterhead` REST API, dynamic ReportLab PDF letterhead branding in `pdf_agent.py`, interactive live preview in `SettingsPage.tsx`
 18. **P22: Decommissioning & Removal of SMS / WhatsApp Module** (Completed) — Decommissioned Meta WhatsApp Cloud API credentials, deleted `agents/whatsapp_agent.py` & `agents/sms_agent.py`, and purged all SMS/WhatsApp triggers
-19. **P23: Production Email Dispatch Engine (`EmailAgent`)** (Completed) — `agents/email_agent.py` SMTP agent sending HTML prescription emails with DOB-password encrypted PDF attachment & dual receipt dispatch
+19. **P23: Production Email Dispatch Engine (`EmailAgent`)** (Completed) — `agents/email_agent.py` SMTP agent sending HTML prescription emails with DOB-password encrypted PDF attachment (`scriptiq.sk@gmail.com`) & dual receipt dispatch
 20. **Phase 29: System Core Repair & End-to-End Delivery Realization (Planned)**
   - Subphase 29A: AI Extraction Engine Resiliency & Fast Retry (< 3s).
   - Subphase 29B: ReportLab PDF DOB Password Encryption Enforcement (`DDMMYYYY`).
-  - Subphase 29C: Production Gmail SMTP Email Dispatch Integration (`saksham2435157@gmail.com` -> `saksham.kj.3736@gmail.com`).
+  - Subphase 29C: Production Gmail SMTP Email Dispatch Integration (`scriptiq.sk@gmail.com` -> `saksham.kj.3736@gmail.com`).
   - Subphase 29D: Multi-Device Mobile Web Push Notification Engine (`ttl=86400`).
   - Subphase 29E: Minimal & Clean Patient Portal Suite.
   - Subphase 29F: Patient Portal Navigation & TopBar Alignment (ScriptIQ Teal `#12897F`).

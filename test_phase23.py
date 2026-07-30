@@ -13,9 +13,9 @@ def test_email_dispatch():
         "email_simulation_mode": True,
         "smtp_host": "smtp.gmail.com",
         "smtp_port": 587,
-        "smtp_user": "saksham2435157@gmail.com",
+        "smtp_user": "scriptiq.sk@gmail.com",
         "smtp_pass": "",
-        "sender_email": "saksham2435157@gmail.com"
+        "sender_email": "scriptiq.sk@gmail.com"
     }
     r = requests.post(f"{BASE_URL}/api/settings/email", json=settings_payload)
     if r.status_code == 200:

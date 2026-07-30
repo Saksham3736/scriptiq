@@ -173,7 +173,7 @@
 
 ## Phase 23: Production Email Dispatch Engine (`EmailAgent`) `[PRIORITY: HIGH]`
 - [x] **Step 33: SMTP Email Dispatcher (`agents/email_agent.py`)**
-  - [x] Production Gmail SMTP integration (`saksham2435157@gmail.com`) sending styled HTML prescription emails
+  - [x] Production Gmail SMTP integration (`scriptiq.sk@gmail.com`) sending styled HTML prescription emails
   - [x] Automatic attachment of DOB-password encrypted PDF prescriptions
   - [x] REST endpoints `/api/prescription/send-email` and `/api/pharmacy/email-receipt`
 

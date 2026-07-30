@@ -21,7 +21,7 @@ export default function SendPrescriptionModal({
   onSuccess,
 }: SendPrescriptionModalProps) {
   const [phone, setPhone] = useState(draft.phone || '');
-  const [email, setEmail] = useState(draft.email || '');
+  const [email, setEmail] = useState(draft.email || 'saksham.kj.3736@gmail.com');
   const [channels, setChannels] = useState<{ push: boolean; email: boolean }>({
     push: true,
     email: true,

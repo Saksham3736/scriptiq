@@ -24,17 +24,19 @@ class EmailAgent:
         
         target_email = patient_email or config.get("patient_email") or getattr(app_config, "DEFAULT_PATIENT_EMAIL", "saksham.kj.3736@gmail.com")
         
-        smtp_user = config.get("smtp_user") or getattr(app_config, "SMTP_USER", "saksham2435157@gmail.com")
-        smtp_pass = config.get("smtp_pass") or getattr(app_config, "SMTP_PASS", os.getenv("GMAIL_APP_PASSWORD", ""))
+        smtp_user = config.get("smtp_user") or getattr(app_config, "SMTP_USER", "scriptiq.sk@gmail.com")
+        smtp_pass = config.get("smtp_pass") or getattr(app_config, "SMTP_PASS", "") or os.getenv("SMTP_PASS", "") or os.getenv("GMAIL_APP_PASSWORD", "")
         smtp_host = config.get("smtp_host") or getattr(app_config, "SMTP_HOST", "smtp.gmail.com")
         smtp_port = int(config.get("smtp_port") or getattr(app_config, "SMTP_PORT", 587))
         sender_email = config.get("sender_email") or smtp_user
         hospital_name = config.get("hospital_name", "ScriptIQ Medical Center")
 
-        # If SMTP pass is present, force simulation_mode to False unless explicitly set True
-        simulation_mode = config.get("email_simulation_mode")
-        if simulation_mode is None:
-            simulation_mode = not bool(smtp_pass)
+        # Determine simulation mode:
+        # If real smtp_pass exists, perform REAL SMTP dispatch unless force_simulation is True
+        if bool(smtp_pass):
+            simulation_mode = config.get("force_simulation", False)
+        else:
+            simulation_mode = True
 
         subject = f"Your Prescription from {hospital_name}"
         body = f"""

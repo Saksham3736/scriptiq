@@ -20,7 +20,7 @@ You are working on **ScriptIQ** (AI Prescription & Clinical Operations Suite).
      - `SpeechAgent`: Audio STT & clinical term normalization.
      - `PrescriptionAgent`: Gemini API structured JSON extraction (`gemini-2.5-flash`, `gemini-2.0-flash`, `gemma-4-26b`) with instant heuristic fallback.
      - `PDFAgent`: ReportLab PDF generation with dynamic letterhead and DOB password encryption (`DDMMYYYY`).
-     - `EmailAgent`: Production Gmail SMTP HTML email dispatch with PDF attachment (`saksham2435157@gmail.com` -> `saksham.kj.3736@gmail.com`).
+     - `EmailAgent`: Production Gmail SMTP HTML email dispatch with PDF attachment (`scriptiq.sk@gmail.com` -> `saksham.kj.3736@gmail.com`).
      - `PushAgent`: Multi-device Web Push notifications (`pywebpush`, VAPID keys, WNS/FCM `ttl=86400`).
      - `DatabaseAgent`: MongoDB consultation indexing and batch deletion.
      - `PharmacyAgent`: In-house order routing and inventory.

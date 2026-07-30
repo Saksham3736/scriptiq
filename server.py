@@ -80,9 +80,9 @@ class EmailSettings(BaseModel):
     email_simulation_mode: bool = Field(True, description="Enable simulation mode to bypass real SMTP")
     smtp_host: str = Field("smtp.gmail.com", description="SMTP Host")
     smtp_port: int = Field(587, description="SMTP Port")
-    smtp_user: str = Field("saksham2435157@gmail.com", description="SMTP Username")
+    smtp_user: str = Field("scriptiq.sk@gmail.com", description="SMTP Username")
     smtp_pass: str = Field("", description="SMTP Password")
-    sender_email: str = Field("saksham2435157@gmail.com", description="Sender Email Address")
+    sender_email: str = Field("scriptiq.sk@gmail.com", description="Sender Email Address")
 
 class APIResponse(BaseModel):
     success: bool
@@ -411,37 +411,7 @@ class SendEmailRequest(BaseModel):
     patient_email: str
     patient_name: str
 
-@app.post("/api/prescription/send-email", response_model=APIResponse, tags=["Prescription"])
-def send_prescription_email_endpoint(req: SendEmailRequest):
-    """
-    Triggers the EmailAgent to send the prescription PDF via Email.
-    """
-    try:
-        from agents.email_agent import EmailAgent
-        from database.mongodb import DBHelper
-        db = DBHelper()
-        db.select_collection("settings")
-        doc = db.collection.find_one({"_id": "email_config"}) or {}
-        
-        lh = db.collection.find_one({"_id": "letterhead_config"}) or {}
-        doc["hospital_name"] = lh.get("hospital_name", "ScriptIQ Medical Center")
-        
-        # Resolve full path for PDF
-        abs_pdf_path = req.pdf_path
-        if abs_pdf_path and not os.path.isabs(abs_pdf_path):
-            abs_pdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), abs_pdf_path)
-            
-        email_agent_instance = EmailAgent()
-        success = email_agent_instance.send_prescription_email(
-            pdf_path=abs_pdf_path,
-            patient_email=req.patient_email,
-            patient_name=req.patient_name,
-            config=doc
-        )
-        return APIResponse(success=success)
-    except Exception as e:
-        print(f"[Send Email Error] {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Send Email Endpoint is defined below under Delivery tags (line 1016)
 
 
 # ─── P9-M1 Endpoint 4: Pharmacy Receipt + Dual Dispatch ──────────────────────
@@ -1025,15 +995,36 @@ def send_prescription_email_endpoint(req: SendEmailRequest):
         
         db = DBHelper()
         db.select_collection("settings")
-        doc = db.collection.find_one({"_id": "email_config"})
-        email_config = doc if doc else {
-            "email_simulation_mode": True,
-            "smtp_host": "smtp.gmail.com",
-            "smtp_port": 587,
-            "smtp_user": "saksham2435157@gmail.com",
-            "smtp_pass": "",
-            "sender_email": "saksham2435157@gmail.com",
-            "hospital_name": "ScriptIQ Medical Center"
+        doc = db.collection.find_one({"_id": "email_config"}) or {}
+        lh = db.collection.find_one({"_id": "letterhead_config"}) or {}
+        hospital_name = lh.get("hospital_name", "ScriptIQ Medical Center")
+        
+        from dotenv import load_dotenv
+        load_dotenv(override=True)
+        import config as app_config
+        env_user = os.getenv("SMTP_USER", "") or getattr(app_config, "SMTP_USER", "")
+        env_pass = os.getenv("SMTP_PASS", "") or os.getenv("GMAIL_APP_PASSWORD", "") or getattr(app_config, "SMTP_PASS", "")
+
+        smtp_user = env_user if env_user else (doc.get("smtp_user") or "scriptiq.sk@gmail.com")
+        smtp_pass = env_pass if env_pass else doc.get("smtp_pass", "")
+        sender_email = env_user if env_user else (doc.get("sender_email") or smtp_user)
+        smtp_host = doc.get("smtp_host") or getattr(app_config, "SMTP_HOST", "smtp.gmail.com")
+        smtp_port = doc.get("smtp_port") or getattr(app_config, "SMTP_PORT", 587)
+
+        # Sync MongoDB document with environment credentials
+        db.collection.update_one(
+            {"_id": "email_config"},
+            {"$set": {"smtp_user": smtp_user, "smtp_pass": smtp_pass, "sender_email": sender_email, "smtp_host": smtp_host, "smtp_port": int(smtp_port)}},
+            upsert=True
+        )
+        
+        email_config = {
+            "smtp_host": smtp_host,
+            "smtp_port": int(smtp_port),
+            "smtp_user": smtp_user,
+            "smtp_pass": smtp_pass,
+            "sender_email": sender_email,
+            "hospital_name": hospital_name
         }
         
         email_agent = EmailAgent()
@@ -1051,7 +1042,17 @@ def send_prescription_email_endpoint(req: SendEmailRequest):
             patient_name=req.patient_name or "Patient",
             config=email_config
         )
-        return APIResponse(success=success, data={"patient_email": req.patient_email, "pdf_path": pdf_file, "from_email": email_config.get("sender_email", "saksham2435157@gmail.com")})
+        dispatch_mode = "LIVE_SMTP" if bool(smtp_pass) else "SIMULATION"
+        return APIResponse(
+            success=success,
+            data={
+                "patient_email": req.patient_email,
+                "pdf_path": pdf_file,
+                "from_email": sender_email,
+                "mode": dispatch_mode,
+                "smtp_pass_configured": bool(smtp_pass)
+            }
+        )
     except Exception as e:
         print(f"[Send Email Error] {e}")
         raise HTTPException(status_code=500, detail=str(e))

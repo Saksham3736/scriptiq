@@ -59,9 +59,9 @@ export default function SettingsPage() {
   const [emailSimulationMode, setEmailSimulationMode] = useState(true);
   const [smtpHost, setSmtpHost] = useState('smtp.gmail.com');
   const [smtpPort, setSmtpPort] = useState('587');
-  const [smtpUser, setSmtpUser] = useState('saksham2435157@gmail.com');
+  const [smtpUser, setSmtpUser] = useState('scriptiq.sk@gmail.com');
   const [smtpPass, setSmtpPass] = useState('');
-  const [senderEmail, setSenderEmail] = useState('saksham2435157@gmail.com');
+  const [senderEmail, setSenderEmail] = useState('scriptiq.sk@gmail.com');
 
   // Load Letterhead & System Settings from API on Mount
   useEffect(() => {

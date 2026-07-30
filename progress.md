@@ -4,7 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-* **Current Phase**: Phase 40 Complete — Official Letterhead Receipt Page (`/receipt/:orderId`) POS Print Mapping & Master System Inventory
+* **Current Phase**: Live Production Email Dispatch & Diagnostic Upgrade (`scriptiq.sk@gmail.com`) Complete
 * **Completed & Active Phases**: 
   * Phase 1 to 30: Baseline Systems, Auth, Telemetry, PDF Encryption & Multi-Channel Engine (100% Complete)
   * Phase 34: In-House Pharmacy Receipt & Template Management Suite (`ReceiptsManagementPage.tsx`, POS velocity mode, UPI QR, thermal 80mm printing) (100% Complete)
@@ -14,6 +14,7 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 38: Live AI Processing Shimmer & Telemetry Active Status Banner (`AIDraftExtractionBanner.tsx`) (100% Complete)
   * Phase 39: Isolated 80mm Thermal Receipt Print Engine & UI Element Hiding (100% Complete)
   * Phase 40: Official Letterhead Receipt Page (`/receipt/:orderId`) POS Print Mapping & Master Feature Inventory (`availability_of_features.md`, `index.new.md`) (100% Complete)
+  * Live Email Dispatch Upgrade: Production Gmail SMTP TLS dispatch (`scriptiq.sk@gmail.com`), duplicate route resolution, `.env` override pre-loading, and UI integration (100% Complete)
 * **Planned Feature Integration Roadmap**:
   * Phase 41: Refund, Returns & Credit Voucher Studio UI Wireup (`ProcessReturnModal.tsx`)
   * Phase 42: Interactive Receipt Editor & Pricing Override Suite (`EditReceiptModal.tsx`)
@@ -21,7 +22,7 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 44: Manual AI Extraction Model Selector & Fallback Console (`DoctorConsolePage.tsx`)
   * Phase 45: 1-Click Patient Web Push Test Trigger in Doctor Console (`SendPrescriptionModal.tsx`)
   * Phase 46: Interactive Medication Alarm Timers & Scheduled Push Reminders (`PatientPortal.tsx`)
-* **Last Updated**: July 28, 2026
+* **Last Updated**: July 30, 2026
 
 ---
 
@@ -366,6 +367,17 @@ This document records all architectural decisions, actions, command executions, 
   - Updated `ReceiptViewPage.tsx` with real API fetching (`/api/pharmacy/receipts?q=${orderId}`) and `autoprint=true` URL search parameter support.
   - Performed complete file-by-file feature audit and created **[availability_of_features.md](file:///s:/AI-prescription-agent/availability_of_features.md)** covering all backend engines, sub-agents, UI pages, components, Zustand stores, and custom hooks across 4 organized parts.
   - Created a clean, ordered master development index **[index.new.md](file:///s:/AI-prescription-agent/index.new.md)** organizing all 53 system phases, including planned Phases 41 through 46 for unexposed features.
+
+---
+
+## ✉️ Live Production Email Dispatch & Diagnostic Upgrade (`scriptiq.sk@gmail.com`)
+* *Status: Completed*
+* Details:
+  - Upgraded system-wide default sender email to **`scriptiq.sk@gmail.com`** across `config.py`, `agents/email_agent.py`, `server.py`, `SendPrescriptionModal.tsx`, `SettingsPage.tsx`, `tests/test_email.py`, and `test_phase26_email.py`.
+  - Identified and resolved duplicate `/api/prescription/send-email` route in `server.py` that intercepted requests with stale MongoDB data.
+  - Added `load_dotenv(override=True)` and dynamic credential priority in `server.py` to seamlessly sync `.env` credentials (`SMTP_PASS`) directly to MongoDB Atlas.
+  - Enhanced `EmailAgent` to automatically disable simulation mode and initiate real TLS transmission (`smtp.gmail.com:587`) whenever valid App Password credentials are available.
+  - Executed automated integration test suite `test_phase26_email.py` and unit tests `tests/test_email.py` confirming **100% SUCCESSFUL LIVE INBOX DELIVERY** of DOB-password encrypted PDFs to `saksham.kj.3736@gmail.com`.
 
 ---
 

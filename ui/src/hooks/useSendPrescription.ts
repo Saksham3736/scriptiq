@@ -77,6 +77,7 @@ export function useSendPrescription() {
         } catch (_) {}
       }
 
+      let emailJson: any = null;
       // 3. Trigger Email Agent if 'email' channel selected
       if (channels.includes('email') && (emailOverride || draft.email)) {
         try {
@@ -91,6 +92,9 @@ export function useSendPrescription() {
             })
           });
           const emailText = await emailRes.text();
+          try {
+            emailJson = JSON.parse(emailText);
+          } catch (_) {}
           console.log('[useSendPrescription] Email Agent response:', emailText);
         } catch (emailErr) {
           console.error('[useSendPrescription] Email Agent error:', emailErr);
@@ -118,6 +122,7 @@ export function useSendPrescription() {
       const resPayload: DeliveryResult = {
         ...approveJson.data,
         pharmacy_result: pharmacyJson?.data || null,
+        email_result: emailJson?.data || null,
       };
 
       setResult(resPayload);

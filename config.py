@@ -24,7 +24,7 @@ VAPID_CLAIMS = {"sub": "mailto:admin@scriptiq.com"}
 # Gmail SMTP Email Config
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER", "saksham2435157@gmail.com")
+SMTP_USER = os.getenv("SMTP_USER", "scriptiq.sk@gmail.com")
 SMTP_PASS = os.getenv("SMTP_PASS", os.getenv("GMAIL_APP_PASSWORD", ""))
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", "saksham2435157@gmail.com")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "scriptiq.sk@gmail.com")
 DEFAULT_PATIENT_EMAIL = os.getenv("DEFAULT_PATIENT_EMAIL", "saksham.kj.3736@gmail.com")

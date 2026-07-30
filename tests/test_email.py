@@ -13,7 +13,7 @@ class TestEmailAgent(unittest.TestCase):
     def test_send_prescription_email_simulation(self):
         config = {
             "email_simulation_mode": True,
-            "smtp_user": "saksham2435157@gmail.com",
+            "smtp_user": "scriptiq.sk@gmail.com",
             "hospital_name": "ScriptIQ Medical Suite"
         }
         res = self.email_agent.send_prescription_email(
