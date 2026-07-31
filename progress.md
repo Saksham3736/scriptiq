@@ -4,7 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-* **Current Phase**: Phase 44 Complete — Manual AI Extraction Model Selector & Fallback Console (`gemini-2.5-flash`, `gemini-3.6-flash`, `gemma-4-26b`, `heuristic-regex`)
+* **Current Phase**: Phase 63 Complete — Gemini Function Calling & Clinical Tool-Use Engine (`CLINICAL_TOOLS`, `MEDICAL_CONTEXT_HEADER`, Non-blocking Telemetry, Push Phone Matcher)
 * **Completed & Active Phases**: 
   * Phase 1 to 30: Baseline Systems, Auth, Telemetry, PDF Encryption & Multi-Channel Engine (100% Complete)
   * Phase 34: In-House Pharmacy Receipt & Template Management Suite (`ReceiptsManagementPage.tsx`, POS velocity mode, UPI QR, thermal 80mm printing) (100% Complete)
@@ -20,10 +20,12 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 49: Clinical Intake Engine Fixes — DOB Extraction, Auto-Age Calculation (`calculateAgeFromDOB`) & Transcript Email Parsing (100% Complete)
   * Phase 50: PDF Password Encryption Synchronization & Doctor Console Security Badge (`config.resolve_pdf_password` & `SendPrescriptionModal.tsx`) (100% Complete)
   * Phase 51: Universal Route & API Authentication Security Guard (`RequireRole.tsx`, `App.tsx`, `LoginPage.tsx`, `PatientLoginPage.tsx`) (100% Complete)
+  * Phase 62: Render Backend Memory Optimization & Gemini API Quota Alignment (100% Complete)
+  * Phase 63: Gemini Function Calling & Clinical Tool-Use Engine + Live Telemetry & Delivery Engine Fixes (100% Complete)
 * **Planned Feature Integration Roadmap**:
   * Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite (`DELETE /api/pharmacy/receipts/{order_id}`)
   * Phase 53: Patient Receipts Portal — Stock Tab Replacement with Patient Receipts Explorer (`ReceiptsManagementPage.tsx`)
-* **Last Updated**: July 30, 2026
+* **Last Updated**: July 31, 2026
 
 ---
 

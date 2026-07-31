@@ -100,7 +100,7 @@ class EmailAgent:
             print("="*50 + "\n")
             return True
 
-        # Actual SMTP Dispatch
+        # Actual SMTP Dispatch with Dual-Mode (Port 465 SSL -> Port 587 STARTTLS) & 10s Timeout
         msg = MIMEMultipart()
         msg['From'] = f"{hospital_name} <{sender_email}>"
         msg['To'] = target_email
@@ -116,14 +116,35 @@ class EmailAgent:
         else:
             print(f"[EmailAgent] Warning: PDF not found at {pdf_path}")
 
+        timeout_sec = int(config.get("timeout", 10))
+        last_exception = None
+
+        # 1. Try Port 465 (Implicit SSL/TLS) — Cloud-Firewall Proof Primary Path
         try:
-            server = smtplib.SMTP(smtp_host, smtp_port)
+            print(f"[EmailAgent] Attempting SMTP_SSL connection to {smtp_host}:465 (timeout={timeout_sec}s)...")
+            server = smtplib.SMTP_SSL(smtp_host, 465, timeout=timeout_sec)
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+            server.quit()
+            print(f"[EmailAgent] Email successfully sent to {target_email} via Port 465 (SSL)")
+            return True
+        except Exception as ssl_err:
+            print(f"[EmailAgent] Port 465 SSL failed ({ssl_err}). Falling back to Port {smtp_port} STARTTLS...")
+            last_exception = ssl_err
+
+        # 2. Fallback: Port 587 (STARTTLS)
+        try:
+            print(f"[EmailAgent] Attempting STARTTLS connection to {smtp_host}:{smtp_port} (timeout={timeout_sec}s)...")
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=timeout_sec)
             server.starttls()
             server.login(smtp_user, smtp_pass)
             server.send_message(msg)
             server.quit()
-            print(f"[EmailAgent] Email successfully sent to {target_email}")
+            print(f"[EmailAgent] Email successfully sent to {target_email} via Port {smtp_port} (STARTTLS)")
             return True
-        except Exception as e:
-            print(f"[EmailAgent] SMTP Error: {e}")
-            raise Exception(f"Failed to send email: {str(e)}")
+        except Exception as tls_err:
+            print(f"[EmailAgent] Port {smtp_port} STARTTLS failed: {tls_err}")
+            last_exception = tls_err
+
+        raise Exception(f"Failed to send email via SMTP (465 SSL & {smtp_port} STARTTLS both failed): {str(last_exception)}")
+

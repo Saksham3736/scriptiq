@@ -96,16 +96,53 @@ class APIResponse(BaseModel):
 
 agent: Optional[AIPrescriptionAgent] = None
 db_agent: Optional[DatabaseAgent] = None
+main_loop: Optional[asyncio.AbstractEventLoop] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global agent, db_agent
+    global agent, db_agent, main_loop
     print("[Server] Initializing ScriptIQ agent pool...")
+    main_loop = asyncio.get_running_loop()
     agent = AIPrescriptionAgent()
     db_agent = DatabaseAgent(collection_name="prescriptions")
     print(f"[Server] All agents ready. LLM model: {config.LLM_MODEL}")
     yield
     print("[Server] Shutting down ScriptIQ server.")
+
+
+# ─── Helper: Flexible Phone Matcher for Push Notifications ──────────────────
+
+def find_push_subscription(db, phone: str):
+    """
+    Find push subscription document in MongoDB matching exact phone, clean digits, or last 10 digits.
+    Prevents country-code string mismatches (+91 9888478606 vs 9888478606 vs 919888478606).
+    """
+    if not phone:
+        return None
+    clean_digits = "".join(c for c in str(phone) if c.isdigit())
+    if not clean_digits:
+        return None
+    
+    # 1. Exact string match
+    doc = db.collection.find_one({"phone": phone})
+    if doc:
+        return doc
+        
+    # 2. Match clean digits
+    doc = db.collection.find_one({"phone": clean_digits})
+    if doc:
+        return doc
+        
+    # 3. Match last 10 digits regex
+    if len(clean_digits) >= 10:
+        last10 = clean_digits[-10:]
+        import re
+        doc = db.collection.find_one({"phone": {"$regex": re.escape(last10) + "$"}})
+        if doc:
+            return doc
+            
+    return None
+
 
 
 # ─── FastAPI App ──────────────────────────────────────────────────────────────
@@ -968,7 +1005,7 @@ def send_prescription_push(req: SendPushRequest):
         
         db = DBHelper()
         db.select_collection("push_subscriptions")
-        doc = db.collection.find_one({"phone": req.phone})
+        doc = find_push_subscription(db, req.phone)
         
         if not doc:
             return APIResponse(success=False, error=f"No subscription found for phone {req.phone}. Please visit /patient on your phone to subscribe.")
@@ -998,9 +1035,10 @@ class SendEmailRequest(BaseModel):
     patient_name: Optional[str] = "Patient"
 
 @app.post("/api/prescription/send-email", response_model=APIResponse, tags=["Delivery"])
-def send_prescription_email_endpoint(req: SendEmailRequest):
+async def send_prescription_email_endpoint(req: SendEmailRequest):
     """
     Dispatch HTML email with prescription PDF attachment via EmailAgent.
+    Runs SMTP dispatch in worker thread to maintain instant API responsiveness.
     """
     try:
         from agents.email_agent import EmailAgent
@@ -1038,19 +1076,39 @@ def send_prescription_email_endpoint(req: SendEmailRequest):
             "smtp_user": smtp_user,
             "smtp_pass": smtp_pass,
             "sender_email": sender_email,
-            "hospital_name": hospital_name
+            "hospital_name": hospital_name,
+            "timeout": 10
         }
         
         email_agent = EmailAgent()
         pdf_file = req.pdf_path
+        
+        # Absolute path resolution logic for PDF attachment
+        if pdf_file:
+            if not os.path.exists(pdf_file):
+                # Try relative to backend dir or output/prescriptions
+                alt_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), pdf_file)
+                if os.path.exists(alt_path):
+                    pdf_file = alt_path
+                else:
+                    alt_path2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", "prescriptions", os.path.basename(pdf_file))
+                    if os.path.exists(alt_path2):
+                        pdf_file = alt_path2
+
         if not pdf_file or not os.path.exists(pdf_file):
-            pdf_dir = "output/prescriptions"
-            if os.path.exists(pdf_dir):
-                pdfs = [os.path.join(pdf_dir, f) for f in os.listdir(pdf_dir) if f.endswith(".pdf")]
-                if pdfs:
-                    pdf_file = pdfs[-1]
+            pdf_dirs = [
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", "prescriptions"),
+                "output/prescriptions"
+            ]
+            for pdir in pdf_dirs:
+                if os.path.exists(pdir):
+                    pdfs = [os.path.join(pdir, f) for f in os.listdir(pdir) if f.endswith(".pdf")]
+                    if pdfs:
+                        pdf_file = pdfs[-1]
+                        break
                     
-        success = email_agent.send_prescription_email(
+        success = await asyncio.to_thread(
+            email_agent.send_prescription_email,
             pdf_path=pdf_file,
             patient_email=req.patient_email,
             patient_name=req.patient_name or "Patient",
@@ -1080,7 +1138,7 @@ def check_push_status(phone: str = Query(...)):
         from database.mongodb import DBHelper
         db = DBHelper()
         db.select_collection("push_subscriptions")
-        doc = db.collection.find_one({"phone": phone})
+        doc = find_push_subscription(db, phone)
         if doc and "subscription" in doc:
             return APIResponse(success=True, data={"subscribed": True, "phone": phone, "endpoint": doc["subscription"].get("endpoint")})
         return APIResponse(success=True, data={"subscribed": False, "phone": phone})
@@ -1192,12 +1250,17 @@ async def broadcast_master_agent_telemetry(event: dict):
 
 def sync_telemetry_callback(event: dict):
     try:
-        import asyncio
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            loop.create_task(broadcast_master_agent_telemetry(event))
-    except Exception:
-        pass
+        target_loop = main_loop
+        if not target_loop or not target_loop.is_running():
+            try:
+                target_loop = asyncio.get_running_loop()
+            except Exception:
+                target_loop = None
+
+        if target_loop and target_loop.is_running():
+            asyncio.run_coroutine_threadsafe(broadcast_master_agent_telemetry(event), target_loop)
+    except Exception as e:
+        print(f"[Telemetry Sync Callback Error] {e}")
 
 @app.websocket("/ws/master_agent")
 async def websocket_master_agent(websocket: WebSocket):
@@ -1244,10 +1307,12 @@ class AutoPilotConsultationRequest(BaseModel):
 async def run_autopilot_consultation(req: AutoPilotConsultationRequest):
     """
     Zero-Touch Auto-Pilot Mode Endpoint.
-    Executes the full 6-agent pipeline (STT -> Structuring -> PDF -> MongoDB -> WhatsApp -> Pharmacy) in 1 automated workflow.
+    Executes full 6-agent pipeline (STT -> Structuring -> PDF -> MongoDB -> Email -> Pharmacy) in 1 automated workflow.
+    Runs in background worker thread to keep asyncio main loop unblocked for live WebSocket telemetry streaming.
     """
     try:
-        res = agent.run_full_automated_workflow(
+        res = await asyncio.to_thread(
+            agent.run_full_automated_workflow,
             transcript=req.transcript,
             patient_name=req.patient_name,
             phone=req.phone,
@@ -1268,100 +1333,120 @@ class ReceiptItemModel(BaseModel):
     dosage: Optional[str] = "500mg"
     quantity: int = 1
     unit_price: float = 50.0
-    total_price: float = 50.0
 
-class CreateReceiptRequest(BaseModel):
-    patient_name: str
-    phone: str
-    email: Optional[str] = None
-    doctor_name: Optional[str] = "Dr. Arjun Sharma"
-    payment_method: Optional[str] = "UPI QR"
-    items: List[ReceiptItemModel]
-    subtotal: float
-    tax: float = 0.0
-    discount: float = 0.0
-    total_amount: float
-    status: Optional[str] = "Paid"
+class CreatePharmacyReceiptRequest(BaseModel):
+    patient_name: str = Field("Rahul Sharma", description="Patient Full Name")
+    phone: Optional[str] = Field("9876543210", description="Patient Phone Number")
+    email: Optional[str] = Field("saksham.kj.3736@gmail.com", description="Patient Email Address")
+    prescription_id: Optional[str] = Field(None, description="Linked Prescription ID")
+    items: List[ReceiptItemModel] = Field(..., description="Itemized purchased medicines")
+    payment_method: Optional[str] = Field("Cash", description="Payment Method: Cash, UPI, Card")
+    discount: Optional[float] = Field(0.0, description="Discount amount in INR")
+    tax_percent: Optional[float] = Field(5.0, description="GST / Tax percentage")
+    doctor_name: Optional[str] = Field("Dr. Arjun Sharma", description="Attending Doctor")
+    notes: Optional[str] = Field("", description="Receipt notes")
 
-class UpdateReceiptRequest(BaseModel):
-    status: Optional[str] = None
+class UpdatePharmacyReceiptRequest(BaseModel):
     patient_name: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
-    payment_method: Optional[str] = None
     items: Optional[List[ReceiptItemModel]] = None
-    subtotal: Optional[float] = None
-    tax: Optional[float] = None
+    payment_method: Optional[str] = None
     discount: Optional[float] = None
-    total_amount: Optional[float] = None
+    tax_percent: Optional[float] = None
+    status: Optional[str] = None
+    notes: Optional[str] = None
 
 class DeleteBatchReceiptsRequest(BaseModel):
-    order_ids: List[str]
+    order_ids: List[str] = Field(..., description="Array of pharmacy order IDs to delete")
 
 @app.get("/api/pharmacy/receipts", response_model=APIResponse, tags=["Pharmacy"])
-async def get_pharmacy_receipts(limit: int = 100, status: Optional[str] = None, q: Optional[str] = None):
+async def get_pharmacy_receipts(q: Optional[str] = Query(None), limit: int = Query(50)):
     try:
         from database.mongodb import DBHelper
         db = DBHelper()
         db.select_collection("pharmacy_receipts")
-        query_filter = {}
-        if status and status != "All":
-            query_filter["status"] = status
+        query = {}
         if q:
-            regex_q = {"$regex": q, "$options": "i"}
-            query_filter["$or"] = [
-                {"patient_name": regex_q},
-                {"phone": regex_q},
-                {"order_id": regex_q}
-            ]
-        cursor = db.collection.find(query_filter).sort("created_at", -1).limit(limit)
-        docs = []
-        for d in cursor:
-            d["_id"] = str(d["_id"])
-            docs.append(d)
-        return APIResponse(success=True, data={"receipts": docs, "count": len(docs)})
+            query = {
+                "$or": [
+                    {"patient_name": {"$regex": q, "$options": "i"}},
+                    {"order_id": {"$regex": q, "$options": "i"}},
+                    {"phone": {"$regex": q, "$options": "i"}}
+                ]
+            }
+        cursor = db.collection.find(query).sort("created_at", -1).limit(limit)
+        results = []
+        for doc in cursor:
+            doc["_id"] = str(doc["_id"])
+            results.append(doc)
+        return APIResponse(success=True, data={"receipts": results, "count": len(results)})
     except Exception as e:
         return APIResponse(success=True, data={"receipts": [], "count": 0})
 
 @app.post("/api/pharmacy/receipts", response_model=APIResponse, tags=["Pharmacy"])
-async def create_pharmacy_receipt(req: CreateReceiptRequest):
+async def create_pharmacy_receipt(req: CreatePharmacyReceiptRequest):
     try:
+        from agents.pharmacy_agent import PharmacyAgent
         from database.mongodb import DBHelper
-        import uuid
-        db = DBHelper()
-        db.select_collection("pharmacy_receipts")
-        order_id = f"PHARM-{uuid.uuid4().hex[:6].upper()}"
-        doc = {
+        import datetime
+        
+        subtotal = sum(item.quantity * item.unit_price for item in req.items)
+        tax_amount = round((subtotal - req.discount) * (req.tax_percent / 100.0), 2)
+        total_amount = round(subtotal - req.discount + tax_amount, 2)
+        
+        now = datetime.datetime.now()
+        order_id = f"PHARM-{now.strftime('%Y%m%d')}-{now.strftime('%H%M%S')}"
+        
+        receipt_doc = {
             "order_id": order_id,
             "patient_name": req.patient_name,
-            "phone": req.phone,
+            "phone": req.phone or "",
             "email": req.email or "",
-            "doctor_name": req.doctor_name,
-            "payment_method": req.payment_method,
-            "items": [item.model_dump() if hasattr(item, 'model_dump') else item.dict() for item in req.items],
-            "subtotal": req.subtotal,
-            "tax": req.tax,
+            "prescription_id": req.prescription_id or "",
+            "doctor_name": req.doctor_name or "Dr. Arjun Sharma",
+            "items": [item.model_dump() for item in req.items],
+            "subtotal": subtotal,
             "discount": req.discount,
-            "total_amount": req.total_amount,
-            "status": req.status or "Paid",
-            "created_at": datetime.now().isoformat()
+            "tax_percent": req.tax_percent,
+            "tax_amount": tax_amount,
+            "total_amount": total_amount,
+            "payment_method": req.payment_method or "Cash",
+            "status": "Paid",
+            "notes": req.notes or "",
+            "created_at": now.isoformat()
         }
-        res = db.collection.insert_one(doc)
-        doc["_id"] = str(res.inserted_id)
-        return APIResponse(success=True, data=doc)
+        
+        db = DBHelper()
+        db.select_collection("pharmacy_receipts")
+        inserted_id = db.collection.insert_one(receipt_doc).inserted_id
+        receipt_doc["_id"] = str(inserted_id)
+        
+        # Dispatch background notifications
+        try:
+            await dispatch_pharmacy_receipt(order_id, receipt_doc)
+        except Exception as d_err:
+            print(f"[Create Receipt Dispatch Warning] {d_err}")
+            
+        return APIResponse(success=True, data=receipt_doc)
     except Exception as e:
+        print(f"[Create Receipt Error] {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.put("/api/pharmacy/receipts/{order_id}", response_model=APIResponse, tags=["Pharmacy"])
-async def update_pharmacy_receipt(order_id: str, req: UpdateReceiptRequest):
+async def update_pharmacy_receipt(order_id: str, req: UpdatePharmacyReceiptRequest):
     try:
         from database.mongodb import DBHelper
         db = DBHelper()
         db.select_collection("pharmacy_receipts")
+        existing = db.collection.find_one({"order_id": order_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail=f"Pharmacy receipt {order_id} not found")
+            
         update_fields = {}
         for k, v in req.model_dump(exclude_unset=True).items():
             if v is not None:
-                if k == "items":
+                if k == 'items':
                     update_fields[k] = [item.model_dump() if hasattr(item, 'model_dump') else item for item in v]
                 else:
                     update_fields[k] = v
@@ -1406,14 +1491,22 @@ async def dispatch_pharmacy_receipt(order_id: str, payload: dict = {}):
         
         # 1. Dispatch Web Push
         try:
+            from database.mongodb import DBHelper
             from agents.push_agent import PushAgent
-            push_agent = PushAgent()
-            push_agent.send_push_notification(
-                title=f"Pharmacy Receipt Issued #{order_id} 🧾",
-                body=f"Hello {patient_name}, your ScriptIQ pharmacy receipt has been generated. Total: ₹{payload.get('total_amount', '0')}.",
-                phone=phone
-            )
-            channels_sent.append("Web Push")
+            db_p = DBHelper()
+            db_p.select_collection("push_subscriptions")
+            doc = find_push_subscription(db_p, phone)
+            if doc:
+                push_agent = PushAgent()
+                subs = doc.get("subscriptions", [])
+                if not subs and "subscription" in doc:
+                    subs = [doc["subscription"]]
+                push_agent.send_push_to_subscriptions(subs, {
+                    "title": f"Pharmacy Receipt Issued #{order_id} 🧾",
+                    "body": f"Hello {patient_name}, your ScriptIQ pharmacy receipt has been generated. Total: ₹{payload.get('total_amount', '0')}.",
+                    "url": "/patient"
+                })
+                channels_sent.append("Web Push")
         except Exception as pe:
             print(f"[Receipt Dispatch Push Warning] {pe}")
 
@@ -1421,11 +1514,36 @@ async def dispatch_pharmacy_receipt(order_id: str, payload: dict = {}):
         if email or getattr(config, "DEFAULT_PATIENT_EMAIL", None):
             try:
                 from agents.email_agent import EmailAgent
+                from database.mongodb import DBHelper
+                db_e = DBHelper()
+                db_e.select_collection("settings")
+                e_doc = db_e.collection.find_one({"_id": "email_config"}) or {}
+                
+                from dotenv import load_dotenv
+                load_dotenv(override=True)
+                import config as app_config
+                env_user = os.getenv("SMTP_USER", "") or getattr(app_config, "SMTP_USER", "")
+                env_pass = os.getenv("SMTP_PASS", "") or os.getenv("GMAIL_APP_PASSWORD", "") or getattr(app_config, "SMTP_PASS", "")
+
+                smtp_user = env_user if env_user else (e_doc.get("smtp_user") or "scriptiq.sk@gmail.com")
+                smtp_pass = env_pass if env_pass else e_doc.get("smtp_pass", "")
+                sender_email = env_user if env_user else (e_doc.get("sender_email") or smtp_user)
+                
+                email_config = {
+                    "smtp_host": e_doc.get("smtp_host") or getattr(app_config, "SMTP_HOST", "smtp.gmail.com"),
+                    "smtp_port": int(e_doc.get("smtp_port") or getattr(app_config, "SMTP_PORT", 587)),
+                    "smtp_user": smtp_user,
+                    "smtp_pass": smtp_pass,
+                    "sender_email": sender_email,
+                    "hospital_name": "ScriptIQ Medical Center"
+                }
+                
                 email_agent = EmailAgent()
                 email_agent.send_prescription_email(
                     pdf_path="",
                     patient_email=email or getattr(config, "DEFAULT_PATIENT_EMAIL", "saksham.kj.3736@gmail.com"),
-                    patient_name=patient_name
+                    patient_name=patient_name,
+                    config=email_config
                 )
                 channels_sent.append("Email")
             except Exception as ee:

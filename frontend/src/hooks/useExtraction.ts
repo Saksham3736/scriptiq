@@ -135,33 +135,39 @@ export function useExtraction() {
       setStatus('done');
       setPrescriptionStatus('Reviewed');
 
-      // Auto-Pilot Execution Chain: if enabled, zero-touch approve & PDF generation
+      // Auto-Pilot Execution Chain: if enabled, zero-touch full master agent workflow & live telemetry
       if (extractedData && useUIStore.getState().isAutoPilotEnabled) {
         try {
-          const saveRes = await fetch(getApiUrl('/api/prescription/approve'), {
+          // Open telemetry console so doctor sees live 6-agent execution steps
+          useUIStore.getState().setTelemetryOpen(true);
+          
+          const autoRes = await fetch(getApiUrl('/api/consultation/autopilot'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
             body: JSON.stringify({
-              prescription_data: extractedData,
+              transcript: text || extractedData.chief_complaint || 'Consultation processed via Auto-Pilot',
+              patient_name: extractedData.patient_name || 'Patient',
               phone: extractedData.phone || '919876543210',
-              patient_dob: extractedData.dob || '15081995',
+              dob: extractedData.dob || extractedData.patient_dob || '15081995',
+              want_in_house_buy: true,
             }),
           });
-          const saveJson = await saveRes.json();
-          if (saveJson.success) {
-            if (saveJson.data?.pdf_url) setPdfUrl(saveJson.data.pdf_url);
-            if (saveJson.data?.db_id) setSavedId(saveJson.data.db_id);
+          const autoJson = await autoRes.json();
+          if (autoJson.success) {
+            const rxDisp = autoJson.data?.prescription_dispatch;
+            if (rxDisp?.pdf_url) setPdfUrl(rxDisp.pdf_url);
+            if (rxDisp?.db_id) setSavedId(rxDisp.db_id);
             setDeliveryStatus('sent');
             setPrescriptionStatus('Saved');
 
             addToast({
               type: 'success',
               title: '⚡ Auto-Pilot Executed Seamlessly',
-              message: `Prescription extracted, ReportLab PDF generated, and saved to MongoDB for ${extractedData.patient_name || 'Patient'}.`,
+              message: `Full 6-agent workflow executed for ${extractedData.patient_name || 'Patient'}.`,
             });
           }
         } catch (autoErr) {
-          console.warn('[Auto-Pilot Save Warn]', autoErr);
+          console.warn('[Auto-Pilot Workflow Warn]', autoErr);
         }
       } else if (extractedData) {
         addToast({
