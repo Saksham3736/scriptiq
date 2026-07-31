@@ -147,10 +147,21 @@ export default function SendPrescriptionModal({
 
                 {/* 🔒 PDF Security Password Badge with 1-Click Copy */}
                 {(() => {
-                  const dobClean = (draft.dob || (draft as any).patient_dob || '').replace(/\D/g, '');
+                  // Mirror backend _normalize_dob_to_ddmmyyyy + resolve_pdf_password exactly
+                  const rawDob = ((draft as any).patient_dob || draft.dob || '');
+                  const dobDigits = rawDob.replace(/\D/g, '');
+                  // Normalize: if 8 digits and year-first (YYYYMMDD e.g. "19950815"), reorder to DDMMYYYY
+                  let dobClean = dobDigits;
+                  if (dobDigits.length === 8 && (dobDigits.startsWith('19') || dobDigits.startsWith('20'))) {
+                    const yyyy = dobDigits.slice(0, 4);
+                    const mm   = dobDigits.slice(4, 6);
+                    const dd   = dobDigits.slice(6, 8);
+                    dobClean = dd + mm + yyyy;
+                  }
                   const phoneClean = (phone || draft.phone || '').replace(/\D/g, '');
                   const resolvedPassword = dobClean.length >= 4 ? dobClean : (phoneClean.length >= 4 ? phoneClean.slice(-4) : '1234');
-                  const passwordLabel = dobClean.length >= 4 ? 'Patient DOB' : (phoneClean.length >= 4 ? 'Phone Last 4 Digits' : 'Default Passcode');
+                  const passwordLabel = dobClean.length >= 4 ? `DOB (${dobClean.slice(0,2)}/${dobClean.slice(2,4)}/${dobClean.slice(4)})` : (phoneClean.length >= 4 ? 'Phone Last 4 Digits' : 'Default Passcode');
+
                   return (
                     <div style={{ background: '#E4F3F1', border: '1px solid #12897F', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '14px 0 16px 0' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
