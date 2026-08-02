@@ -1049,3 +1049,67 @@ Final assembled PrescriptionSchema JSON → DraftStore
 ### Step 67C: Verification & Build
 - [x] `npm run build` — 0 TypeScript errors (434ms)
 
+---
+
+## Phase 68: Parallel Multi-Channel Dispatch Resilience & Email/Push Pipeline Optimization `[PRIORITY: HIGH - DELIVERY RESILIENCE]`
+
+### Step 68A: Modal State & Demographics Synchronization (`SendPrescriptionModal.tsx`)
+- [ ] Add `useEffect` to synchronize `phone` and `email` local form states whenever `isOpen` is `true` or `draft` changes.
+- [ ] Fix stale initialization bug so extracted patient email & phone immediately populate into the dispatch modal.
+
+### Step 68B: Parallel Non-Blocking Delivery Pipeline (`useSendPrescription.ts`)
+- [ ] Convert serial execution (`Step 2 Email -> Step 3 Push`) into concurrent `Promise.allSettled([sendEmailPromise, sendPushPromise])`.
+- [ ] Ensure SMTP delays or email network failures NEVER block Web Push execution or UI completion.
+- [ ] Return unified delivery status containing both `email_result` and `push_result`.
+
+### Step 68C: Patient DOB Password & Demographics Sync (`server.py` & `useSendPrescription.ts`)
+- [ ] Update `SendEmailRequest` Pydantic schema in `server.py` to include `patient_dob` and `phone`.
+- [ ] Pass `patient_dob` and `phone` into `email_config` when calling `EmailAgent.send_prescription_email`.
+- [ ] Ensure the HTML email password callout banner displays the exact patient DOB password encrypting the attached PDF (instead of fallback `1234`).
+
+### Step 68D: Optimized SMTP Socket Timeouts & Fallback Resilience (`email_agent.py`)
+- [ ] Reduce socket timeout from 10s to 4s per port attempt (Port 465 SSL -> Port 587 STARTTLS).
+- [ ] Catch socket errors gracefully; if live SMTP fails due to network/firewall, fall back to simulation mode or report delivery status without throwing 500 errors.
+
+### Step 68E: Verification & Test
+- [ ] Run `npm run build` in `frontend/` (0 TypeScript errors).
+- [ ] Run `tests/test_phase26_email.py` for email dispatch verification.
+
+---
+
+## 🚀 Newly Proposed High-Impact Enhancements Roadmap
+
+### Phase 69: Automated Drug-Drug Interaction (DDI) & Allergy Contraindication Guard `[PRIORITY: CRITICAL - CLINICAL SAFETY]`
+- [ ] **Step 75: Clinical Safety Guard Agent (`backend/agents/safety_guard_agent.py`)**
+  - [ ] Build DDI interaction matrix & allergy checking engine.
+  - [ ] Evaluate extracted medicines against known contraindications (*Warfarin + Aspirin*, *Penicillin allergies*).
+  - [ ] Return severity tags: `CRITICAL_CONTRAINDICATION` (Red), `MODERATE_INTERACTION` (Amber), `SAFE` (Green).
+- [ ] **Step 76: Interactive Warning Banners in Console (`DraftPanel.tsx` & `MedicineRow.tsx`)**
+  - [ ] Display real-time warning badges and 1-click alternative drug suggestion chips before finalizing prescription.
+
+---
+
+### Phase 70: Multi-Lingual Patient Instruction Translator `[PRIORITY: HIGH - PATIENT COMPLIANCE]`
+- [ ] **Step 77: Regional Language Translation Engine (`prescription_agent.py`)**
+  - [ ] Support Hindi (हिंदी), Punjabi (ਪੰਜਾਬੀ), Tamil (தமிழ்), Telugu (తెలుగు), Gujarati (ગુજરાતી), and Bengali (বাংলা).
+  - [ ] Translate `meal_instruction`, `general_advice`, and `precautions` into regional script via Gemini.
+- [ ] **Step 78: Dual-Language PDF & Email Rendering (`pdf_agent.py` & `email_agent.py`)**
+  - [ ] Render dual-language (English + Regional) instructions side-by-side on generated PDF prescriptions and HTML emails.
+
+---
+
+### Phase 71: Meta WhatsApp Cloud API Direct Dispatch Engine `[PRIORITY: HIGH - PATIENT ENGAGEMENT]`
+- [ ] **Step 79: WhatsApp Cloud API Integration (`agents/whatsapp_agent.py`)**
+  - [ ] Integrate Meta WhatsApp Business Cloud API / Twilio WhatsApp Sandbox for direct 1-click messaging.
+  - [ ] Add `WhatsApp` delivery toggle to `SendPrescriptionModal.tsx`.
+- [ ] **Step 80: Interactive WhatsApp Message Template**
+  - [ ] Dispatch template message with doctor name, patient name, DOB password callout, and 1-click link to `/p/:shareToken` & `/receipt/:orderId`.
+
+---
+
+### Phase 72: Longitudinal Patient Medical Dossier & Timeline Explorer `[PRIORITY: HIGH - CLINICAL HISTORY]`
+- [ ] **Step 81: Patient Dossier Aggregator (`server.py` & `db_agent.py`)**
+  - [ ] Aggregate all historical consultations, diagnoses, and prescribed medicines by patient `phone` / `patient_dob`.
+- [ ] **Step 82: Timeline UI Drawer (`HistoryPage.tsx` & `DoctorConsolePage.tsx`)**
+  - [ ] Interactive timeline showing patient health progression, chronic disease trends, and past PDF downloads in a unified dossier drawer.
+
