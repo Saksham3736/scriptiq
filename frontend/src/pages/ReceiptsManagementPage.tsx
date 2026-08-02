@@ -293,6 +293,57 @@ export default function ReceiptsManagementPage() {
     }
   };
 
+  // Phase 66C: Re-load a receipt's data into POS Builder for editing
+  const handleReloadReceiptIntoPOS = (receipt: ReceiptDoc) => {
+    setPatientName(receipt.patient_name || 'Walk-in Patient');
+    setPhone(receipt.phone || '');
+    if (receipt.items && receipt.items.length > 0) {
+      setItems(receipt.items.map((it) => ({
+        name: it.name,
+        dosage: it.dosage || '',
+        quantity: it.quantity,
+        unit_price: it.unit_price,
+        total_price: it.total_price,
+      })));
+    }
+    if (receipt.payment_method) {
+      const pm = receipt.payment_method as 'UPI QR' | 'Cash' | 'Card';
+      if (['UPI QR', 'Cash', 'Card'].includes(pm)) {
+        setPaymentMethod(pm);
+      }
+    }
+    setActiveTab('create');
+    addToast({
+      type: 'success',
+      title: '⚡ Receipt Re-Loaded into POS',
+      message: `Order #${receipt.order_id} hydrated into POS Builder — modify items and re-save.`,
+    });
+  };
+
+  // Phase 66C: Delete a receipt via DELETE /api/pharmacy/receipts/:order_id
+  const handleDeleteReceipt = async (orderId: string) => {
+    if (!window.confirm(`Are you sure you want to delete receipt #${orderId}? This cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/pharmacy/receipts/${orderId}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        setReceipts(receipts.filter((r) => r.order_id !== orderId));
+        addToast({
+          type: 'success',
+          title: 'Receipt Deleted',
+          message: `Order #${orderId} has been permanently removed.`,
+        });
+      } else {
+        addToast({ type: 'error', title: 'Delete Failed', message: json.message || 'Could not delete receipt.' });
+      }
+    } catch (err) {
+      console.error('Failed to delete receipt:', err);
+      addToast({ type: 'error', title: 'Delete Error', message: 'Network error while deleting receipt.' });
+    }
+  };
+
   const filteredReceipts = receipts.filter(
     (r) =>
       r.patient_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -742,60 +793,149 @@ export default function ReceiptsManagementPage() {
             </div>
           )}
 
-          {/* TAB 2: ISSUED RECEIPTS HISTORY */}
+          {/* TAB 2: ISSUED RECEIPTS HISTORY — Phase 66B+66C Enhanced */}
           {activeTab === 'history' && (
             <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
               <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <div style={{ position: 'relative', width: '320px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px' }}>
+                  <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
                     <Search size={16} color="#64748B" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                     <input
                       type="text"
-                      placeholder="Search order ID, patient..."
+                      placeholder="Search order ID, patient name, phone..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       style={{ ...inputStyle, paddingLeft: '36px' }}
                     />
                   </div>
+                  <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '12px', color: '#64748B', fontWeight: 600 }}>
+                    {filteredReceipts.length} receipt{filteredReceipts.length !== 1 ? 's' : ''}
+                  </span>
                 </div>
 
-                <div style={{ background: '#FFF', borderRadius: '12px', border: '1px solid var(--color-border, #E2E8F0)', overflow: 'hidden' }}>
-                  {filteredReceipts.map((r, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '16px 20px',
-                        borderBottom: '1px solid var(--color-border, #E2E8F0)',
-                      }}
-                    >
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: '13px', color: '#12897F' }}>
-                            {r.order_id}
-                          </span>
-                          <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'rgba(18,137,127,0.1)', color: '#12897F', fontSize: '11px', fontWeight: 600 }}>
-                            {r.status || 'Paid'}
-                          </span>
+                {filteredReceipts.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '48px 24px', background: '#FFF', borderRadius: '12px', border: '1px solid var(--color-border, #E2E8F0)' }}>
+                    <FileText size={36} color="#CBD5E1" style={{ marginBottom: '12px' }} />
+                    <p style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '15px', color: '#64748B', margin: 0 }}>
+                      No receipts found
+                    </p>
+                    <p style={{ fontFamily: 'Inter', fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>
+                      {searchQuery ? 'Try a different search query.' : 'Create your first receipt in the POS Bill Builder tab.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ background: '#FFF', borderRadius: '12px', border: '1px solid var(--color-border, #E2E8F0)', overflow: 'hidden' }}>
+                    {filteredReceipts.map((r, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '16px 20px',
+                          borderBottom: i < filteredReceipts.length - 1 ? '1px solid var(--color-border, #E2E8F0)' : 'none',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = '#FAFBFC')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        {/* Left: Receipt Info */}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: '13px', color: '#12897F' }}>
+                              {r.order_id}
+                            </span>
+                            <span style={{ padding: '2px 8px', borderRadius: '4px', background: 'rgba(18,137,127,0.1)', color: '#12897F', fontSize: '11px', fontWeight: 600 }}>
+                              {r.status || 'Paid'}
+                            </span>
+                            <span style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8' }}>
+                              {r.items?.length || 0} item{(r.items?.length || 0) !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <p style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '14px', margin: '4px 0 0', color: '#101A2E' }}>
+                            {r.patient_name} <span style={{ fontFamily: 'Inter', fontWeight: 400, fontSize: '12px', color: '#64748B' }}>({r.phone})</span>
+                          </p>
+                          {r.doctor_name && (
+                            <p style={{ fontFamily: 'Inter', fontSize: '11px', color: '#94A3B8', margin: '2px 0 0' }}>
+                              Dr. {r.doctor_name}
+                            </p>
+                          )}
                         </div>
-                        <p style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '14px', margin: '4px 0 0', color: '#101A2E' }}>
-                          {r.patient_name} ({r.phone})
-                        </p>
-                      </div>
 
-                      <div style={{ textAlign: 'right' }}>
-                        <p style={{ fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: '15px', color: '#101A2E', margin: 0 }}>
-                          ₹{r.total_amount.toFixed(2)}
-                        </p>
-                        <p style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B', margin: '2px 0 0' }}>
-                          {r.payment_method} · {new Date(r.created_at).toLocaleDateString()}
-                        </p>
+                        {/* Center: Amount & Date */}
+                        <div style={{ textAlign: 'right', marginRight: '16px' }}>
+                          <p style={{ fontFamily: 'IBM Plex Mono', fontWeight: 700, fontSize: '15px', color: '#101A2E', margin: 0 }}>
+                            ₹{r.total_amount.toFixed(2)}
+                          </p>
+                          <p style={{ fontFamily: 'Inter', fontSize: '11px', color: '#64748B', margin: '2px 0 0' }}>
+                            {r.payment_method} · {new Date(r.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+
+                        {/* Right: Action Buttons — Phase 66C */}
+                        <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                          {/* Edit / Re-Load into POS Builder */}
+                          <button
+                            onClick={() => handleReloadReceiptIntoPOS(r)}
+                            title="Edit / Re-Load into POS Builder"
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              padding: '6px 12px',
+                              borderRadius: '8px',
+                              background: 'linear-gradient(135deg, #12897F 0%, #0E6A62 100%)',
+                              color: '#FFF',
+                              border: 'none',
+                              fontFamily: 'Space Grotesk',
+                              fontWeight: 600,
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 6px rgba(18, 137, 127, 0.25)',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <Zap size={12} /> Edit / Re-Load
+                          </button>
+
+                          {/* View Official Receipt */}
+                          <button
+                            onClick={() => window.open(`/receipt/${r.order_id}`, '_blank')}
+                            title="View Official Receipt"
+                            style={{
+                              padding: '6px 10px',
+                              borderRadius: '8px',
+                              background: 'var(--color-bg-subtle, #F1F5F9)',
+                              color: 'var(--color-ink-900, #334155)',
+                              border: '1px solid var(--color-border, #E2E8F0)',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <Printer size={13} />
+                          </button>
+
+                          {/* Delete Receipt */}
+                          <button
+                            onClick={() => handleDeleteReceipt(r.order_id)}
+                            title="Delete Receipt"
+                            style={{
+                              padding: '6px 10px',
+                              borderRadius: '8px',
+                              background: 'rgba(225, 85, 84, 0.08)',
+                              color: '#E15554',
+                              border: '1px solid rgba(225, 85, 84, 0.2)',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

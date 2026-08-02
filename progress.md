@@ -4,7 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-* **Current Phase**: Phase 64 Complete — Redundant LLM Request Elimination & Dispatch Deduplication Suite (`run_full_automated_workflow` JSON reuse, Auto-Pilot 50% LLM token savings, `useSendPrescription.ts` single-call pharmacy order deduplication, `AIPrescriptionAgent.generate_prescription` alias & `import config` fix)
+* **Current Phase**: Phase 66 Complete — Patients Page Decommission & Receipts History & Edit Workspace Integration
 * **Completed & Active Phases**: 
   * Phase 1 to 30: Baseline Systems, Auth, Telemetry, PDF Encryption & Multi-Channel Engine (100% Complete)
   * Phase 34: In-House Pharmacy Receipt & Template Management Suite (`ReceiptsManagementPage.tsx`, POS velocity mode, UPI QR, thermal 80mm printing) (100% Complete)
@@ -23,9 +23,11 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 62: Render Backend Memory Optimization & Gemini API Quota Alignment (100% Complete)
   * Phase 63: Gemini Function Calling & Clinical Tool-Use Engine + Live Telemetry & Delivery Engine Fixes (100% Complete)
   * Phase 64: Redundant LLM Request Elimination & Dispatch Deduplication Suite (100% Complete)
+  * Phase 65: Comprehensive PDF Generation Attribute Parsing & Layout Fixes — Dynamic age/DOB, consultation timestamp parity, field alias standardization, patient contact details (100% Complete)
+  * Phase 66: Patients Page Decommission & Receipts History & Edit Workspace Integration — `/patients` removed, receipt edit/re-load/delete engine (100% Complete)
 * **Planned Feature Integration Roadmap**:
-  * Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite (`DELETE /api/pharmacy/receipts/{order_id}`)
-  * Phase 53: Patient Receipts Portal — Stock Tab Replacement with Patient Receipts Explorer (`ReceiptsManagementPage.tsx`)
+  * Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite (Superseded by Phase 66)
+  * Phase 53: Patient Receipts Portal — Stock Tab Replacement with Patient Receipts Explorer (Superseded by Phase 66)
 * **Last Updated**: August 3, 2026
 
 ---

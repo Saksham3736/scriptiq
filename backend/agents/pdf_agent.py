@@ -97,6 +97,41 @@ class PDFAgent:
             print(f"[PDFAgent] Warning fetching letterhead settings from DB: {e}")
         return defaults
 
+    # --- Phase 65 Helper Methods ---
+
+    def _calculate_age_from_dob(self, dob_str: str) -> str:
+        """Calculate age in years from a DOB string. Supports DDMMYYYY, DD-MM-YYYY, DD/MM/YYYY, YYYY-MM-DD, ISO 8601."""
+        from dateutil import parser as dateutil_parser
+        try:
+            # Try common Indian format DDMMYYYY (no separators)
+            if len(dob_str) == 8 and dob_str.isdigit():
+                dob_date = datetime.strptime(dob_str, "%d%m%Y")
+            else:
+                dob_date = dateutil_parser.parse(dob_str, dayfirst=True)
+            today = datetime.now()
+            age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+            return str(max(age, 0))
+        except Exception:
+            print(f"[PDFAgent] Could not parse DOB string for age calculation: '{dob_str}'")
+            return "N/A"
+
+    def _parse_consultation_timestamp(self, ts) -> datetime:
+        """Parse a consultation timestamp from various formats. Returns datetime object."""
+        from dateutil import parser as dateutil_parser
+        if isinstance(ts, datetime):
+            return ts
+        if isinstance(ts, (int, float)):
+            try:
+                return datetime.fromtimestamp(ts)
+            except Exception:
+                pass
+        if isinstance(ts, str):
+            try:
+                return dateutil_parser.parse(ts)
+            except Exception:
+                print(f"[PDFAgent] Could not parse consultation timestamp: '{ts}', using current time")
+        return datetime.now()
+
     def generate_pdf(self, prescription_data: dict, output_filename: str = None) -> str:
         """
         Generate a professional prescription PDF file from structured prescription JSON.
@@ -109,15 +144,24 @@ class PDFAgent:
 
         # Extract patient fields with safe defaults
         patient_name = prescription_data.get("patient_name") or "Rahul Sharma"
-        age = prescription_data.get("age") or "24"
         gender = prescription_data.get("gender") or "Male"
         dob = prescription_data.get("patient_dob") or prescription_data.get("dob") or ""
         chief_complaint = prescription_data.get("chief_complaint") or "Fever and sore throat"
         diagnosis = prescription_data.get("diagnosis") or "Viral Fever"
         medicines = prescription_data.get("medicines", [])
         tests = prescription_data.get("tests", [])
-        general_advice = prescription_data.get("general_advice", [])
+        # Phase 65C: Support both 'general_advice' and 'advice' field aliases
+        general_advice = prescription_data.get("general_advice") or prescription_data.get("advice") or []
         follow_up = prescription_data.get("follow_up") or "After 5 Days"
+
+        # Phase 65A: Dynamic Age — calculate from DOB if age is missing/None
+        age_raw = prescription_data.get("age") or prescription_data.get("patient_age")
+        if age_raw:
+            age = str(age_raw)
+        elif dob:
+            age = self._calculate_age_from_dob(dob)
+        else:
+            age = "N/A"
 
         # Extract dynamic Doctor/Hospital profile details
         hospital_name = prescription_data.get("hospital_name") or saved_letterhead.get("hospital_name")
@@ -135,11 +179,24 @@ class PDFAgent:
         hex_secondary = prescription_data.get("secondary_color") or saved_letterhead.get("secondary_color") or "#2B6CB0"
         header_layout = prescription_data.get("header_layout") or saved_letterhead.get("header_layout") or "center"
 
-        current_time = datetime.now()
-        date_str = current_time.strftime("%d %B %Y")
-        time_str = current_time.strftime("%I:%M %p")
+        # Phase 65B: Preserve original consultation timestamp if available
+        consultation_ts = (
+            prescription_data.get("consultation_date")
+            or prescription_data.get("created_at")
+            or prescription_data.get("timestamp")
+            or prescription_data.get("date")
+        )
+        if consultation_ts:
+            resolved_time = self._parse_consultation_timestamp(consultation_ts)
+        else:
+            resolved_time = datetime.now()
+        date_str = resolved_time.strftime("%d %B %Y")
+        time_str = resolved_time.strftime("%I:%M %p")
+        current_time = resolved_time  # used downstream for filename
 
-        phone = prescription_data.get("phone") or ""
+        # Phase 65C: Support both 'phone' and 'patient_phone', 'email' and 'patient_email'
+        phone = prescription_data.get("phone") or prescription_data.get("patient_phone") or ""
+        patient_email = prescription_data.get("email") or prescription_data.get("patient_email") or ""
 
         # Configure Password Encryption if enabled (default True)
         encrypt_pdf_flag = prescription_data.get("encrypt_pdf")
@@ -269,13 +326,15 @@ class PDFAgent:
 
         # 3. Patient Metadata Card Table
         dob_display = f" | <b>DOB:</b> {dob}" if dob else ""
+        # Phase 65A: Display calculated/raw age; show "N/A" instead of hardcoded value
+        age_display = f"{age} Yrs" if age and age != "N/A" else "N/A"
         patient_info_data = [
             [
                 Paragraph(f"<b>Patient Name:</b> {patient_name}{dob_display}", body_style),
                 Paragraph(f"<b>Date:</b> {date_str} ({time_str})", body_style)
             ],
             [
-                Paragraph(f"<b>Age / Gender:</b> {age} Yrs / {gender}", body_style),
+                Paragraph(f"<b>Age / Gender:</b> {age_display} / {gender}", body_style),
                 Paragraph(f"<b>Chief Complaint:</b> {chief_complaint}", body_style)
             ],
             [
@@ -283,6 +342,23 @@ class PDFAgent:
                 Paragraph(f"<b>Follow Up:</b> {follow_up}", body_style)
             ]
         ]
+        # Phase 65D: Add patient contact details row if phone or email exists
+        if phone or patient_email:
+            contact_parts = []
+            if phone:
+                contact_parts.append(f"<b>Phone:</b> {phone}")
+            if patient_email:
+                contact_parts.append(f"<b>Email:</b> {patient_email}")
+            if len(contact_parts) == 2:
+                patient_info_data.append([
+                    Paragraph(contact_parts[0], body_style),
+                    Paragraph(contact_parts[1], body_style)
+                ])
+            else:
+                patient_info_data.append([
+                    Paragraph(" | ".join(contact_parts), body_style),
+                    Paragraph("", body_style)
+                ])
 
         patient_table = Table(patient_info_data, colWidths=[270, 270])
         patient_table.setStyle(TableStyle([
@@ -310,7 +386,8 @@ class PDFAgent:
                 med_name = med.get("name", "N/A") if isinstance(med, dict) else str(med)
                 dosage = med.get("dosage", "N/A") if isinstance(med, dict) else ""
                 duration = med.get("duration", "N/A") if isinstance(med, dict) else ""
-                meal_instruction = med.get("meal_instruction", "N/A") if isinstance(med, dict) else ""
+                # Phase 65C: Support meal_instruction, instruction, dosage_instruction aliases
+                meal_instruction = (med.get("meal_instruction") or med.get("instruction") or med.get("dosage_instruction") or "N/A") if isinstance(med, dict) else ""
 
                 med_table_data.append([
                     Paragraph(str(idx), ParagraphStyle('Center', parent=body_style, alignment=TA_CENTER)),

@@ -986,5 +986,50 @@ Final assembled PrescriptionSchema JSON → DraftStore
 | Hinglish handling | Variable | Stable — medical context header normalises terms |
 | Empty field rate | High on short transcripts | Low — tool system prompts explicit empty marking |
 
+---
+
+## Phase 65: Comprehensive PDF Generation Attribute Parsing & Layout Fixes `[PRIORITY: HIGH]`
+
+### Step 65A: Dynamic Age & DOB Fallback Calculation (`pdf_agent.py`)
+- [ ] Inspect `prescription_data.get("age")`, `prescription_data.get("patient_age")`, `prescription_data.get("dob")`, and `prescription_data.get("patient_dob")`.
+- [ ] Eliminate hardcoded `"24"` age fallback.
+- [ ] If `age` is missing/None, auto-calculate exact age from DOB string (`DDMMYYYY` / `YYYY-MM-DD`). Fallback to `"N/A"` if DOB is unparseable.
+
+### Step 65B: Consultation Date & Timestamp Parity (`pdf_agent.py`)
+- [ ] Extract `consultation_date`, `created_at`, or `date` from `prescription_data`.
+- [ ] Fallback to system `datetime.now()` ONLY when creating a brand new prescription, ensuring historical PDFs display original consultation timestamp.
+
+### Step 65C: Field Alias Standardization (`pdf_agent.py`)
+- [ ] Support both `advice` and `general_advice` array fields.
+- [ ] Support `meal_instruction`, `instruction`, `dosage_instruction`, and `frequency` across medicine objects.
+- [ ] Support both `patient_email` and `email`.
+
+### Step 65D: Patient Contact Details Integration in PDF Card (`pdf_agent.py`)
+- [ ] Add Patient Phone (`phone`) and Patient Email (`email`) into the Patient Metadata Table layout.
+
+---
+
+## Phase 66: Patients Page Decommission & Receipts History & Edit Workspace Integration `[PRIORITY: HIGH - UX & POS]`
+
+### Step 66A: Remove Patients Navigation & App Route
+- [ ] Remove `Patients` (`/patients`, `PatientsPage.tsx`) item from `NAV` array in `Sidebar.tsx`.
+- [ ] Update bottom-left account popover menu in `Sidebar.tsx` to link to `Receipts Portal` (`/receipts`) instead of `Patient Directory`.
+- [ ] Deprecate `/patients` route in `App.tsx` and redirect to `/receipts`.
+
+### Step 66B: Receipts History & Explorer Tab (`ReceiptsManagementPage.tsx`)
+- [ ] Promote `Receipts` (`/receipts`) as a primary top-level sidebar navigation page.
+- [ ] Build Receipts History Explorer displaying all generated pharmacy receipts fetched from `GET /api/pharmacy/receipts`.
+- [ ] Add live patient search, date range filter, and itemized preview drawer.
+
+### Step 66C: POS Receipt Editing & Re-Loading Engine (`ReceiptsManagementPage.tsx` & Phase 52 mapping)
+- [ ] Add **"⚡ Edit / Re-Load into POS Builder"** button on every receipt row/card.
+- [ ] Clicking **"Edit / Re-Load"** hydrates receipt details (patient name, phone, email, doctor, items, dosage, quantities, prices, discount, tax, payment method, notes) back into the active POS Bill Builder form.
+- [ ] Allows instant modification of items/prices and re-saving/re-printing of the receipt.
+- [ ] Map with receipt deletion endpoint (`DELETE /api/pharmacy/receipts/{order_id}`).
+
+### Step 66D: Verification & Build
+- [ ] Verify Vite build (`npm run build`) with zero TypeScript errors.
+- [ ] Test receipt editing flow: select receipt -> click Edit -> hydrate POS form -> modify -> re-save.
+
 
 

@@ -11,7 +11,7 @@ import HistoryPage from './pages/HistoryPage';
 import PrescriptionViewPage from './pages/PrescriptionViewPage';
 import ReceiptViewPage from './pages/ReceiptViewPage';
 import ReceiptsManagementPage from './pages/ReceiptsManagementPage';
-import PatientsPage from './pages/PatientsPage';
+
 import SettingsPage from './pages/SettingsPage';
 import PatientPortal from './pages/PatientPortal';
 import PatientLoginPage from './pages/patient/PatientLoginPage';
@@ -61,7 +61,7 @@ export default function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/receipts" element={<ReceiptsManagementPage />} />
               <Route path="/history" element={<HistoryPage />} />
-              <Route path="/patients" element={<PatientsPage />} />
+              <Route path="/patients" element={<Navigate to="/receipts" replace />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>
