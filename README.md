@@ -35,32 +35,155 @@
 
 ---
 
-## 🏗️ Master Agent System Architecture
+## 🏗️ Master Agent System Architecture & Foundational Diagrams
 
+### 1. Master System Architecture & Micro-Agent Orchestration Flow
 ```mermaid
 flowchart TD
-    subgraph Input [1. Clinical Audio & Intake]
-        A[Doctor Voice Input / Audio Mic] -->|Audio Stream| B(SpeechAgent STT)
-        A2[Patient Intake Space] -->|Typed/Voice Intake| B
+    subgraph CLINICAL_INTAKE["1. Clinical Intake & Speech Processing"]
+        A["Doctor-Patient Audio Stream / Voice Consultation"] --> B["SpeechAgent"]
+        B -->|"Gemini Multimodal STT + Medical Lexicon"| C["Clean Medical Transcript"]
     end
 
-    subgraph Orchestrator [2. Master Agent Telemetry Pipeline]
-        B -->|Raw Transcript| C{MasterAgent Orchestrator}
-        C -->|Step 1/7: STT| D[PrescriptionAgent Extraction]
-        D -->|Multi-Model Fallback| E[Gemini 2.5 Flash / 3.5 Flash]
-        E -->|Validated JSON Schema| F[Doctor Console Draft Editor]
+    subgraph CLINICAL_REASONING["2. AI Clinical Extraction Engine"]
+        C --> D["PrescriptionAgent"]
+        D -->|"Gemini Function Calling (7 Clinical Tools)"| E["Tool Executor & Python Validator"]
+        E --> F["Validated PrescriptionSchema JSON"]
     end
 
-    subgraph Output [3. Fulfillment & Omni-Channel Delivery]
-        F -->|Doctor Approval| G(PDFAgent)
-        G -->|DOB Encrypted PDF| H[(MongoDB Atlas)]
-        H -->|Auto-Bridge| I(Pharmacy POS Engine)
-        H -->|SMTP TLS| J(EmailAgent)
-        H -->|VAPID Push| K(PushAgent)
-        I -->|80mm Thermal Print| L[Hospital Counter #1 POS]
-        J -->|Encrypted Email| M[Patient Inbox]
-        K -->|Lock-Screen Alert| N[Patient Smartphone]
+    subgraph PERSISTENCE_SEC["3. Security & Persistence Layer"]
+        F --> G["PDFAgent"]
+        G -->|"DOB Password Encryption (128-bit)"| H["ReportLab PDF Document"]
+        F --> I["DatabaseAgent"]
+        I -->|"Persist Record"| J[("MongoDB Atlas")]
     end
+
+    subgraph MULTI_CHANNEL["4. Multi-Channel Dispatch Engine"]
+        F --> K["Delivery Pipeline"]
+        K --> L["PushAgent (Web Push Notifications)"]
+        K --> M["EmailAgent (HTML Email + PDF Attachment)"]
+        K --> N["PharmacyAgent (POS Bill & Inventory Stock Alert)"]
+        N --> O["Official Letterhead Receipt (/receipt/:orderId)"]
+    end
+
+    style A fill:#101A2E,color:#FFF,stroke:#12897F,stroke-width:2px
+    style F fill:#E4F3F1,color:#101A2E,stroke:#12897F,stroke-width:2px
+    style H fill:#12897F,color:#FFF,stroke:#0E6A62,stroke-width:2px
+    style J fill:#1389D2,color:#FFF,stroke:#0E5B8E,stroke-width:2px
+```
+
+### 2. Gemini Function Calling (Tool-Use) Clinical Reasoning Loop
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Doctor as Doctor / Transcript
+    participant Agent as PrescriptionAgent
+    participant LLM as Gemini 2.5 Flash
+    participant Validator as Tool Executor (Python)
+    participant Store as Zustand DraftStore
+
+    Doctor->>Agent: Audio Transcript + Medical Context Header
+    Agent->>LLM: generate_content(tools=[CLINICAL_TOOLS])
+    
+    loop Multi-Turn Tool Execution Loop (Max 12 Iterations)
+        LLM-->>Agent: Function Call Request
+        alt extract_patient_info
+            Agent->>Validator: Validate Patient Name, DOB, Phone, Email
+        else extract_chief_complaint
+            Agent->>Validator: Validate Symptoms & Primary Complaint
+        else extract_diagnosis
+            Agent->>Validator: Validate Explicit Clinical Diagnosis
+        else extract_medicine (Iterative per Drug)
+            Agent->>Validator: Sanitize Drug Brand, Dosage, Duration, Meal Instructions
+        else extract_lab_tests / extract_advice
+            Agent->>Validator: Validate Lab Investigations & Health Advice
+        end
+        Validator-->>Agent: Validated Tool Result JSON
+        Agent->>LLM: Send Tool Output back to Gemini Context
+    end
+
+    LLM-->>Agent: Final Response Complete
+    Agent->>Store: Populate Validated Prescription Draft
+```
+
+### 3. Prescription-to-Pharmacy POS & Billing Velocity Flow
+```mermaid
+graph LR
+    subgraph DOCTOR_CONSOLE["Doctor Console"]
+        A["Doctor Approves Prescription"]
+    end
+
+    subgraph POS_BRIDGE["Auto-Bridge Engine"]
+        A --> B["Process Pharmacy Choice"]
+        B --> C{"In-House Purchase?"}
+        C -->|Yes| D["PharmacyAgent.generate_pharmacy_order()"]
+        C -->|No| E["Mark External Pharmacy Opt-Out"]
+    end
+
+    subgraph POS_WORKSPACE["POS Billing & Receipts Portal"]
+        D --> F["POS Bill Builder Form Hydration"]
+        F --> G["80mm Thermal Printer Engine"]
+        F --> H["Dynamic UPI QR Code Generator"]
+        F --> I["Official Letterhead Receipt Generator"]
+        I --> J["View/Print Official Receipt (/receipt/:orderId)"]
+    end
+
+    style A fill:#12897F,color:#FFF
+    style D fill:#E4F3F1,color:#101A2E
+    style H fill:#E8A33D,color:#FFF
+    style J fill:#6D5DF6,color:#FFF
+```
+
+### 4. Multi-Layer Patient Security & Dynamic Encryption Matrix
+```mermaid
+flowchart TD
+    A["Patient Input Demographics"] --> B{"Is DOB String Present?"}
+    
+    B -->|Yes| C["Format DOB as DDMMYYYY"]
+    C --> D["Primary Encryption Key (e.g. 15081989)"]
+    
+    B -->|No| E{"Is Phone Number Present?"}
+    E -->|Yes| F["Extract Last 4 Digits of Phone"]
+    F --> G["Fallback Key 1 (e.g. 8606)"]
+    
+    E -->|No| H["Default Security Key (1234)"]
+    
+    D --> I["ReportLab 128-Bit Standard Encryption"]
+    G --> I
+    H --> I
+    
+    I --> J["Encrypted PDF File Saved"]
+    I --> K["Explicit Password Callout Banner in Email"]
+
+    style D fill:#12897F,color:#FFF
+    style G fill:#E8A33D,color:#FFF
+    style H fill:#CBD5E1,color:#101A2E
+    style K fill:#E4F3F1,color:#101A2E,stroke:#12897F,stroke-width:2px
+```
+
+### 5. Parallel Non-Blocking Multi-Channel Delivery Pipeline
+```mermaid
+flowchart LR
+    A["User Clicks 'Confirm & Send'"] --> B["useSendPrescription.ts"]
+    B --> C["Step 1: POST /api/prescription/approve"]
+    C --> D["Promise.allSettled() Concurrent Dispatch"]
+    
+    D -->|"Branch A (~100ms)"| E["POST /api/prescription/send-push"]
+    D -->|"Branch B (Parallel)"| F["POST /api/prescription/send-email"]
+    D -->|"Branch C (Instant)"| G["Pharmacy Order Auto-Bridge"]
+
+    E --> H["PushAgent: Web Push Notification Fired"]
+    F --> I["EmailAgent: Dual-Port (465 SSL / 587 STARTTLS) HTML Email"]
+    G --> J["Receipt Queued at Pharmacy Counter #1"]
+
+    H --> K["Unified Delivery Result Returned to UI"]
+    I --> K
+    J --> K
+
+    style D fill:#6D5DF6,color:#FFF
+    style E fill:#12897F,color:#FFF
+    style F fill:#1389D2,color:#FFF
+    style K fill:#E4F3F1,color:#101A2E,stroke:#12897F,stroke-width:2px
 ```
 
 ---
@@ -84,10 +207,10 @@ flowchart TD
 | Workspace Name | Route | Target User | Key Capabilities |
 | :--- | :--- | :--- | :--- |
 | **Doctor Consultation Console** | [`/console`](file:///s:/AI-prescription-agent/frontend/src/pages/DoctorConsolePage.tsx) | Doctor | 3-Pane clinical layout (`WaveformSpine`, `LiveTranscriptPanel`, `DraftPanel`), zero-scroll 100vh viewport, patient intake space. |
-| **Patient Receipts & POS Portal** | [`/receipts`](file:///s:/AI-prescription-agent/frontend/src/pages/ReceiptsManagementPage.tsx) | Pharmacist / Staff | POS billing cart, 5% GST, discounts, 1-Click `⚡ Load Recent Prescription`, UPI QR code generator, 80mm thermal print isolation. |
+| **Official Receipts Workspace** | [`/official-receipts`](file:///s:/AI-prescription-agent/frontend/src/pages/OfficialReceiptsPage.tsx) | Doctor / Admin / Staff | History explorer of generated patient receipts and live interactive Official Patient Receipt Editor & letterhead customizer. |
+| **POS Billing Workspace** | [`/receipts`](file:///s:/AI-prescription-agent/frontend/src/pages/ReceiptsManagementPage.tsx) | Pharmacist / Staff | POS billing cart, 5% GST, discounts, 1-Click `⚡ Load Recent Prescription`, UPI QR code generator, 80mm thermal print isolation. |
 | **Standalone Official Receipt** | [`/receipt/:orderId`](file:///s:/AI-prescription-agent/frontend/src/pages/ReceiptViewPage.tsx) | Patient / Doctor | Branded receipt view URL (`PHARM-XXXX`) with hospital letterhead, doctor credentials, system stamp, signature, and A4 print isolation (`?autoprint=true`). |
 | **Clinical History & Audit Trail** | [`/history`](file:///s:/AI-prescription-agent/frontend/src/pages/HistoryPage.tsx) | Doctor / Admin | Searchable audit log with Age/Gender badges (`50 Yrs / Female`), dual-tab prescription vs. raw transcript views, CSV export, batch deletion. |
-| **Patient Directory & Dossier** | [`/patients`](file:///s:/AI-prescription-agent/frontend/src/pages/PatientsPage.tsx) | Doctor / Admin | Central patient directory, consultation history timelines, and 1-click patient health dossier inspection. |
 | **Operations Dashboard** | [`/dashboard`](file:///s:/AI-prescription-agent/frontend/src/pages/DashboardPage.tsx) | Admin | Real-time consultation analytics, sub-agent pipeline health monitors, recent consultation logs, and system status gauges. |
 | **System & Letterhead Settings** | [`/settings`](file:///s:/AI-prescription-agent/frontend/src/pages/SettingsPage.tsx) | Admin / Doctor | 5-tab settings application covering Profile, PDF Letterhead Customization (with live canvas preview), Email SMTP, Push Notifications, and Receipt Template settings. |
 | **Patient Self-Service Portal** | [`/patient`](file:///s:/AI-prescription-agent/frontend/src/pages/PatientPortal.tsx) | Patient | Self-service dashboard with OTP login, active prescription timeline, visual time-of-day medication schedule, and 1-click DOB password unlock. |
