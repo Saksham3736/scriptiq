@@ -12,7 +12,7 @@
 |---|---|
 | **Product Name** | ScriptIQ |
 | **Project Root** | `s:/AI-prescription-agent/` |
-| **Phase** | Phase 66 Complete (Patients Page Decommission & Receipts History & Edit Workspace Integration) |
+| **Phase** | Phase 67 Complete (Official Receipts History Page & Letterhead Editor) |
 | **LLM Model** | `gemini-2.5-flash` (primary), `gemini-2.5-flash-lite` (fallback 1), `gemini-3.5-flash` (fallback 2) |
 | **Database** | MongoDB Atlas (`Agent_Doctor` db) |
 | **Backend** | Python (agents + `ai_prescription_agent.py`) → FastAPI (`server.py`) |

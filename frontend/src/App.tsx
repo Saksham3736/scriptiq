@@ -11,6 +11,7 @@ import HistoryPage from './pages/HistoryPage';
 import PrescriptionViewPage from './pages/PrescriptionViewPage';
 import ReceiptViewPage from './pages/ReceiptViewPage';
 import ReceiptsManagementPage from './pages/ReceiptsManagementPage';
+import OfficialReceiptsPage from './pages/OfficialReceiptsPage';
 
 import SettingsPage from './pages/SettingsPage';
 import PatientPortal from './pages/PatientPortal';
@@ -60,8 +61,9 @@ export default function App() {
               <Route path="/console" element={<DoctorConsolePage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/receipts" element={<ReceiptsManagementPage />} />
+              <Route path="/official-receipts" element={<OfficialReceiptsPage />} />
               <Route path="/history" element={<HistoryPage />} />
-              <Route path="/patients" element={<Navigate to="/receipts" replace />} />
+              <Route path="/patients" element={<Navigate to="/official-receipts" replace />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>

@@ -20,6 +20,28 @@ export default function ReceiptViewPage() {
         setLoading(false);
         return;
       }
+
+      // Phase 67D: Fetch letterhead config from DB instead of hardcoding
+      let letterhead: any = {};
+      try {
+        const lhRes = await fetch('/api/settings/letterhead');
+        const lhJson = await lhRes.json();
+        if (lhJson.success && lhJson.data) {
+          letterhead = lhJson.data;
+        }
+      } catch (e) {
+        console.warn('[ReceiptViewPage] Could not fetch letterhead config:', e);
+      }
+
+      // Resolve letterhead fields with safe defaults
+      const lhHospitalName = letterhead.hospital_name || 'MEDICARE HOSPITAL & CLINIC';
+      const lhDoctorName = letterhead.doctor_name || 'Dr. Rajesh Sharma';
+      const lhDoctorQualification = letterhead.doctor_qualification || 'MBBS, MD (General Medicine)';
+      const lhDoctorSpecialization = letterhead.doctor_specialization || 'Senior Consultant Physician';
+      const lhDoctorRegNo = letterhead.doctor_reg_no || 'PMC/2026/123456';
+      const lhHospitalAddress = letterhead.hospital_address || 'Civil Lines, Ludhiana, Punjab - 141001';
+      const lhHospitalPhone = letterhead.hospital_phone || '+91 98765 43210';
+
       try {
         const res = await fetch(`/api/pharmacy/receipts?q=${orderId}`);
         const json = await res.json();
@@ -33,13 +55,13 @@ export default function ReceiptViewPage() {
             pickup_location: 'Hospital Pharmacy Counter #1',
             order_date: found.created_at ? new Date(found.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('en-IN'),
             status: found.status || 'Paid',
-            doctor_name: found.doctor_name || 'Dr. Rajesh Sharma',
-            doctor_qualification: 'MBBS, MD (General Medicine)',
-            doctor_specialization: 'Senior Consultant Physician',
-            doctor_reg_no: 'PMC/2026/123456',
-            hospital_name: 'MEDICARE HOSPITAL & CLINIC',
-            hospital_address: 'Civil Lines, Ludhiana, Punjab - 141001',
-            hospital_phone: '+91 98765 43210',
+            doctor_name: found.doctor_name || lhDoctorName,
+            doctor_qualification: lhDoctorQualification,
+            doctor_specialization: lhDoctorSpecialization,
+            doctor_reg_no: lhDoctorRegNo,
+            hospital_name: lhHospitalName,
+            hospital_address: lhHospitalAddress,
+            hospital_phone: lhHospitalPhone,
             items: found.items ? found.items.map((it: any) => ({
               medicine: it.name || it.medicine,
               generic_name: it.dosage || it.generic_name || 'Standard Dosage',
@@ -66,13 +88,13 @@ export default function ReceiptViewPage() {
         pickup_location: 'Hospital Pharmacy Counter #1',
         order_date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
         status: 'Priority Dispense Ready',
-        doctor_name: 'Dr. Rajesh Sharma',
-        doctor_qualification: 'MBBS, MD (General Medicine)',
-        doctor_specialization: 'Senior Consultant Physician',
-        doctor_reg_no: 'PMC/2026/123456',
-        hospital_name: 'MEDICARE HOSPITAL & CLINIC',
-        hospital_address: 'Civil Lines, Ludhiana, Punjab - 141001',
-        hospital_phone: '+91 98765 43210',
+        doctor_name: lhDoctorName,
+        doctor_qualification: lhDoctorQualification,
+        doctor_specialization: lhDoctorSpecialization,
+        doctor_reg_no: lhDoctorRegNo,
+        hospital_name: lhHospitalName,
+        hospital_address: lhHospitalAddress,
+        hospital_phone: lhHospitalPhone,
         items: [
           { medicine: 'Pan 40 tablet', generic_name: 'Pantoprazole 40mg', quantity: 1, unit_price_inr: 50.0, total_price_inr: 50.0 },
           { medicine: 'Cetzine 10mg', generic_name: 'Cetirizine 10mg', quantity: 1, unit_price_inr: 50.0, total_price_inr: 50.0 },

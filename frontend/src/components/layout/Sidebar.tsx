@@ -23,7 +23,8 @@ import { useUIStore } from '@/store/uiStore';
 const NAV = [
   { to: '/console', icon: Stethoscope, label: 'New Consult', roles: ['doctor', 'admin'] },
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['doctor', 'admin'] },
-  { to: '/receipts', icon: Receipt, label: 'Receipts Portal', roles: ['doctor', 'admin', 'patient'] },
+  { to: '/official-receipts', icon: Receipt, label: 'Receipts', roles: ['doctor', 'admin'] },
+  { to: '/receipts', icon: ShoppingBag, label: 'POS Billing', roles: ['doctor', 'admin'] },
   { to: '/history', icon: ClipboardList, label: 'History', roles: ['doctor', 'admin', 'patient'] },
   { to: '/settings', icon: Settings, label: 'Settings', roles: ['doctor', 'admin', 'patient'] },
 ];
@@ -241,12 +242,12 @@ export default function Sidebar() {
               <button
                 onClick={() => {
                   setShowAccountMenu(false);
-                  navigate('/receipts');
+                  navigate('/official-receipts');
                 }}
                 style={popoverBtnStyle}
               >
                 <User size={14} color="#12897F" />
-                <span>Receipts Portal</span>
+                <span>Official Receipts</span>
               </button>
 
               <button

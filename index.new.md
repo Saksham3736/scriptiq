@@ -1028,8 +1028,24 @@ Final assembled PrescriptionSchema JSON → DraftStore
 - [ ] Map with receipt deletion endpoint (`DELETE /api/pharmacy/receipts/{order_id}`).
 
 ### Step 66D: Verification & Build
-- [ ] Verify Vite build (`npm run build`) with zero TypeScript errors.
-- [ ] Test receipt editing flow: select receipt -> click Edit -> hydrate POS form -> modify -> re-save.
+- [x] Verify Vite build (`npm run build`) with zero TypeScript errors.
+- [x] Test receipt editing flow: select receipt -> click Edit -> hydrate POS form -> modify -> re-save.
 
+---
 
+## Phase 67: Official Receipts History Page & Letterhead Editor `[PRIORITY: HIGH - UX & RECEIPT BRANDING]`
+
+### Step 67A: New `OfficialReceiptsPage.tsx` Sidebar Page (`/official-receipts`)
+- [x] Create `OfficialReceiptsPage.tsx` with two tabs:
+  - **Tab 1 — Receipt History Explorer**: Fetches receipts from `GET /api/pharmacy/receipts`, searchable, with View/Print/Delete buttons
+  - **Tab 2 — Letterhead Editor**: Full form editor for hospital/doctor details, colors, layout alignment, with live preview banner and Sample PDF generation
+- [x] Add route `/official-receipts` in `App.tsx`
+- [x] Add "Receipts" nav item in `Sidebar.tsx`, rename existing "Receipts Portal" to "POS Billing"
+
+### Step 67B: ReceiptViewPage Letterhead Sync Fix
+- [x] Fix `ReceiptViewPage.tsx` to fetch letterhead from `GET /api/settings/letterhead` instead of hardcoded hospital/doctor values
+- [x] Letterhead editor changes now correctly reflect on all official receipts
+
+### Step 67C: Verification & Build
+- [x] `npm run build` — 0 TypeScript errors (434ms)
 
