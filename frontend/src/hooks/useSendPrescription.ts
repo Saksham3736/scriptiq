@@ -57,25 +57,8 @@ export function useSendPrescription() {
         throw new Error(approveJson.detail || approveJson.error || 'Failed to approve prescription.');
       }
 
-      let pharmacyJson: any = null;
-
-      // 2. Trigger pharmacy receipt & dual dispatch if in-house buy selected
-      if (wantInHousePharmacy) {
-        const pharmRes = await fetch('/api/pharmacy/receipt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prescription_data: draft,
-            want_in_house_buy: true,
-            phone: targetPhone,
-          }),
-        });
-
-        const pharmText = await pharmRes.text();
-        try {
-          pharmacyJson = JSON.parse(pharmText);
-        } catch (_) {}
-      }
+      // 2. Extract pharmacy receipt from approval response (already created on backend)
+      let pharmacyJson: any = approveJson.data?.pharmacy_receipt || null;
 
       let emailJson: any = null;
       // 3. Trigger Email Agent if 'email' channel selected

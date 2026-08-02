@@ -150,6 +150,7 @@ export function useExtraction() {
               phone: extractedData.phone || '919876543210',
               dob: extractedData.dob || extractedData.patient_dob || '15081995',
               want_in_house_buy: true,
+              prescription_data: extractedData,
             }),
           });
           const autoJson = await autoRes.json();

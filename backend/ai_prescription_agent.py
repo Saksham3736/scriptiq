@@ -13,6 +13,7 @@ from agents.pdf_agent import PDFAgent
 from agents.pharmacy_agent import PharmacyAgent
 from agents.database_agent import DatabaseAgent
 from agents.speech_agent import SpeechAgent
+import config
 
 
 class AIPrescriptionAgent:
@@ -120,6 +121,9 @@ class AIPrescriptionAgent:
         print(f"[AIPrescriptionAgent] Prescription generated for: {prescription_data.get('patient_name', 'Patient')} ({prescription_data.get('age', 'N/A')} Yrs / {prescription_data.get('gender', 'N/A')}) | DOB: {prescription_data.get('patient_dob', 'N/A')} | Email: {prescription_data.get('email', 'N/A')}")
         self.emit_telemetry(telemetry_callback, 2, "PrescriptionAgent", "DONE", "AI JSON Structured", f"Extracted prescription for {prescription_data.get('patient_name', 'Patient')} successfully.", payload={"medicines_count": len(prescription_data.get("medicines", []))})
         return prescription_data
+
+    # Alias for process_consultation
+    generate_prescription = process_consultation
 
     def amend_prescription(
         self,
@@ -275,6 +279,7 @@ class AIPrescriptionAgent:
         gender: Optional[str] = None,
         amendments: Optional[Dict[str, Any]] = None,
         want_in_house_buy: bool = True,
+        prescription_data: Optional[Dict[str, Any]] = None,
         telemetry_callback: Optional[Callable[[Dict[str, Any]], None]] = None
     ) -> Dict[str, Any]:
         """
@@ -283,16 +288,26 @@ class AIPrescriptionAgent:
         print(f"\n[START] Starting Full Automated Workflow for Patient: {patient_name}...")
         self.emit_telemetry(telemetry_callback, 1, "SpeechAgent", "DONE", "Speech Transcription Complete", "Audio transcript prepared for AI structuring.")
         
-        # 1. Generate Prescription
-        rx_data = self.generate_prescription(
-            transcript,
-            patient_name=patient_name,
-            phone=phone,
-            dob=dob,
-            age=age,
-            gender=gender,
-            telemetry_callback=telemetry_callback
-        )
+        # 1. Reuse pre-extracted Prescription data or Generate via LLM
+        if prescription_data and isinstance(prescription_data, dict) and prescription_data.get("medicines"):
+            print("[AIPrescriptionAgent] Re-using pre-extracted prescription JSON draft (bypassing duplicate LLM call)...")
+            rx_data = dict(prescription_data)
+            if patient_name: rx_data["patient_name"] = patient_name
+            if phone: rx_data["phone"] = phone
+            if dob: rx_data["patient_dob"] = dob; rx_data["dob"] = dob
+            if age is not None: rx_data["age"] = age
+            if gender: rx_data["gender"] = gender
+            self.emit_telemetry(telemetry_callback, 2, "PrescriptionAgent", "DONE", "AI JSON Structured", f"Reused pre-extracted draft for {patient_name}.", payload={"medicines_count": len(rx_data.get("medicines", []))})
+        else:
+            rx_data = self.process_consultation(
+                transcript,
+                patient_name=patient_name,
+                phone=phone,
+                dob=dob,
+                age=age,
+                gender=gender,
+                telemetry_callback=telemetry_callback
+            )
         
         # 2. Check & Amend (if amendments provided)
         if amendments:

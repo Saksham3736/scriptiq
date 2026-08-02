@@ -4,7 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-* **Current Phase**: Phase 63 Complete — Gemini Function Calling & Clinical Tool-Use Engine (`CLINICAL_TOOLS`, `MEDICAL_CONTEXT_HEADER`, Non-blocking Telemetry, Push Phone Matcher)
+* **Current Phase**: Phase 64 Complete — Redundant LLM Request Elimination & Dispatch Deduplication Suite (`run_full_automated_workflow` JSON reuse, Auto-Pilot 50% LLM token savings, `useSendPrescription.ts` single-call pharmacy order deduplication, `AIPrescriptionAgent.generate_prescription` alias & `import config` fix)
 * **Completed & Active Phases**: 
   * Phase 1 to 30: Baseline Systems, Auth, Telemetry, PDF Encryption & Multi-Channel Engine (100% Complete)
   * Phase 34: In-House Pharmacy Receipt & Template Management Suite (`ReceiptsManagementPage.tsx`, POS velocity mode, UPI QR, thermal 80mm printing) (100% Complete)
@@ -22,10 +22,11 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 51: Universal Route & API Authentication Security Guard (`RequireRole.tsx`, `App.tsx`, `LoginPage.tsx`, `PatientLoginPage.tsx`) (100% Complete)
   * Phase 62: Render Backend Memory Optimization & Gemini API Quota Alignment (100% Complete)
   * Phase 63: Gemini Function Calling & Clinical Tool-Use Engine + Live Telemetry & Delivery Engine Fixes (100% Complete)
+  * Phase 64: Redundant LLM Request Elimination & Dispatch Deduplication Suite (100% Complete)
 * **Planned Feature Integration Roadmap**:
   * Phase 52: Patient Receipts Portal — Receipt Deletion & POS Bill Re-Loading Suite (`DELETE /api/pharmacy/receipts/{order_id}`)
   * Phase 53: Patient Receipts Portal — Stock Tab Replacement with Patient Receipts Explorer (`ReceiptsManagementPage.tsx`)
-* **Last Updated**: July 31, 2026
+* **Last Updated**: August 3, 2026
 
 ---
 
@@ -456,6 +457,17 @@ This document records all architectural decisions, actions, command executions, 
   - **Gemini Model Quota Alignment**: Replaced deprecated/zero-quota `gemini-2.0-flash` references across `prescription_agent.py`, `speech_agent.py`, and `server.py` with active quota models (`gemini-2.5-flash` primary, with fallback routing through `gemini-2.5-flash-lite`, `gemini-3.5-flash`, `gemini-3-flash`).
   - **UI Model Selector Synchronization**: Updated frontend components (`TopBar.tsx`, `SettingsPage.tsx`, `recordingStore.ts`, `AutoPilotTelemetryConsole.tsx`) to match active Gemini quota models (`Gemini 2.5 Flash`, `Gemini 3.5 Flash`, `Gemini 3 Flash`, `Gemini 2.5 Flash Lite`, `Gemini Cloud STT`).
   - **Verification**: Verified zero syntax errors via `py_compile`, confirmed instant (<0.5s) startup of `AIPrescriptionAgent` and `SpeechAgent`, and verified production build `npm run build` passing **100% OK** in 593ms.
+
+
+---
+
+## ⚡ Phase 64: Redundant LLM Request Elimination & Dispatch Deduplication Suite
+* *Status: Completed*
+* Details:
+  - **Auto-Pilot JSON Reuse & 50% Token Savings**: Refactored `run_full_automated_workflow()` in `backend/ai_prescription_agent.py` and `AutoPilotConsultationRequest` in `backend/server.py` to accept optional pre-extracted `prescription_data`. Updated `frontend/src/hooks/useExtraction.ts` to attach `prescription_data: extractedData` in `/api/consultation/autopilot` payload. Reuses extracted JSON directly, saving 100% of duplicate LLM token calls during Auto-Pilot mode.
+  - **Pharmacy Order Deduplication**: Removed redundant fetch to `/api/pharmacy/receipt` in `frontend/src/hooks/useSendPrescription.ts`. Extracted `pharmacy_receipt` directly from `/api/prescription/approve` response (which already processes pharmacy orders on the backend), eliminating duplicate `pharmacy_orders` document creation in MongoDB Atlas.
+  - **Backend Aliases & Bug Fixes**: Added `generate_prescription = process_consultation` alias to `AIPrescriptionAgent` and added missing `import config` in `backend/ai_prescription_agent.py`.
+  - **Verification**: Verified unit test suite `tests/test_ai_prescription_agent.py` passing 100% OK in 14s, confirmed tool-use pipeline manual test `tests/test_phase63_manual.py` passing OK (`Valid: True`), and verified production frontend build `npm run build` passing in 757ms.
 
 ---
 

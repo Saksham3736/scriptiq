@@ -1301,6 +1301,7 @@ class AutoPilotConsultationRequest(BaseModel):
     phone: Optional[str] = Field("919876543210", description="Patient WhatsApp number")
     dob: Optional[str] = Field("15081995", description="DOB DDMMYYYY password key")
     want_in_house_buy: Optional[bool] = Field(True, description="Pharmacy routing flag")
+    prescription_data: Optional[Dict[str, Any]] = Field(None, description="Pre-extracted prescription JSON draft")
 
 
 @app.post("/api/consultation/autopilot", response_model=APIResponse, tags=["Consultation"])
@@ -1318,6 +1319,7 @@ async def run_autopilot_consultation(req: AutoPilotConsultationRequest):
             phone=req.phone,
             dob=req.dob,
             want_in_house_buy=req.want_in_house_buy if req.want_in_house_buy is not None else True,
+            prescription_data=req.prescription_data,
             telemetry_callback=sync_telemetry_callback
         )
         return APIResponse(success=True, data=res)
