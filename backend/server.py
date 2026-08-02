@@ -68,6 +68,11 @@ class LetterheadSettings(BaseModel):
     primary_color: str = Field("#1A365D", description="Primary Accent Color Hex")
     secondary_color: str = Field("#2B6CB0", description="Secondary Accent Color Hex")
     header_layout: str = Field("center", description="Header Layout Alignment (center, left, split)")
+    receipt_title: Optional[str] = Field("OFFICIAL IN-HOUSE PHARMACY RECEIPT", description="Official Receipt Title Banner")
+    receipt_pickup_location: Optional[str] = Field("Hospital Pharmacy Counter #1", description="Default Pharmacy Pickup Location")
+    receipt_disclaimer: Optional[str] = Field("Computer generated pharmacy receipt. Valid for medicine collection at Counter #1.", description="Official Receipt Footer Disclaimer")
+    receipt_primary_color: Optional[str] = Field("#12897F", description="Official Receipt Accent Color")
+    receipt_signatory_label: Optional[str] = Field("Authorized Signatory", description="Signature Footer Subtitle")
     llm_model: Optional[str] = Field("gemini-2.5-flash", description="Primary LLM Model")
     fallback_model: Optional[str] = Field("gemini-3.5-flash", description="Fallback LLM Model")
     stt_model: Optional[str] = Field("gemini-2.5-flash", description="Cloud Audio STT Model")
@@ -764,7 +769,12 @@ def get_letterhead_settings_endpoint():
             "tagline": "Notice: Valid for 30 days from date of issue. Please bring this prescription on follow-up visit.",
             "primary_color": "#1A365D",
             "secondary_color": "#2B6CB0",
-            "header_layout": "center"
+            "header_layout": "center",
+            "receipt_title": "OFFICIAL IN-HOUSE PHARMACY RECEIPT",
+            "receipt_pickup_location": "Hospital Pharmacy Counter #1",
+            "receipt_disclaimer": "Computer generated pharmacy receipt. Valid for medicine collection at Counter #1.",
+            "receipt_primary_color": "#12897F",
+            "receipt_signatory_label": "Authorized Signatory"
         }
         if doc:
             for k, v in doc.items():

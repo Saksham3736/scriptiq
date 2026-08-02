@@ -1038,7 +1038,7 @@ Final assembled PrescriptionSchema JSON → DraftStore
 ### Step 67A: New `OfficialReceiptsPage.tsx` Sidebar Page (`/official-receipts`)
 - [x] Create `OfficialReceiptsPage.tsx` with two tabs:
   - **Tab 1 — Receipt History Explorer**: Fetches receipts from `GET /api/pharmacy/receipts`, searchable, with View/Print/Delete buttons
-  - **Tab 2 — Letterhead Editor**: Full form editor for hospital/doctor details, colors, layout alignment, with live preview banner and Sample PDF generation
+  - **Tab 2 — Official Receipt Editor**: Full template & letterhead editor specifically for official patient pharmacy receipts (header branding, receipt title, pickup location, security disclaimer notice, primary accent color, doctor signatory details) with live interactive A4 receipt card preview and full-page preview button
 - [x] Add route `/official-receipts` in `App.tsx`
 - [x] Add "Receipts" nav item in `Sidebar.tsx`, rename existing "Receipts Portal" to "POS Billing"
 

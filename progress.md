@@ -25,7 +25,7 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 64: Redundant LLM Request Elimination & Dispatch Deduplication Suite (100% Complete)
   * Phase 65: Comprehensive PDF Generation Attribute Parsing & Layout Fixes — Dynamic age/DOB, consultation timestamp parity, field alias standardization, patient contact details (100% Complete)
   * Phase 66: Patients Page Decommission & Receipts History & Edit Workspace Integration — `/patients` removed, receipt edit/re-load/delete engine (100% Complete)
-  * Phase 67: Official Receipts History Page & Letterhead Editor — `/official-receipts`, `OfficialReceiptsPage.tsx`, `ReceiptViewPage.tsx` letterhead sync fix (100% Complete)
+  * Phase 67: Official Receipts History Page & Official Patient Receipt Editor — `/official-receipts`, `OfficialReceiptsPage.tsx` with live patient receipt preview, `ReceiptViewPage.tsx` dynamic receipt fields sync (100% Complete)
 * **Last Updated**: August 3, 2026
 
 ---

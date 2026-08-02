@@ -41,6 +41,11 @@ export default function ReceiptViewPage() {
       const lhDoctorRegNo = letterhead.doctor_reg_no || 'PMC/2026/123456';
       const lhHospitalAddress = letterhead.hospital_address || 'Civil Lines, Ludhiana, Punjab - 141001';
       const lhHospitalPhone = letterhead.hospital_phone || '+91 98765 43210';
+      const lhReceiptTitle = letterhead.receipt_title || 'OFFICIAL IN-HOUSE PHARMACY RECEIPT';
+      const lhPickupLocation = letterhead.receipt_pickup_location || 'Hospital Pharmacy Counter #1';
+      const lhDisclaimer = letterhead.receipt_disclaimer || 'Computer generated pharmacy receipt. Valid for medicine collection at Counter #1.';
+      const lhPrimaryColor = letterhead.receipt_primary_color || '#12897F';
+      const lhSignatoryLabel = letterhead.receipt_signatory_label || 'Authorized Signatory';
 
       try {
         const res = await fetch(`/api/pharmacy/receipts?q=${orderId}`);
@@ -52,7 +57,7 @@ export default function ReceiptViewPage() {
             patient_name: found.patient_name || 'Patient',
             phone: found.phone || 'N/A',
             total_amount_inr: found.total_amount || 0.0,
-            pickup_location: 'Hospital Pharmacy Counter #1',
+            pickup_location: found.pickup_location || lhPickupLocation,
             order_date: found.created_at ? new Date(found.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('en-IN'),
             status: found.status || 'Paid',
             doctor_name: found.doctor_name || lhDoctorName,
@@ -62,6 +67,10 @@ export default function ReceiptViewPage() {
             hospital_name: lhHospitalName,
             hospital_address: lhHospitalAddress,
             hospital_phone: lhHospitalPhone,
+            receipt_title: lhReceiptTitle,
+            disclaimer: lhDisclaimer,
+            primary_color: lhPrimaryColor,
+            signatory_label: lhSignatoryLabel,
             items: found.items ? found.items.map((it: any) => ({
               medicine: it.name || it.medicine,
               generic_name: it.dosage || it.generic_name || 'Standard Dosage',
@@ -85,7 +94,7 @@ export default function ReceiptViewPage() {
         patient_name: 'Priya Verma',
         phone: '+91 98765 43211',
         total_amount_inr: 100.0,
-        pickup_location: 'Hospital Pharmacy Counter #1',
+        pickup_location: lhPickupLocation,
         order_date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
         status: 'Priority Dispense Ready',
         doctor_name: lhDoctorName,
@@ -95,6 +104,10 @@ export default function ReceiptViewPage() {
         hospital_name: lhHospitalName,
         hospital_address: lhHospitalAddress,
         hospital_phone: lhHospitalPhone,
+        receipt_title: lhReceiptTitle,
+        disclaimer: lhDisclaimer,
+        primary_color: lhPrimaryColor,
+        signatory_label: lhSignatoryLabel,
         items: [
           { medicine: 'Pan 40 tablet', generic_name: 'Pantoprazole 40mg', quantity: 1, unit_price_inr: 50.0, total_price_inr: 50.0 },
           { medicine: 'Cetzine 10mg', generic_name: 'Cetirizine 10mg', quantity: 1, unit_price_inr: 50.0, total_price_inr: 50.0 },
@@ -187,7 +200,7 @@ export default function ReceiptViewPage() {
         <div className="print-container" style={{ background: '#fff', borderRadius: '16px', border: '1px solid #E3E8EE', boxShadow: '0 8px 32px rgba(16,26,46,0.06)', overflow: 'hidden' }}>
 
           {/* Official Letterhead Header */}
-          <div style={{ padding: '28px 36px', borderBottom: '3px solid #12897F', background: '#FAFBFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '28px 36px', borderBottom: `3px solid ${order.primary_color || '#12897F'}`, background: '#FAFBFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
               <img
                 src="/assets/hospital_logo.png"
@@ -209,7 +222,7 @@ export default function ReceiptViewPage() {
             </div>
 
             <div style={{ textAlign: 'right' }}>
-              <h3 style={{ fontFamily: 'Space Grotesk', fontSize: '17px', fontWeight: 700, color: '#12897F', margin: 0 }}>
+              <h3 style={{ fontFamily: 'Space Grotesk', fontSize: '17px', fontWeight: 700, color: order.primary_color || '#12897F', margin: 0 }}>
                 {order.doctor_name}
               </h3>
               <p style={{ fontSize: '12px', fontWeight: 600, color: '#101A2E', margin: '2px 0 0 0' }}>
@@ -227,9 +240,9 @@ export default function ReceiptViewPage() {
           {/* Receipt Title Banner */}
           <div style={{ background: '#101A2E', padding: '14px 36px', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontFamily: 'Space Grotesk', fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShoppingBag size={16} color="#12897F" /> OFFICIAL IN-HOUSE PHARMACY RECEIPT
+              <ShoppingBag size={16} color={order.primary_color || '#12897F'} /> {order.receipt_title || 'OFFICIAL IN-HOUSE PHARMACY RECEIPT'}
             </span>
-            <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '13px', color: '#12897F', background: 'rgba(18,137,127,0.2)', padding: '4px 12px', borderRadius: '4px', fontWeight: 600 }}>
+            <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '13px', color: order.primary_color || '#12897F', background: 'rgba(18,137,127,0.2)', padding: '4px 12px', borderRadius: '4px', fontWeight: 600 }}>
               {order.order_id}
             </span>
           </div>
@@ -248,8 +261,8 @@ export default function ReceiptViewPage() {
 
             <div style={{ textAlign: 'right' }}>
               <span style={{ fontSize: '11px', color: '#5B6B82', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Fulfillment Details</span>
-              <p style={{ fontSize: '13px', fontWeight: 600, color: '#12897F', margin: '2px 0 0 0', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-                <MapPin size={14} color="#12897F" /> {order.pickup_location}
+              <p style={{ fontSize: '13px', fontWeight: 600, color: order.primary_color || '#12897F', margin: '2px 0 0 0', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                <MapPin size={14} color={order.primary_color || '#12897F'} /> {order.pickup_location}
               </p>
               <p style={{ fontSize: '12px', color: '#5B6B82', margin: '2px 0 0 0', fontFamily: 'IBM Plex Mono' }}>
                 Date: {order.order_date}
@@ -272,18 +285,18 @@ export default function ReceiptViewPage() {
                 style={{ height: '110px', width: 'auto', objectFit: 'contain', marginBottom: '8px' }}
                 onError={(e) => (e.currentTarget.style.display = 'none')}
               />
-              <p style={{ fontFamily: 'Space Grotesk', fontSize: '11px', fontWeight: 700, color: '#12897F', margin: 0, letterSpacing: '0.05em' }}>
+              <p style={{ fontFamily: 'Space Grotesk', fontSize: '11px', fontWeight: 700, color: order.primary_color || '#12897F', margin: 0, letterSpacing: '0.05em' }}>
                 OFFICIAL HOSPITAL STAMP
               </p>
             </div>
 
             {/* Middle: Security Notice */}
-            <div style={{ textAlign: 'center', maxWidth: '220px', paddingBottom: '12px' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#12897F', fontSize: '11px', fontFamily: 'IBM Plex Mono', fontWeight: 600, marginBottom: '6px' }}>
+            <div style={{ textAlign: 'center', maxWidth: '240px', paddingBottom: '12px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: order.primary_color || '#12897F', fontSize: '11px', fontFamily: 'IBM Plex Mono', fontWeight: 600, marginBottom: '6px' }}>
                 <ShieldCheck size={15} /> System Verified
               </div>
               <p style={{ fontSize: '10px', color: '#5B6B82', margin: 0, lineHeight: 1.4 }}>
-                Computer generated pharmacy receipt. Valid for medicine collection at Counter #1.
+                {order.disclaimer || 'Computer generated pharmacy receipt. Valid for medicine collection at Counter #1.'}
               </p>
             </div>
 
@@ -300,7 +313,7 @@ export default function ReceiptViewPage() {
                   {order.doctor_name}
                 </p>
                 <p style={{ fontSize: '10px', color: '#5B6B82', margin: '2px 0 0 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Authorized Signatory
+                  {order.signatory_label || 'Authorized Signatory'}
                 </p>
               </div>
             </div>
