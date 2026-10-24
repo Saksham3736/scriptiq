@@ -1080,9 +1080,32 @@ Final assembled PrescriptionSchema JSON → DraftStore
 
 ---
 
+## Phase 69: Multi-Provider Cloud Email Delivery Engine & Resend Port 443 HTTPS Integration `[PRIORITY: HIGH - DELIVERY RESILIENCE]`
+* *Status: Completed & Live Verified*
+
+### Step 69A: Resend HTTPS REST API Engine (`backend/agents/email_agent.py`)
+- [x] Implemented `_send_via_resend(...)` operating over Port 443 HTTPS (`POST https://api.resend.com/emails`) with Base64 PDF attachment support.
+- [x] Sub-second deliverability (<0.7s) completely bypassing cloud firewall and SMTP port blocks.
+- [x] Added doctor `bcc` audit copy and `reply_to` routing directly to the doctor's Gmail.
+
+### Step 69B: Official Brevo Python SDK & Campaign Engine (`email_agent.py`)
+- [x] Integrated `sib_api_v3_sdk.TransactionalEmailsApi` with `SendSmtpEmail` as secondary cloud provider.
+- [x] Added `create_email_campaign` using `sib_api_v3_sdk.EmailCampaignsApi` for marketing list campaigns.
+- [x] Added `_resolve_brevo_envelope(...)` to prevent DMARC rejection on free `@gmail.com` sender addresses.
+
+### Step 69C: Configuration & MongoDB Synchronization (`config.py` & `server.py`)
+- [x] Added `RESEND_API_KEY` and `BREVO_SEND_DOMAIN` to `backend/config.py`.
+- [x] Updated `/api/prescription/send-email` and pharmacy receipt dispatch in `server.py` to prioritize Resend, sync keys to MongoDB `email_config`, and return `mode: "RESEND_HTTPS_API"`.
+
+### Step 69D: Live Verification & Testing
+- [x] Delivered live prescription emails with PDF attachments to `scriptiq.sk@gmail.com` via Resend API (IDs `01a16ef6-3be7-75d3-9e2a-3576c796b64b`, `01a16ef7-75bc-7185-a847-4b35467edf9c`, `01a16ef9-cb83-7f0d-9776-0ce41f9d2a40`).
+- [x] Verified frontend build `npm run build` passing 100% OK in 961ms.
+
+---
+
 ## 🚀 Newly Proposed High-Impact Enhancements Roadmap
 
-### Phase 69: Automated Drug-Drug Interaction (DDI) & Allergy Contraindication Guard `[PRIORITY: CRITICAL - CLINICAL SAFETY]`
+### Phase 70: Automated Drug-Drug Interaction (DDI) & Allergy Contraindication Guard `[PRIORITY: CRITICAL - CLINICAL SAFETY]`
 - [ ] **Step 75: Clinical Safety Guard Agent (`backend/agents/safety_guard_agent.py`)**
   - [ ] Build DDI interaction matrix & allergy checking engine.
   - [ ] Evaluate extracted medicines against known contraindications (*Warfarin + Aspirin*, *Penicillin allergies*).
@@ -1092,7 +1115,7 @@ Final assembled PrescriptionSchema JSON → DraftStore
 
 ---
 
-### Phase 70: Multi-Lingual Patient Instruction Translator `[PRIORITY: HIGH - PATIENT COMPLIANCE]`
+### Phase 71: Multi-Lingual Patient Instruction Translator `[PRIORITY: HIGH - PATIENT COMPLIANCE]`
 - [ ] **Step 77: Regional Language Translation Engine (`prescription_agent.py`)**
   - [ ] Support Hindi (हिंदी), Punjabi (ਪੰਜਾਬੀ), Tamil (தமிழ்), Telugu (తెలుగు), Gujarati (ગુજરાતી), and Bengali (বাংলা).
   - [ ] Translate `meal_instruction`, `general_advice`, and `precautions` into regional script via Gemini.
@@ -1101,7 +1124,7 @@ Final assembled PrescriptionSchema JSON → DraftStore
 
 ---
 
-### Phase 71: Meta WhatsApp Cloud API Direct Dispatch Engine `[PRIORITY: HIGH - PATIENT ENGAGEMENT]`
+### Phase 72: Meta WhatsApp Cloud API Direct Dispatch Engine `[PRIORITY: HIGH - PATIENT ENGAGEMENT]`
 - [ ] **Step 79: WhatsApp Cloud API Integration (`agents/whatsapp_agent.py`)**
   - [ ] Integrate Meta WhatsApp Business Cloud API / Twilio WhatsApp Sandbox for direct 1-click messaging.
   - [ ] Add `WhatsApp` delivery toggle to `SendPrescriptionModal.tsx`.
@@ -1110,9 +1133,10 @@ Final assembled PrescriptionSchema JSON → DraftStore
 
 ---
 
-### Phase 72: Longitudinal Patient Medical Dossier & Timeline Explorer `[PRIORITY: HIGH - CLINICAL HISTORY]`
+### Phase 73: Longitudinal Patient Medical Dossier & Timeline Explorer `[PRIORITY: HIGH - CLINICAL HISTORY]`
 - [ ] **Step 81: Patient Dossier Aggregator (`server.py` & `db_agent.py`)**
   - [ ] Aggregate all historical consultations, diagnoses, and prescribed medicines by patient `phone` / `patient_dob`.
 - [ ] **Step 82: Timeline UI Drawer (`HistoryPage.tsx` & `DoctorConsolePage.tsx`)**
   - [ ] Interactive timeline showing patient health progression, chronic disease trends, and past PDF downloads in a unified dossier drawer.
+
 
