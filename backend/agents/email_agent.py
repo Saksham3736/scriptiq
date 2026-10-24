@@ -179,6 +179,56 @@ class EmailAgent:
         return api_response
 
 
+    def _send_via_resend(self, api_key: str, hospital_name: str, doctor_email: str, target_email: str, patient_name: str, subject: str, html_content: str, pdf_path: Optional[str] = None) -> bool:
+        """
+        Dispatches email with attachment via Resend HTTPS REST API (Port 443).
+        Bypasses cloud firewall blocks with sub-second deliverability.
+        """
+        url = "https://api.resend.com/emails"
+        headers = {
+            "Authorization": f"Bearer {api_key.strip()}",
+            "Content-Type": "application/json"
+        }
+        
+        # Default Resend sandbox sender
+        sender_email = f"{hospital_name} <onboarding@resend.dev>"
+        
+        payload = {
+            "from": sender_email,
+            "to": [target_email],
+            "reply_to": doctor_email or "scriptiq.sk@gmail.com",
+            "subject": subject,
+            "html": html_content
+        }
+
+        # Add doctor BCC if not sending directly to the doctor
+        if doctor_email and target_email.lower() != doctor_email.lower():
+            payload["bcc"] = [doctor_email]
+
+        if pdf_path and os.path.exists(pdf_path):
+            try:
+                with open(pdf_path, "rb") as f:
+                    encoded_pdf = base64.b64encode(f.read()).decode("utf-8")
+                payload["attachments"] = [
+                    {
+                        "filename": os.path.basename(pdf_path),
+                        "content": encoded_pdf
+                    }
+                ]
+            except Exception as read_err:
+                print(f"[EmailAgent] Notice: Failed to attach PDF to Resend ({read_err})")
+
+        print(f"[EmailAgent] Dispatching email to {target_email} via Resend HTTPS REST API (Port 443)...")
+        response = requests.post(url, headers=headers, json=payload, timeout=20)
+        if response.status_code in (200, 201):
+            res_data = response.json() if response.text else {}
+            print(f"[EmailAgent] Email successfully delivered via Resend API! Message ID: {res_data.get('id')}")
+            return True
+        else:
+            err_msg = f"Resend API error ({response.status_code}): {response.text}"
+            print(f"[EmailAgent] {err_msg}")
+            raise Exception(err_msg)
+
     def send_prescription_email(self, pdf_path: str, patient_email: Optional[str] = None, patient_name: Optional[str] = "Patient", config: Optional[Dict[str, Any]] = None) -> bool:
         """
         Sends the encrypted prescription PDF to the patient.
@@ -186,8 +236,9 @@ class EmailAgent:
         if config is None:
             config = {}
         
-        target_email = patient_email or config.get("patient_email") or getattr(app_config, "DEFAULT_PATIENT_EMAIL", "saksham.kj.3736@gmail.com")
+        target_email = patient_email or config.get("patient_email") or getattr(app_config, "DEFAULT_PATIENT_EMAIL", "scriptiq.sk@gmail.com")
         
+        resend_api_key = config.get("resend_api_key") or os.getenv("RESEND_API_KEY") or getattr(app_config, "RESEND_API_KEY", "")
         brevo_api_key = config.get("brevo_api_key") or os.getenv("BREVO_API_KEY") or getattr(app_config, "BREVO_API_KEY", "")
         smtp_user = config.get("smtp_user") or getattr(app_config, "SMTP_USER", "scriptiq.sk@gmail.com")
         smtp_pass = config.get("smtp_pass") or getattr(app_config, "SMTP_PASS", "") or os.getenv("SMTP_PASS", "") or os.getenv("GMAIL_APP_PASSWORD", "")
@@ -197,8 +248,8 @@ class EmailAgent:
         hospital_name = config.get("hospital_name", "ScriptIQ Medical Center")
 
         # Determine simulation mode:
-        # If Brevo API key or real smtp_pass exists, perform REAL dispatch unless force_simulation is True
-        if bool(brevo_api_key) or bool(smtp_pass):
+        # If Resend API key, Brevo API key, or real smtp_pass exists, perform REAL dispatch unless force_simulation is True
+        if bool(resend_api_key) or bool(brevo_api_key) or bool(smtp_pass):
             simulation_mode = config.get("force_simulation", False)
         else:
             simulation_mode = True
@@ -252,18 +303,38 @@ class EmailAgent:
         </html>
         """
 
-        # 1. Primary Cloud Path: Brevo HTTPS REST API (Port 443 — Render & cloud firewall proof)
+        # 1. Primary Cloud Path: Resend HTTPS REST API (Port 443 — Instant Deliverability)
+        if bool(resend_api_key) and not simulation_mode:
+            try:
+                return self._send_via_resend(
+                    api_key=resend_api_key,
+                    hospital_name=hospital_name,
+                    doctor_email=sender_email,
+                    target_email=target_email,
+                    patient_name=patient_name,
+                    subject=subject,
+                    html_content=body,
+                    pdf_path=pdf_path
+                )
+            except Exception as resend_err:
+                print(f"[EmailAgent] Notice: Resend dispatch failed ({resend_err}), falling back to Brevo...")
+
+        # 2. Secondary Cloud Path: Brevo HTTPS REST API / SDK (Port 443)
         if bool(brevo_api_key) and not simulation_mode:
-            return self._send_via_brevo(
-                api_key=brevo_api_key,
-                sender_email=sender_email,
-                hospital_name=hospital_name,
-                target_email=target_email,
-                patient_name=patient_name,
-                subject=subject,
-                html_content=body,
-                pdf_path=pdf_path
-            )
+            try:
+                return self._send_via_brevo(
+                    api_key=brevo_api_key,
+                    sender_email=sender_email,
+                    hospital_name=hospital_name,
+                    target_email=target_email,
+                    patient_name=patient_name,
+                    subject=subject,
+                    html_content=body,
+                    pdf_path=pdf_path
+                )
+            except Exception as brevo_err:
+                print(f"[EmailAgent] Notice: Brevo dispatch failed ({brevo_err}), falling back to SMTP...")
+
 
         if simulation_mode or not smtp_pass:
             print("\n" + "="*50)

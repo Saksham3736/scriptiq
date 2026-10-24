@@ -1071,6 +1071,8 @@ async def send_prescription_email_endpoint(req: SendEmailRequest):
         from dotenv import load_dotenv
         load_dotenv(override=True)
         import config as app_config
+        env_resend = os.getenv("RESEND_API_KEY", "") or getattr(app_config, "RESEND_API_KEY", "")
+        resend_key = env_resend if env_resend else doc.get("resend_api_key", "")
         env_brevo = os.getenv("BREVO_API_KEY", "") or getattr(app_config, "BREVO_API_KEY", "")
         brevo_key = env_brevo if env_brevo else doc.get("brevo_api_key", "")
         env_user = os.getenv("SMTP_USER", "") or getattr(app_config, "SMTP_USER", "")
@@ -1090,6 +1092,8 @@ async def send_prescription_email_endpoint(req: SendEmailRequest):
             "smtp_host": smtp_host,
             "smtp_port": int(smtp_port)
         }
+        if resend_key:
+            update_doc["resend_api_key"] = resend_key
         if brevo_key:
             update_doc["brevo_api_key"] = brevo_key
         db.collection.update_one(
@@ -1102,6 +1106,7 @@ async def send_prescription_email_endpoint(req: SendEmailRequest):
         phone_val = req.phone or (req.prescription_data or {}).get("phone")
 
         email_config = {
+            "resend_api_key": resend_key,
             "brevo_api_key": brevo_key,
             "smtp_host": smtp_host,
             "smtp_port": int(smtp_port),
@@ -1148,7 +1153,9 @@ async def send_prescription_email_endpoint(req: SendEmailRequest):
             patient_name=req.patient_name or "Patient",
             config=email_config
         )
-        if bool(brevo_key):
+        if bool(resend_key):
+            dispatch_mode = "RESEND_HTTPS_API"
+        elif bool(brevo_key):
             dispatch_mode = "BREVO_HTTPS_API"
         elif bool(smtp_pass):
             dispatch_mode = "LIVE_SMTP"
@@ -1162,6 +1169,7 @@ async def send_prescription_email_endpoint(req: SendEmailRequest):
                 "pdf_path": pdf_file,
                 "from_email": sender_email,
                 "mode": dispatch_mode,
+                "resend_configured": bool(resend_key),
                 "brevo_configured": bool(brevo_key),
                 "smtp_pass_configured": bool(smtp_pass)
             }
@@ -1572,10 +1580,13 @@ async def dispatch_pharmacy_receipt(order_id: str, payload: dict = {}):
                 smtp_pass = env_pass if env_pass else e_doc.get("smtp_pass", "")
                 sender_email = env_user if env_user else (e_doc.get("sender_email") or smtp_user)
                 
+                env_resend = os.getenv("RESEND_API_KEY", "") or getattr(app_config, "RESEND_API_KEY", "")
+                resend_key = env_resend if env_resend else e_doc.get("resend_api_key", "")
                 env_brevo = os.getenv("BREVO_API_KEY", "") or getattr(app_config, "BREVO_API_KEY", "")
                 brevo_key = env_brevo if env_brevo else e_doc.get("brevo_api_key", "")
                 
                 email_config = {
+                    "resend_api_key": resend_key,
                     "brevo_api_key": brevo_key,
                     "smtp_host": e_doc.get("smtp_host") or getattr(app_config, "SMTP_HOST", "smtp.gmail.com"),
                     "smtp_port": int(e_doc.get("smtp_port") or getattr(app_config, "SMTP_PORT", 587)),
