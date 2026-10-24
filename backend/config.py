@@ -23,6 +23,7 @@ VAPID_CLAIMS = {"sub": "mailto:admin@scriptiq.com"}
 
 # Gmail SMTP & Brevo API Email Config
 BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+BREVO_SEND_DOMAIN = os.getenv("BREVO_SEND_DOMAIN", "12568848.brevosend.com")
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "scriptiq.sk@gmail.com")

@@ -18,11 +18,90 @@ class EmailAgent:
     def __init__(self):
         pass
 
+    def _resolve_brevo_envelope(self, sender_email: str) -> str:
+        """
+        DMARC compliance resolver:
+        Free email domains (@gmail.com, @yahoo, @outlook, @hotmail) are blocked by Brevo
+        and mail filters with 'Your sending platform is currently disabled' because third-party
+        relays cannot spoof Gmail SPF/DKIM.
+        When a Gmail/free domain sender is provided, route through Brevo's authenticated subdomain
+        (defaulting to 12568848.brevosend.com or BREVO_SEND_DOMAIN), while keeping the Doctor's
+        display name, Reply-To header, and automatic BCC to the doctor's actual Gmail inbox!
+        """
+        sender_email = (sender_email or "scriptiq.sk@gmail.com").strip().lower()
+        free_providers = ("@gmail.com", "@yahoo.", "@outlook.", "@hotmail.")
+        if any(p in sender_email for p in free_providers):
+            domain = getattr(app_config, "BREVO_SEND_DOMAIN", "12568848.brevosend.com")
+            username = sender_email.split("@")[0] or "scriptiq.sk"
+            return f"{username}@{domain}"
+        return sender_email
+
     def _send_via_brevo(self, api_key: str, sender_email: str, hospital_name: str, target_email: str, patient_name: str, subject: str, html_content: str, pdf_path: Optional[str] = None) -> bool:
         """
-        Dispatches email with attachment via Brevo HTTPS REST API (Port 443).
-        Bypasses cloud provider SMTP firewall blocks (Render Errno 101).
+        Dispatches email with attachment via Brevo Python SDK (sib_api_v3_sdk)
+        over Port 443 HTTPS. Bypasses cloud provider SMTP firewall blocks (Render Errno 101).
+        
+        Features:
+          - Uses sib_api_v3_sdk.TransactionalEmailsApi (official Brevo SDK)
+          - Automatic DMARC-compliant envelope address (Brevo verified subdomain)
+          - Automatic BCC copy to the doctor's Gmail so it arrives directly in their Gmail inbox
+          - Automatic Reply-To set to the doctor's Gmail so patient replies go straight to the doctor
+          - Encoded Base64 PDF attachment support
+          - Graceful fallback to direct REST API (requests) if SDK encounters any error
         """
+        envelope_sender = self._resolve_brevo_envelope(sender_email)
+        doctor_email = sender_email or "scriptiq.sk@gmail.com"
+        
+        # Read & Base64-encode PDF attachment if present
+        encoded_pdf = None
+        pdf_filename = None
+        if pdf_path and os.path.exists(pdf_path):
+            try:
+                with open(pdf_path, "rb") as f:
+                    encoded_pdf = base64.b64encode(f.read()).decode("utf-8")
+                pdf_filename = os.path.basename(pdf_path)
+            except Exception as read_err:
+                print(f"[EmailAgent] Notice: Failed to attach PDF ({read_err})")
+        else:
+            print(f"[EmailAgent] Notice: No PDF attachment found at {pdf_path}")
+
+        # 1. Attempt dispatch using official Brevo SDK (sib_api_v3_sdk)
+        try:
+            import sib_api_v3_sdk
+            from sib_api_v3_sdk.rest import ApiException
+
+            configuration = sib_api_v3_sdk.Configuration()
+            configuration.api_key['api-key'] = api_key
+            api_client = sib_api_v3_sdk.ApiClient(configuration)
+            api_instance = sib_api_v3_sdk.TransactionalEmailsApi(api_client)
+
+            attachments = []
+            if encoded_pdf and pdf_filename:
+                attachments.append(sib_api_v3_sdk.SendSmtpEmailAttachment(
+                    name=pdf_filename,
+                    content=encoded_pdf
+                ))
+
+            send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+                sender=sib_api_v3_sdk.SendSmtpEmailSender(name=hospital_name, email=envelope_sender),
+                to=[sib_api_v3_sdk.SendSmtpEmailTo(email=target_email, name=patient_name or "Patient")],
+                reply_to=sib_api_v3_sdk.SendSmtpEmailReplyTo(email=doctor_email, name=hospital_name),
+                bcc=[sib_api_v3_sdk.SendSmtpEmailBcc(email=doctor_email, name="ScriptIQ Audit & Records")],
+                subject=subject,
+                html_content=html_content,
+                attachment=attachments if attachments else None
+            )
+
+            print(f"[EmailAgent] Dispatching email to {target_email} via Brevo SDK (sib_api_v3_sdk)...")
+            api_response = api_instance.send_transac_email(send_smtp_email)
+            msg_id = getattr(api_response, "message_id", str(api_response))
+            print(f"[EmailAgent] Email successfully delivered via Brevo SDK! Message ID: {msg_id}")
+            return True
+
+        except Exception as sdk_err:
+            print(f"[EmailAgent] Notice: Brevo SDK call encountered ({sdk_err}), falling back to direct HTTPS REST API...")
+
+        # 2. Fallback: Direct HTTPS REST API call via requests
         url = "https://api.brevo.com/v3/smtp/email"
         headers = {
             "accept": "application/json",
@@ -32,7 +111,7 @@ class EmailAgent:
         payload = {
             "sender": {
                 "name": hospital_name,
-                "email": sender_email or "scriptiq.sk@gmail.com"
+                "email": envelope_sender
             },
             "to": [
                 {
@@ -40,35 +119,65 @@ class EmailAgent:
                     "name": patient_name or "Patient"
                 }
             ],
+            "replyTo": {
+                "email": doctor_email,
+                "name": hospital_name
+            },
+            "bcc": [
+                {
+                    "email": doctor_email,
+                    "name": "ScriptIQ Audit & Records"
+                }
+            ],
             "subject": subject,
             "htmlContent": html_content
         }
 
-        if pdf_path and os.path.exists(pdf_path):
-            try:
-                with open(pdf_path, "rb") as f:
-                    encoded_pdf = base64.b64encode(f.read()).decode("utf-8")
-                payload["attachment"] = [
-                    {
-                        "name": os.path.basename(pdf_path),
-                        "content": encoded_pdf
-                    }
-                ]
-            except Exception as read_err:
-                print(f"[EmailAgent] Notice: Failed to attach PDF ({read_err})")
-        else:
-            print(f"[EmailAgent] Notice: No PDF attachment found at {pdf_path}")
+        if encoded_pdf and pdf_filename:
+            payload["attachment"] = [
+                {
+                    "name": pdf_filename,
+                    "content": encoded_pdf
+                }
+            ]
 
-        print(f"[EmailAgent] Dispatching email to {target_email} via Brevo HTTPS REST API (Port 443)...")
+        print(f"[EmailAgent] Dispatching email to {target_email} via Brevo HTTPS REST API (Port 443 fallback)...")
         response = requests.post(url, headers=headers, json=payload, timeout=20)
         if response.status_code in (200, 201, 202):
             res_data = response.json() if response.text else {}
-            print(f"[EmailAgent] Email successfully delivered via Brevo API! Message ID: {res_data.get('messageId')}")
+            print(f"[EmailAgent] Email successfully delivered via Brevo REST API! Message ID: {res_data.get('messageId')}")
             return True
         else:
             err_msg = f"Brevo API error ({response.status_code}): {response.text}"
             print(f"[EmailAgent] {err_msg}")
             raise Exception(err_msg)
+
+    def create_email_campaign(self, api_key: str, name: str, subject: str, html_content: str, sender_email: str = "saksham.kj.3736@gmail.com", sender_name: str = "ScriptIQ", list_ids: list = None) -> dict:
+        """
+        Creates an email campaign using Brevo SDK (sib_api_v3_sdk.EmailCampaignsApi).
+        Directly implements Brevo's Campaign API snippet.
+        """
+        import sib_api_v3_sdk
+        from sib_api_v3_sdk.rest import ApiException
+        
+        configuration = sib_api_v3_sdk.Configuration()
+        configuration.api_key['api-key'] = api_key
+        api_instance = sib_api_v3_sdk.EmailCampaignsApi(sib_api_v3_sdk.ApiClient(configuration))
+        
+        if list_ids is None:
+            list_ids = [2]
+            
+        email_campaign = sib_api_v3_sdk.CreateEmailCampaign(
+            name=name,
+            subject=subject,
+            sender={"name": sender_name, "email": sender_email},
+            html_content=html_content,
+            recipients={"listIds": list_ids}
+        )
+        
+        api_response = api_instance.create_email_campaign(email_campaign)
+        return api_response
+
 
     def send_prescription_email(self, pdf_path: str, patient_email: Optional[str] = None, patient_name: Optional[str] = "Patient", config: Optional[Dict[str, Any]] = None) -> bool:
         """

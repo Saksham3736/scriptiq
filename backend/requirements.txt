@@ -10,3 +10,4 @@ python-dotenv
 requests
 pywebpush
 python-dateutil
+sib-api-v3-sdk
