@@ -498,6 +498,23 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
+## ⚠️ Known Open Issues & Technical Debt (To Be Resolved)
+
+### Issue #E1: Production Patient Email Delivery Failure & Domain Verification Requirement
+* **Priority**: HIGH — Delivery Infrastructure
+* **Affected Areas**: `backend/agents/email_agent.py`, `SendPrescriptionModal.tsx`, Render Backend (`scriptiq-backend.onrender.com`), Vercel Frontend (`scriptiq-sk.vercel.app`)
+* **Symptom**: Prescriptions dispatched from the deployed Vercel application to arbitrary patient email addresses do not reach the patient's inbox.
+* **Root Causes Diagnosed**:
+  1. **Brevo Account-Level Platform Block (`relay.enabled: false`)**: Free Brevo account (`user_id: 12568848`) has transactional relay disabled by default, suppressing emails with `"reason": "Email not sent: Your sending platform is currently disabled."`. Rejects `@gmail.com` under DMARC `p=reject`.
+  2. **Resend Free Sandbox Limitation (`onboarding@resend.dev`)**: Free tier allows sending only to the registered owner email (`scriptiq.sk@gmail.com`). Attempts to send to third-party patient emails return HTTP 403 (`validation_error: "You can only send testing emails to your own email address... To send emails to other recipients, please verify a domain at resend.com/domains"`).
+  3. **Render Cloud Firewall Block on SMTP Ports**: Outbound TCP ports 25, 465, and 587 are blocked on Render free/starter tiers with `[Errno 101] Network is unreachable`.
+* **Resolution Plan**:
+  - [ ] **Action 1 (Resend Custom Domain - Recommended)**: Connect a custom domain at `resend.com/domains`, publish the 3 DNS records (DKIM/SPF), and send from `prescriptions@yourdomain.com` over Port 443 HTTPS.
+  - [ ] **Action 2 (Brevo Transactional Unlock)**: Submit an activation ticket in Brevo Dashboard under **Transactional** to set `relay: enabled`.
+  - [ ] **Action 3 (In-App PDF Download & Portal Link Fallback)**: Ensure `SendPrescriptionModal.tsx` provides prominent 1-click **Download PDF** and **Copy Portal Link (`/p/:shareToken`)** actions so doctor-to-patient handoff is never blocked.
+
+---
+
 ## 📈 Launch Commands
 * **FastAPI Backend Server (Port 8000)**:
   ```powershell

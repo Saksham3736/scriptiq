@@ -1103,6 +1103,31 @@ Final assembled PrescriptionSchema JSON → DraftStore
 
 ---
 
+## ⚠️ Known Open Issues & Technical Debt (To Be Resolved)
+
+### Issue #E1: Production Patient Email Delivery Failure & Domain Verification Requirement
+* **Priority**: HIGH — Delivery Infrastructure
+* **Affected Areas**: `backend/agents/email_agent.py`, `SendPrescriptionModal.tsx`, Render Backend (`scriptiq-backend.onrender.com`), Vercel Frontend (`scriptiq-sk.vercel.app`)
+* **Symptom**: 
+  - Prescriptions dispatched from the deployed Vercel application to patient email addresses do not reach the patient's inbox.
+* **Root Causes Diagnosed**:
+  1. **Brevo Account-Level Platform Block (`relay.enabled: false`)**: 
+     - Free Brevo account (`user_id: 12568848`) has transactional relay disabled by default.
+     - Brevo accepts the API call (`/v3/smtp/email`) with HTTP 201, but internally suppresses the email with:
+       `"reason": "Email not sent: Your sending platform is currently disabled."`
+     - Brevo additionally rejects free `@gmail.com` envelopes under Google's DMARC `p=reject` policy.
+  2. **Resend Free Sandbox Limitation (`onboarding@resend.dev`)**:
+     - Resend free tier (`RESEND_API_KEY`) functions properly for the registered account email (`scriptiq.sk@gmail.com`), but returns HTTP 403 Forbidden when attempting to send to third-party patient addresses (`saksham.kj.3736@gmail.com` or arbitrary patient emails):
+       `"validation_error: You can only send testing emails to your own email address... To send emails to other recipients, please verify a domain at resend.com/domains"`
+  3. **Render Cloud Firewall Block on SMTP Ports**:
+     - Render blocks raw outbound TCP traffic on ports 25, 465, and 587 (`[Errno 101] Network is unreachable`), preventing direct fallback to standard Gmail SMTP sockets.
+* **Resolution Plan**:
+  - [ ] **Action 1 (Resend Custom Domain - Recommended)**: Connect a custom domain at `resend.com/domains`, add the 3 DNS records (DKIM/SPF CNAME & TXT), and configure sender to `prescriptions@yourdomain.com`. This unlocks unrestricted delivery to all patient addresses worldwide over Port 443 HTTPS.
+  - [ ] **Action 2 (Brevo Transactional Unlock)**: Submit an activation request ticket in Brevo Dashboard under **Transactional** to set `relay: enabled`.
+  - [ ] **Action 3 (In-App Direct Download & Portal Link Fallback)**: Ensure `SendPrescriptionModal.tsx` provides prominent 1-click **Download PDF** and **Copy Portal Link (`/p/:shareToken`)** actions so doctor-to-patient handoff is never blocked by cloud email provider limits.
+
+---
+
 ## 🚀 Newly Proposed High-Impact Enhancements Roadmap
 
 ### Phase 70: Automated Drug-Drug Interaction (DDI) & Allergy Contraindication Guard `[PRIORITY: CRITICAL - CLINICAL SAFETY]`
