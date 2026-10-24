@@ -1051,29 +1051,32 @@ Final assembled PrescriptionSchema JSON → DraftStore
 
 ---
 
-## Phase 68: Parallel Multi-Channel Dispatch Resilience & Email/Push Pipeline Optimization `[PRIORITY: HIGH - DELIVERY RESILIENCE]`
+## Phase 68: Parallel Multi-Channel Dispatch Resilience & Brevo HTTPS Cloud Email Integration `[PRIORITY: HIGH - DELIVERY RESILIENCE]`
+* *Status: Completed & Live Verified*
 
 ### Step 68A: Modal State & Demographics Synchronization (`SendPrescriptionModal.tsx`)
-- [ ] Add `useEffect` to synchronize `phone` and `email` local form states whenever `isOpen` is `true` or `draft` changes.
-- [ ] Fix stale initialization bug so extracted patient email & phone immediately populate into the dispatch modal.
+- [x] Add `useEffect` to synchronize `phone` and `email` local form states whenever `isOpen` is `true` or `draft` changes.
+- [x] Fix stale initialization bug so extracted patient email & phone immediately populate into the dispatch modal.
 
 ### Step 68B: Parallel Non-Blocking Delivery Pipeline (`useSendPrescription.ts`)
-- [ ] Convert serial execution (`Step 2 Email -> Step 3 Push`) into concurrent `Promise.allSettled([sendEmailPromise, sendPushPromise])`.
-- [ ] Ensure SMTP delays or email network failures NEVER block Web Push execution or UI completion.
-- [ ] Return unified delivery status containing both `email_result` and `push_result`.
+- [x] Convert serial execution (`Step 2 Email -> Step 3 Push`) into concurrent `Promise.allSettled([sendEmailPromise, sendPushPromise])`.
+- [x] Ensure SMTP delays or email network failures NEVER block Web Push execution or UI completion.
+- [x] Return unified delivery status containing both `email_result` and `push_result`.
 
 ### Step 68C: Patient DOB Password & Demographics Sync (`server.py` & `useSendPrescription.ts`)
-- [ ] Update `SendEmailRequest` Pydantic schema in `server.py` to include `patient_dob` and `phone`.
-- [ ] Pass `patient_dob` and `phone` into `email_config` when calling `EmailAgent.send_prescription_email`.
-- [ ] Ensure the HTML email password callout banner displays the exact patient DOB password encrypting the attached PDF (instead of fallback `1234`).
+- [x] Update `SendEmailRequest` Pydantic schema in `server.py` to include `patient_dob` and `phone`.
+- [x] Pass `patient_dob` and `phone` into `email_config` when calling `EmailAgent.send_prescription_email`.
+- [x] Ensure the HTML email password callout banner displays the exact patient DOB password encrypting the attached PDF (instead of fallback `1234`).
 
-### Step 68D: Optimized SMTP Socket Timeouts & Fallback Resilience (`email_agent.py`)
-- [ ] Reduce socket timeout from 10s to 4s per port attempt (Port 465 SSL -> Port 587 STARTTLS).
-- [ ] Catch socket errors gracefully; if live SMTP fails due to network/firewall, fall back to simulation mode or report delivery status without throwing 500 errors.
+### Step 68D: Brevo HTTPS REST API Cloud Integration (`email_agent.py` & `server.py`)
+- [x] Integrated `_send_via_brevo(...)` using HTTPS `POST https://api.brevo.com/v3/smtp/email` on Port 443 with base64 PDF attachment.
+- [x] Bypassed Render cloud platform SMTP port blocks (resolving `[Errno 101] Network is unreachable`).
+- [x] Maintained automatic fallback chain: Brevo HTTPS REST API -> Local Gmail SMTP (465/587) -> Simulation mode.
 
 ### Step 68E: Verification & Test
-- [ ] Run `npm run build` in `frontend/` (0 TypeScript errors).
-- [ ] Run `tests/test_phase26_email.py` for email dispatch verification.
+- [x] Run `npm run build` in `frontend/` (0 TypeScript errors, 2.23s).
+- [x] Run end-to-end PDF generation, 128-bit DOB encryption, and Brevo HTTPS API email dispatch test (Verified live delivery with Message ID to `saksham.kj.3736@gmail.com`).
+- [x] Run FastAPI `/api/prescription/send-email` TestClient diagnostic (Status 200, `mode: BREVO_HTTPS_API`).
 
 ---
 

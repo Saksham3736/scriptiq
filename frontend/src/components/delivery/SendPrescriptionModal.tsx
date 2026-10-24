@@ -1,7 +1,7 @@
 /* SendPrescriptionModal.tsx — Multi-channel prescription dispatch modal */
 
-import { useState } from 'react';
-import { X, Send, MessageSquare, Smartphone, ShoppingBag, ShieldCheck, CheckCircle2, ExternalLink, FileText } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Send, MessageSquare, Smartphone, ShoppingBag, ShieldCheck, CheckCircle2, ExternalLink, FileText, AlertTriangle } from 'lucide-react';
 import { useSendPrescription } from '@/hooks/useSendPrescription';
 import type { PrescriptionDraft } from '@/store/draftStore';
 import { useUIStore } from '@/store/uiStore';
@@ -30,9 +30,17 @@ export default function SendPrescriptionModal({
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [createdPdfUrl, setCreatedPdfUrl] = useState<string | null>(null);
 
-  const { sending, sent, error, sendPrescription } = useSendPrescription();
+  const { sending, sent, error, result, sendPrescription } = useSendPrescription();
   const addToast = useUIStore((s) => s.addToast);
   const setPrescriptionStatus = useUIStore((s) => s.setPrescriptionStatus);
+
+  // Synchronize modal state with draft demographics whenever opened or updated (Step 68A)
+  useEffect(() => {
+    if (isOpen) {
+      if (draft.phone) setPhone(draft.phone);
+      if (draft.email) setEmail(draft.email);
+    }
+  }, [isOpen, draft.phone, draft.email]);
 
   if (!isOpen) return null;
 
@@ -49,11 +57,19 @@ export default function SendPrescriptionModal({
       setCreatedPdfUrl(res.pdf_url || null);
       setPrescriptionStatus('Sent');
 
-      addToast({
-        type: 'success',
-        title: 'Prescription & Receipt Dispatched',
-        message: `Sent to ${phone || 'patient'} and queued at Pharmacy Counter #1.`,
-      });
+      if (res.email_result && !res.email_result.success) {
+        addToast({
+          type: 'warning',
+          title: 'Prescription Saved (Email Delivery Issue)',
+          message: `Prescription saved, but email to ${email} failed: ${res.email_result.error}`,
+        });
+      } else {
+        addToast({
+          type: 'success',
+          title: 'Prescription & Receipt Dispatched',
+          message: `Sent to ${phone || 'patient'} and queued at Pharmacy Counter #1.`,
+        });
+      }
       onSuccess?.(res.pdf_url, orderId);
     }
   };
@@ -114,9 +130,58 @@ export default function SendPrescriptionModal({
                   Sent Successfully!
                 </h4>
                 <p style={{ fontSize: '13px', color: 'var(--color-ink-500, #5B6B82)', margin: '4px 0 0 0' }}>
-                  Prescription PDF and Pharmacy Order have been sent.
+                  Prescription PDF and Pharmacy Order have been processed.
                 </p>
               </div>
+
+              {/* Delivery Channels Status Summary */}
+              {result && (
+                <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '12px 14px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', marginTop: '4px' }}>
+                  <div style={{ fontWeight: 600, color: '#475569', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.04em' }}>Channel Dispatch Status</div>
+                  
+                  {channels.email && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        📧 Email ({email}):
+                      </span>
+                      {result.email_result?.success ? (
+                        <span style={{ color: '#16A34A', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          ✓ Delivered {result.email_result.data?.mode ? `(${result.email_result.data.mode})` : ''}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#DC2626', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }} title={result.email_result?.error}>
+                          ✕ {result.email_result?.error ? (result.email_result.error.length > 25 ? `${result.email_result.error.slice(0, 25)}...` : result.email_result.error) : 'Failed'}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {channels.push && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        🔔 Web Push:
+                      </span>
+                      {result.push_result?.success ? (
+                        <span style={{ color: '#16A34A', fontWeight: 600 }}>✓ Dispatched</span>
+                      ) : (
+                        <span style={{ color: '#D97706', fontWeight: 600 }}>ℹ Pending Subscription</span>
+                      )}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#334155' }}>📄 Encrypted PDF:</span>
+                    <span style={{ color: '#16A34A', fontWeight: 600 }}>✓ Generated</span>
+                  </div>
+
+                  {wantInHousePharmacy && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#334155' }}>🛒 Pharmacy Counter #1:</span>
+                      <span style={{ color: '#16A34A', fontWeight: 600 }}>✓ Queued</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Action Links */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>

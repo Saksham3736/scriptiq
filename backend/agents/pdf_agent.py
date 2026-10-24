@@ -101,23 +101,43 @@ class PDFAgent:
 
     def _calculate_age_from_dob(self, dob_str: str) -> str:
         """Calculate age in years from a DOB string. Supports DDMMYYYY, DD-MM-YYYY, DD/MM/YYYY, YYYY-MM-DD, ISO 8601."""
-        from dateutil import parser as dateutil_parser
+        if not dob_str:
+            return "N/A"
         try:
-            # Try common Indian format DDMMYYYY (no separators)
-            if len(dob_str) == 8 and dob_str.isdigit():
-                dob_date = datetime.strptime(dob_str, "%d%m%Y")
-            else:
-                dob_date = dateutil_parser.parse(dob_str, dayfirst=True)
-            today = datetime.now()
-            age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
-            return str(max(age, 0))
-        except Exception:
-            print(f"[PDFAgent] Could not parse DOB string for age calculation: '{dob_str}'")
+            clean = str(dob_str).strip()
+            dob_date = None
+            try:
+                from dateutil import parser as dateutil_parser
+                if len(clean) == 8 and clean.isdigit():
+                    dob_date = datetime.strptime(clean, "%d%m%Y")
+                else:
+                    dob_date = dateutil_parser.parse(clean, dayfirst=True)
+            except ImportError:
+                # Standard library datetime fallback (zero dependencies)
+                formats = ["%d%m%Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"]
+                for fmt in formats:
+                    try:
+                        dob_date = datetime.strptime(clean, fmt)
+                        break
+                    except ValueError:
+                        continue
+                if not dob_date:
+                    try:
+                        dob_date = datetime.fromisoformat(clean.replace("Z", "+00:00"))
+                    except Exception:
+                        pass
+
+            if dob_date:
+                today = datetime.now()
+                age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+                return str(max(age, 0))
+            return "N/A"
+        except Exception as e:
+            print(f"[PDFAgent] Could not parse DOB string for age calculation: '{dob_str}' ({e})")
             return "N/A"
 
     def _parse_consultation_timestamp(self, ts) -> datetime:
         """Parse a consultation timestamp from various formats. Returns datetime object."""
-        from dateutil import parser as dateutil_parser
         if isinstance(ts, datetime):
             return ts
         if isinstance(ts, (int, float)):
@@ -126,10 +146,23 @@ class PDFAgent:
             except Exception:
                 pass
         if isinstance(ts, str):
+            clean = ts.strip()
             try:
-                return dateutil_parser.parse(ts)
+                from dateutil import parser as dateutil_parser
+                return dateutil_parser.parse(clean)
+            except ImportError:
+                try:
+                    return datetime.fromisoformat(clean.replace("Z", "+00:00"))
+                except Exception:
+                    formats = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%d-%m-%Y %H:%M:%S", "%d/%m/%Y %H:%M:%S", "%Y-%m-%d"]
+                    for fmt in formats:
+                        try:
+                            return datetime.strptime(clean, fmt)
+                        except ValueError:
+                            continue
             except Exception:
-                print(f"[PDFAgent] Could not parse consultation timestamp: '{ts}', using current time")
+                pass
+            print(f"[PDFAgent] Could not parse consultation timestamp: '{ts}', using current time")
         return datetime.now()
 
     def generate_pdf(self, prescription_data: dict, output_filename: str = None) -> str:

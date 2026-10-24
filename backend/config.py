@@ -21,7 +21,8 @@ VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", os.path.join(os.path.dirname(
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "BD3tmSicsE_2-a3_lG1yHpePnf2QLDnPx65cGgCzronPmSA86KX-H0OFfixR7ADYaFxIv1257RklLVrloPTgQyc")
 VAPID_CLAIMS = {"sub": "mailto:admin@scriptiq.com"}
 
-# Gmail SMTP Email Config
+# Gmail SMTP & Brevo API Email Config
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "scriptiq.sk@gmail.com")

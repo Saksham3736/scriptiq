@@ -1,5 +1,7 @@
 import os
 import smtplib
+import base64
+import requests
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
@@ -10,10 +12,63 @@ import config as app_config
 class EmailAgent:
     """
     Handles sending automated HTML emails with attached prescription PDFs.
-    Supports a simulation mode for development/testing without real SMTP credentials.
+    Supports Brevo HTTPS REST API (cloud/Render proof on Port 443),
+    standard Gmail SMTP (local), and a simulation mode for development/testing.
     """
     def __init__(self):
         pass
+
+    def _send_via_brevo(self, api_key: str, sender_email: str, hospital_name: str, target_email: str, patient_name: str, subject: str, html_content: str, pdf_path: Optional[str] = None) -> bool:
+        """
+        Dispatches email with attachment via Brevo HTTPS REST API (Port 443).
+        Bypasses cloud provider SMTP firewall blocks (Render Errno 101).
+        """
+        url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json"
+        }
+        payload = {
+            "sender": {
+                "name": hospital_name,
+                "email": sender_email or "scriptiq.sk@gmail.com"
+            },
+            "to": [
+                {
+                    "email": target_email,
+                    "name": patient_name or "Patient"
+                }
+            ],
+            "subject": subject,
+            "htmlContent": html_content
+        }
+
+        if pdf_path and os.path.exists(pdf_path):
+            try:
+                with open(pdf_path, "rb") as f:
+                    encoded_pdf = base64.b64encode(f.read()).decode("utf-8")
+                payload["attachment"] = [
+                    {
+                        "name": os.path.basename(pdf_path),
+                        "content": encoded_pdf
+                    }
+                ]
+            except Exception as read_err:
+                print(f"[EmailAgent] Notice: Failed to attach PDF ({read_err})")
+        else:
+            print(f"[EmailAgent] Notice: No PDF attachment found at {pdf_path}")
+
+        print(f"[EmailAgent] Dispatching email to {target_email} via Brevo HTTPS REST API (Port 443)...")
+        response = requests.post(url, headers=headers, json=payload, timeout=20)
+        if response.status_code in (200, 201, 202):
+            res_data = response.json() if response.text else {}
+            print(f"[EmailAgent] Email successfully delivered via Brevo API! Message ID: {res_data.get('messageId')}")
+            return True
+        else:
+            err_msg = f"Brevo API error ({response.status_code}): {response.text}"
+            print(f"[EmailAgent] {err_msg}")
+            raise Exception(err_msg)
 
     def send_prescription_email(self, pdf_path: str, patient_email: Optional[str] = None, patient_name: Optional[str] = "Patient", config: Optional[Dict[str, Any]] = None) -> bool:
         """
@@ -24,6 +79,7 @@ class EmailAgent:
         
         target_email = patient_email or config.get("patient_email") or getattr(app_config, "DEFAULT_PATIENT_EMAIL", "saksham.kj.3736@gmail.com")
         
+        brevo_api_key = config.get("brevo_api_key") or os.getenv("BREVO_API_KEY") or getattr(app_config, "BREVO_API_KEY", "")
         smtp_user = config.get("smtp_user") or getattr(app_config, "SMTP_USER", "scriptiq.sk@gmail.com")
         smtp_pass = config.get("smtp_pass") or getattr(app_config, "SMTP_PASS", "") or os.getenv("SMTP_PASS", "") or os.getenv("GMAIL_APP_PASSWORD", "")
         smtp_host = config.get("smtp_host") or getattr(app_config, "SMTP_HOST", "smtp.gmail.com")
@@ -32,8 +88,8 @@ class EmailAgent:
         hospital_name = config.get("hospital_name", "ScriptIQ Medical Center")
 
         # Determine simulation mode:
-        # If real smtp_pass exists, perform REAL SMTP dispatch unless force_simulation is True
-        if bool(smtp_pass):
+        # If Brevo API key or real smtp_pass exists, perform REAL dispatch unless force_simulation is True
+        if bool(brevo_api_key) or bool(smtp_pass):
             simulation_mode = config.get("force_simulation", False)
         else:
             simulation_mode = True
@@ -86,6 +142,19 @@ class EmailAgent:
         </body>
         </html>
         """
+
+        # 1. Primary Cloud Path: Brevo HTTPS REST API (Port 443 — Render & cloud firewall proof)
+        if bool(brevo_api_key) and not simulation_mode:
+            return self._send_via_brevo(
+                api_key=brevo_api_key,
+                sender_email=sender_email,
+                hospital_name=hospital_name,
+                target_email=target_email,
+                patient_name=patient_name,
+                subject=subject,
+                html_content=body,
+                pdf_path=pdf_path
+            )
 
         if simulation_mode or not smtp_pass:
             print("\n" + "="*50)

@@ -84,6 +84,7 @@ class LetterheadSettings(BaseModel):
 
 class EmailSettings(BaseModel):
     email_simulation_mode: bool = Field(True, description="Enable simulation mode to bypass real SMTP")
+    brevo_api_key: Optional[str] = Field(None, description="Brevo API Key for Port 443 HTTPS Email Dispatch")
     smtp_host: str = Field("smtp.gmail.com", description="SMTP Host")
     smtp_port: int = Field(587, description="SMTP Port")
     smtp_user: str = Field("scriptiq.sk@gmail.com", description="SMTP Username")
@@ -814,6 +815,9 @@ def get_email_settings_endpoint():
             for k, v in doc.items():
                 if k != "_id" and v is not None:
                     defaults[k] = v
+        if not defaults.get("brevo_api_key"):
+            import config as app_config
+            defaults["brevo_api_key"] = os.getenv("BREVO_API_KEY", "") or getattr(app_config, "BREVO_API_KEY", "")
         return APIResponse(success=True, data=defaults)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1043,12 +1047,15 @@ class SendEmailRequest(BaseModel):
     pdf_path: Optional[str] = None
     patient_email: str
     patient_name: Optional[str] = "Patient"
+    patient_dob: Optional[str] = None
+    phone: Optional[str] = None
 
 @app.post("/api/prescription/send-email", response_model=APIResponse, tags=["Delivery"])
 async def send_prescription_email_endpoint(req: SendEmailRequest):
     """
     Dispatch HTML email with prescription PDF attachment via EmailAgent.
-    Runs SMTP dispatch in worker thread to maintain instant API responsiveness.
+    Uses Brevo HTTPS REST API (Port 443) on cloud/Render, or SMTP/Simulation fallback.
+    Runs dispatch in worker thread to maintain instant API responsiveness.
     """
     try:
         from agents.email_agent import EmailAgent
@@ -1064,6 +1071,8 @@ async def send_prescription_email_endpoint(req: SendEmailRequest):
         from dotenv import load_dotenv
         load_dotenv(override=True)
         import config as app_config
+        env_brevo = os.getenv("BREVO_API_KEY", "") or getattr(app_config, "BREVO_API_KEY", "")
+        brevo_key = env_brevo if env_brevo else doc.get("brevo_api_key", "")
         env_user = os.getenv("SMTP_USER", "") or getattr(app_config, "SMTP_USER", "")
         env_pass = os.getenv("SMTP_PASS", "") or os.getenv("GMAIL_APP_PASSWORD", "") or getattr(app_config, "SMTP_PASS", "")
 
@@ -1074,20 +1083,35 @@ async def send_prescription_email_endpoint(req: SendEmailRequest):
         smtp_port = doc.get("smtp_port") or getattr(app_config, "SMTP_PORT", 587)
 
         # Sync MongoDB document with environment credentials
+        update_doc = {
+            "smtp_user": smtp_user,
+            "smtp_pass": smtp_pass,
+            "sender_email": sender_email,
+            "smtp_host": smtp_host,
+            "smtp_port": int(smtp_port)
+        }
+        if brevo_key:
+            update_doc["brevo_api_key"] = brevo_key
         db.collection.update_one(
             {"_id": "email_config"},
-            {"$set": {"smtp_user": smtp_user, "smtp_pass": smtp_pass, "sender_email": sender_email, "smtp_host": smtp_host, "smtp_port": int(smtp_port)}},
+            {"$set": update_doc},
             upsert=True
         )
         
+        dob_val = req.patient_dob or (req.prescription_data or {}).get("patient_dob") or (req.prescription_data or {}).get("dob")
+        phone_val = req.phone or (req.prescription_data or {}).get("phone")
+
         email_config = {
+            "brevo_api_key": brevo_key,
             "smtp_host": smtp_host,
             "smtp_port": int(smtp_port),
             "smtp_user": smtp_user,
             "smtp_pass": smtp_pass,
             "sender_email": sender_email,
             "hospital_name": hospital_name,
-            "timeout": 10
+            "dob": dob_val,
+            "phone": phone_val,
+            "timeout": 15
         }
         
         email_agent = EmailAgent()
@@ -1124,7 +1148,13 @@ async def send_prescription_email_endpoint(req: SendEmailRequest):
             patient_name=req.patient_name or "Patient",
             config=email_config
         )
-        dispatch_mode = "LIVE_SMTP" if bool(smtp_pass) else "SIMULATION"
+        if bool(brevo_key):
+            dispatch_mode = "BREVO_HTTPS_API"
+        elif bool(smtp_pass):
+            dispatch_mode = "LIVE_SMTP"
+        else:
+            dispatch_mode = "SIMULATION"
+
         return APIResponse(
             success=success,
             data={
@@ -1132,6 +1162,7 @@ async def send_prescription_email_endpoint(req: SendEmailRequest):
                 "pdf_path": pdf_file,
                 "from_email": sender_email,
                 "mode": dispatch_mode,
+                "brevo_configured": bool(brevo_key),
                 "smtp_pass_configured": bool(smtp_pass)
             }
         )
@@ -1541,7 +1572,11 @@ async def dispatch_pharmacy_receipt(order_id: str, payload: dict = {}):
                 smtp_pass = env_pass if env_pass else e_doc.get("smtp_pass", "")
                 sender_email = env_user if env_user else (e_doc.get("sender_email") or smtp_user)
                 
+                env_brevo = os.getenv("BREVO_API_KEY", "") or getattr(app_config, "BREVO_API_KEY", "")
+                brevo_key = env_brevo if env_brevo else e_doc.get("brevo_api_key", "")
+                
                 email_config = {
+                    "brevo_api_key": brevo_key,
                     "smtp_host": e_doc.get("smtp_host") or getattr(app_config, "SMTP_HOST", "smtp.gmail.com"),
                     "smtp_port": int(e_doc.get("smtp_port") or getattr(app_config, "SMTP_PORT", 587)),
                     "smtp_user": smtp_user,
