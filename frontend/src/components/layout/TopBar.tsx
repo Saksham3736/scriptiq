@@ -1,7 +1,7 @@
 /* TopBar.tsx — Doctor Console Header with Patient Autocomplete, Notifications Popover & Profile Dropdown */
 
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Bell,
   ChevronDown,
@@ -38,8 +38,81 @@ interface NotificationItem {
 
 export default function TopBar() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
+
+  const isConsole = pathname === '/console' || pathname === '/';
+  const isHistory = pathname === '/history';
+  const isOfficialReceipts = pathname === '/official-receipts';
+  const isPharmacyReceipts = pathname === '/receipts';
+  const isSettings = pathname === '/settings';
+  const isDashboard = pathname === '/dashboard';
+  const isPatientPortal = pathname.startsWith('/patient');
+
   const { user, logout } = useAuthStore();
-  const { isDirty, savedId, deliveryStatus } = useDraftStore();
+  const { draft, isDirty, savedId, deliveryStatus } = useDraftStore();
+
+  const getHeaderContext = () => {
+    if (isConsole) {
+      const patientName = draft?.patient_name?.trim();
+      return {
+        title: patientName ? `Consultation: ${patientName}` : 'New Consultation',
+        subtitle: new Date().toLocaleDateString('en-IN', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        }),
+      };
+    }
+    if (isHistory) {
+      return {
+        title: 'Consultation Audit Log',
+        subtitle: 'Historical prescriptions, transcripts & patient records',
+      };
+    }
+    if (isOfficialReceipts) {
+      return {
+        title: 'Official Patient Receipts',
+        subtitle: 'Thermal & letterhead receipt history & editor',
+      };
+    }
+    if (isPharmacyReceipts) {
+      return {
+        title: 'In-House Pharmacy & POS Suite',
+        subtitle: 'Medicine dispensing, thermal billing & digital dispatch',
+      };
+    }
+    if (isSettings) {
+      return {
+        title: 'Practice & System Settings',
+        subtitle: 'Doctor credentials, letterhead config & provider keys',
+      };
+    }
+    if (isDashboard) {
+      return {
+        title: 'Clinical Overview & Activity',
+        subtitle: 'Practice statistics, recent patients & quick launch',
+      };
+    }
+    if (isPatientPortal) {
+      return {
+        title: 'Patient Health Portal',
+        subtitle: 'Digital prescription vault & personal medical dossier',
+      };
+    }
+    return {
+      title: 'ScriptIQ Clinical Suite',
+      subtitle: new Date().toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }),
+    };
+  };
+
+  const headerContext = getHeaderContext();
   const { theme, effectiveTheme, setTheme } = useTheme();
   const { isAutoPilotEnabled, toggleAutoPilot } = useUIStore();
   const status = useRecordingStore((s) => s.status);
@@ -142,27 +215,29 @@ export default function TopBar() {
         zIndex: 50,
       }}
     >
-      {/* Left — Patient context */}
+      {/* Left — Workspace & Patient context */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div>
           <p style={{ fontFamily: 'Space Grotesk,sans-serif', fontWeight: 600, fontSize: '15px', color: 'var(--color-ink-900, #101A2E)', lineHeight: 1.2, margin: 0 }}>
-            New Consultation
+            {headerContext.title}
           </p>
           <p style={{ fontFamily: 'Inter,sans-serif', fontSize: '11px', color: '#5B6B82', margin: 0 }}>
-            {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })}
+            {headerContext.subtitle}
           </p>
         </div>
 
-        {/* Save status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '99px', background: '#F6F8FA', border: '1px solid #E3E8EE' }}>
-          <SaveIcon size={11} color={saveStatus.color} strokeWidth={2.5} />
-          <span style={{ fontFamily: 'IBM Plex Mono,monospace', fontSize: '10px', color: saveStatus.color, fontWeight: 500 }}>
-            {saveStatus.text}
-          </span>
-        </div>
+        {/* Save status — Only visible in Doctor Console where active consultation draft is present */}
+        {isConsole && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '99px', background: '#F6F8FA', border: '1px solid #E3E8EE' }}>
+            <SaveIcon size={11} color={saveStatus.color} strokeWidth={2.5} />
+            <span style={{ fontFamily: 'IBM Plex Mono,monospace', fontSize: '10px', color: saveStatus.color, fontWeight: 500 }}>
+              {saveStatus.text}
+            </span>
+          </div>
+        )}
 
-        {/* Delivery badge */}
-        {deliveryBadge && (
+        {/* Delivery badge — Only visible in Doctor Console */}
+        {isConsole && deliveryBadge && (
           <div style={{ padding: '4px 10px', borderRadius: '99px', background: deliveryBadge.bg }}>
             <span style={{ fontFamily: 'IBM Plex Mono,monospace', fontSize: '10px', color: deliveryBadge.color, fontWeight: 500 }}>
               {deliveryBadge.text}
@@ -171,100 +246,104 @@ export default function TopBar() {
         )}
       </div>
 
-      {/* Center — AI Control Capsule */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--space-2, 8px)',
-        padding: 'var(--space-1, 4px) var(--space-2, 8px)',
-        borderRadius: '99px',
-        background: 'var(--color-bg-subtle, #F1F5F9)',
-        border: '1px solid var(--color-border, #E2E8F0)',
-      }}>
-        <AILoadingStatusBadge isProcessing={isProcessing} />
+      {/* Center — AI Control Capsule (Visible strictly in Doctor Console for live consultation extraction) */}
+      {isConsole ? (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-2, 8px)',
+          padding: 'var(--space-1, 4px) var(--space-2, 8px)',
+          borderRadius: '99px',
+          background: 'var(--color-bg-subtle, #F1F5F9)',
+          border: '1px solid var(--color-border, #E2E8F0)',
+        }}>
+          <AILoadingStatusBadge isProcessing={isProcessing} />
 
-        {/* Auto-Pilot Mode Switch */}
-        <button
-          onClick={toggleAutoPilot}
-          title={isAutoPilotEnabled ? "Auto-Pilot ACTIVE: Voice/text automatically generates PDF & automated dispatch." : "Auto-Pilot OFF: Click to enable zero-touch automated processing."}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 'var(--space-1, 4px)',
-            height: 'var(--btn-height-sm, 32px)',
-            padding: '0 var(--space-3, 12px)',
-            borderRadius: '99px',
-            background: isAutoPilotEnabled ? 'var(--color-primary-light, #E4F3F1)' : 'var(--color-bg-surface, #FFFFFF)',
-            border: isAutoPilotEnabled ? '1.5px solid var(--color-primary, #12897F)' : '1px solid var(--color-border, #E2E8F0)',
-            color: isAutoPilotEnabled ? 'var(--color-primary, #12897F)' : 'var(--color-ink-500, #64748B)',
-            fontFamily: 'var(--font-heading, Space Grotesk, sans-serif)',
-            fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'var(--motion-fast, 100ms cubic-bezier(0.16, 1, 0.3, 1))',
-            boxShadow: isAutoPilotEnabled ? '0 2px 8px rgba(18, 137, 127, 0.2)' : 'none',
-          }}
-        >
-          <Zap size={13} color={isAutoPilotEnabled ? 'var(--color-primary, #12897F)' : '#64748B'} fill={isAutoPilotEnabled ? 'var(--color-primary, #12897F)' : 'none'} />
-          <span>{isAutoPilotEnabled ? 'Auto-Pilot ON' : 'Auto-Pilot OFF'}</span>
-        </button>
-
-        {/* Language Selector Dropdown */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <select
-            value={useRecordingStore((s) => s.language)}
-            onChange={(e) => useRecordingStore.getState().setLanguage(e.target.value as any)}
-            title="Select Consultation Audio & Speech STT Language"
+          {/* Auto-Pilot Mode Switch */}
+          <button
+            onClick={toggleAutoPilot}
+            title={isAutoPilotEnabled ? "Auto-Pilot ACTIVE: Voice/text automatically generates PDF & automated dispatch." : "Auto-Pilot OFF: Click to enable zero-touch automated processing."}
             style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 'var(--space-1, 4px)',
               height: 'var(--btn-height-sm, 32px)',
-              padding: '0 var(--space-2, 8px)',
+              padding: '0 var(--space-3, 12px)',
               borderRadius: '99px',
-              border: '1px solid var(--color-border, #E2E8F0)',
-              background: 'var(--color-bg-surface, #FFFFFF)',
-              color: 'var(--color-ink-900, #0F172A)',
+              background: isAutoPilotEnabled ? 'var(--color-primary-light, #E4F3F1)' : 'var(--color-bg-surface, #FFFFFF)',
+              border: isAutoPilotEnabled ? '1.5px solid var(--color-primary, #12897F)' : '1px solid var(--color-border, #E2E8F0)',
+              color: isAutoPilotEnabled ? 'var(--color-primary, #12897F)' : 'var(--color-ink-500, #64748B)',
+              fontFamily: 'var(--font-heading, Space Grotesk, sans-serif)',
               fontSize: '11px',
               fontWeight: 600,
-              fontFamily: 'var(--font-heading, Space Grotesk, sans-serif)',
               cursor: 'pointer',
-              outline: 'none',
+              transition: 'var(--motion-fast, 100ms cubic-bezier(0.16, 1, 0.3, 1))',
+              boxShadow: isAutoPilotEnabled ? '0 2px 8px rgba(18, 137, 127, 0.2)' : 'none',
             }}
           >
-            <option value="en">🇬🇧 English</option>
-            <option value="hinglish">🇮🇳 Hinglish</option>
-            <option value="hi">🇮🇳 Hindi</option>
-          </select>
-        </div>
+            <Zap size={13} color={isAutoPilotEnabled ? 'var(--color-primary, #12897F)' : '#64748B'} fill={isAutoPilotEnabled ? 'var(--color-primary, #12897F)' : 'none'} />
+            <span>{isAutoPilotEnabled ? 'Auto-Pilot ON' : 'Auto-Pilot OFF'}</span>
+          </button>
 
-        {/* AI Extraction Model Selector Dropdown */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <select
-            value={useRecordingStore((s) => s.selectedModel || 'gemini-2.5-flash')}
-            onChange={(e) => useRecordingStore.getState().setSelectedModel(e.target.value as any)}
-            title="Select AI Extraction LLM Engine / Model"
-            style={{
-              height: 'var(--btn-height-sm, 32px)',
-              padding: '0 var(--space-2, 8px)',
-              borderRadius: '99px',
-              border: '1.5px solid #12897F',
-              background: '#E4F3F1',
-              color: '#12897F',
-              fontSize: '11px',
-              fontWeight: 700,
-              fontFamily: 'var(--font-heading, Space Grotesk, sans-serif)',
-              cursor: 'pointer',
-              outline: 'none',
-            }}
-          >
-            <option value="gemini-2.5-flash">⚡ Gemini 2.5 Flash</option>
-            <option value="gemini-3.5-flash">🚀 Gemini 3.5 Flash</option>
-            <option value="gemini-3-flash">🧠 Gemini 3 Flash</option>
-            <option value="gemini-2.5-flash-lite">⚡ Gemini 2.5 Flash Lite</option>
-            <option value="heuristic-regex">⚡ Rule Engine (Regex)</option>
-          </select>
-        </div>
+          {/* Language Selector Dropdown */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <select
+              value={useRecordingStore((s) => s.language)}
+              onChange={(e) => useRecordingStore.getState().setLanguage(e.target.value as any)}
+              title="Select Consultation Audio & Speech STT Language"
+              style={{
+                height: 'var(--btn-height-sm, 32px)',
+                padding: '0 var(--space-2, 8px)',
+                borderRadius: '99px',
+                border: '1px solid var(--color-border, #E2E8F0)',
+                background: 'var(--color-bg-surface, #FFFFFF)',
+                color: 'var(--color-ink-900, #0F172A)',
+                fontSize: '11px',
+                fontWeight: 600,
+                fontFamily: 'var(--font-heading, Space Grotesk, sans-serif)',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              <option value="en">🇬🇧 English</option>
+              <option value="hinglish">🇮🇳 Hinglish</option>
+              <option value="hi">🇮🇳 Hindi</option>
+            </select>
+          </div>
 
-        <PatientSearchAutocomplete />
-      </div>
+          {/* AI Extraction Model Selector Dropdown */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <select
+              value={useRecordingStore((s) => s.selectedModel || 'gemini-2.5-flash')}
+              onChange={(e) => useRecordingStore.getState().setSelectedModel(e.target.value as any)}
+              title="Select AI Extraction LLM Engine / Model"
+              style={{
+                height: 'var(--btn-height-sm, 32px)',
+                padding: '0 var(--space-2, 8px)',
+                borderRadius: '99px',
+                border: '1.5px solid #12897F',
+                background: '#E4F3F1',
+                color: '#12897F',
+                fontSize: '11px',
+                fontWeight: 700,
+                fontFamily: 'var(--font-heading, Space Grotesk, sans-serif)',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              <option value="gemini-2.5-flash">⚡ Gemini 2.5 Flash</option>
+              <option value="gemini-3.5-flash">🚀 Gemini 3.5 Flash</option>
+              <option value="gemini-3-flash">🧠 Gemini 3 Flash</option>
+              <option value="gemini-2.5-flash-lite">⚡ Gemini 2.5 Flash Lite</option>
+              <option value="heuristic-regex">⚡ Rule Engine (Regex)</option>
+            </select>
+          </div>
+
+          <PatientSearchAutocomplete />
+        </div>
+      ) : (
+        <div style={{ flex: 1 }} />
+      )}
 
       {/* Right — User Profile & Utilities Capsule */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2, 8px)' }}>
@@ -297,89 +376,116 @@ export default function TopBar() {
           )}
         </button>
 
-        {/* Notification Bell Icon & Popover */}
-        <div ref={notifRef} style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            style={{
-              position: 'relative',
-              width: 36,
-              height: 36,
-              borderRadius: '8px',
-              border: showNotifications ? '1.5px solid #12897F' : '1.5px solid #E3E8EE',
-              background: '#F6F8FA',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <Bell size={16} color={showNotifications ? '#12897F' : '#5B6B82'} strokeWidth={2} />
-            {unreadCount > 0 && (
-              <span style={{ position: 'absolute', top: 6, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#E15554', border: '1.5px solid #fff' }} />
-            )}
-          </button>
-
-          {/* Notifications Popover Dropdown */}
-          {showNotifications && (
-            <div
+        {/* Notification Bell Icon & Popover — Visible for authenticated clinical staff */}
+        {!isPatientPortal && (
+          <div ref={notifRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
               style={{
-                position: 'absolute',
-                top: 'calc(100% + 8px)',
-                right: 0,
-                width: '340px',
-                background: 'var(--color-bg-surface, #FFFFFF)',
-                borderRadius: '12px',
-                border: '1px solid var(--color-border, #E3E8EE)',
-                boxShadow: 'var(--shadow-lg)',
-                zIndex: 1000,
-                overflow: 'hidden',
+                position: 'relative',
+                width: 36,
+                height: 36,
+                borderRadius: '8px',
+                border: showNotifications ? '1.5px solid #12897F' : '1.5px solid #E3E8EE',
+                background: '#F6F8FA',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease',
               }}
             >
-              <div style={{ padding: '12px 16px', background: 'var(--color-bg-subtle, #F8FAFC)', borderBottom: '1px solid var(--color-border, #E2E8F0)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 700, color: 'var(--color-ink-900, #101A2E)' }}>
-                  Notifications ({unreadCount} new)
-                </span>
-                {unreadCount > 0 && (
-                  <button
-                    onClick={markAllAsRead}
-                    style={{ background: 'none', border: 'none', color: '#12897F', fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
-                  >
-                    <Check size={12} /> Mark read
-                  </button>
-                )}
-              </div>
+              <Bell size={16} color={showNotifications ? '#12897F' : '#5B6B82'} strokeWidth={2} />
+              {unreadCount > 0 && (
+                <span style={{ position: 'absolute', top: 6, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#E15554', border: '1.5px solid #fff' }} />
+              )}
+            </button>
 
-              <div style={{ maxHeight: '300px', overflowY: 'auto', padding: '6px 0' }}>
-                {notifications.map((item) => (
-                  <div
-                    key={item.id}
-                    style={{
-                      padding: '12px 16px',
-                      borderBottom: '1px solid var(--color-border, #F1F5F9)',
-                      background: item.read ? 'transparent' : 'var(--color-primary-light, #F0FDF4)',
-                      transition: 'background 0.15s ease',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px' }}>
-                      <span style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '12px', color: 'var(--color-ink-900, #101A2E)' }}>
-                        {item.title}
-                      </span>
-                      <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '10px', color: 'var(--color-ink-500, #94A3B8)' }}>{item.time}</span>
+            {/* Notifications Popover Dropdown */}
+            {showNotifications && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  width: '340px',
+                  background: 'var(--color-bg-surface, #FFFFFF)',
+                  borderRadius: '12px',
+                  border: '1px solid var(--color-border, #E3E8EE)',
+                  boxShadow: 'var(--shadow-lg)',
+                  zIndex: 1000,
+                  overflow: 'hidden',
+                }}
+              >
+                <div style={{ padding: '12px 16px', background: 'var(--color-bg-subtle, #F8FAFC)', borderBottom: '1px solid var(--color-border, #E2E8F0)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: 'Space Grotesk', fontSize: '13px', fontWeight: 700, color: 'var(--color-ink-900, #101A2E)' }}>
+                    Notifications ({unreadCount} new)
+                  </span>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllAsRead}
+                      style={{ background: 'none', border: 'none', color: '#12897F', fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+                    >
+                      <Check size={12} /> Mark read
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ maxHeight: '300px', overflowY: 'auto', padding: '6px 0' }}>
+                  {notifications.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        padding: '12px 16px',
+                        borderBottom: '1px solid var(--color-border, #F1F5F9)',
+                        background: item.read ? 'transparent' : 'var(--color-primary-light, #F0FDF4)',
+                        transition: 'background 0.15s ease',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px' }}>
+                        <span style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '12px', color: 'var(--color-ink-900, #101A2E)' }}>
+                          {item.title}
+                        </span>
+                        <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '10px', color: 'var(--color-ink-500, #94A3B8)' }}>{item.time}</span>
+                      </div>
+                      <p style={{ fontFamily: 'Inter', fontSize: '11px', color: 'var(--color-ink-700, #5B6B82)', lineHeight: 1.4, margin: 0 }}>
+                        {item.message}
+                      </p>
                     </div>
-                    <p style={{ fontFamily: 'Inter', fontSize: '11px', color: 'var(--color-ink-700, #5B6B82)', lineHeight: 1.4, margin: 0 }}>
-                      {item.message}
-                    </p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* User Profile Avatar Pill & Dropdown Menu */}
-        <div ref={profileRef} style={{ position: 'relative' }}>
+        {isPatientPortal ? (
+          <button
+            onClick={() => {
+              logout();
+              navigate('/patient/login');
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '8px',
+              background: 'rgba(225, 85, 84, 0.08)',
+              border: '1px solid rgba(225, 85, 84, 0.2)',
+              color: '#E15554',
+              fontFamily: 'Space Grotesk, sans-serif',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+            title="Log out of Patient Portal"
+          >
+            <LogOut size={13} /> Exit Portal
+          </button>
+        ) : (
+          <div ref={profileRef} style={{ position: 'relative' }}>
           <div
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             style={{
@@ -478,6 +584,7 @@ export default function TopBar() {
             </div>
           )}
         </div>
+        )}
       </div>
     </header>
   );
