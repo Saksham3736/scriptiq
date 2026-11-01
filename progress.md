@@ -4,7 +4,7 @@ This document records all architectural decisions, actions, command executions, 
 
 ---
 
-* **Current Phase**: Phase 70 Complete — Clinical UI Ergonomics, Live LLM Model Routing & Resend Smart Sandbox Engine
+* **Current Phase**: Phase 71 Complete — Clinical Dashboard Redesign & Real-Time MongoDB Aggregation Engine
 * **Completed & Active Phases**: 
   * Phase 1 to 30: Baseline Systems, Auth, Telemetry, PDF Encryption & Multi-Channel Engine (100% Complete)
   * Phase 34: In-House Pharmacy Receipt & Template Management Suite (`ReceiptsManagementPage.tsx`, POS velocity mode, UPI QR, thermal 80mm printing) (100% Complete)
@@ -29,6 +29,7 @@ This document records all architectural decisions, actions, command executions, 
   * Phase 68: Parallel Multi-Channel Dispatch Resilience & Brevo HTTPS Cloud Email Integration (100% Complete)
   * Phase 69: Multi-Provider Cloud Email Delivery Engine & Resend Port 443 HTTPS Integration (100% Complete)
   * Phase 70: Clinical UI Ergonomics, Live LLM Model Routing & Resend Smart Sandbox Engine (100% Complete)
+  * Phase 71: Clinical Dashboard Redesign & Real-Time MongoDB Aggregation Engine (100% Complete)
 * **Last Updated**: November 1, 2026
 
 
@@ -528,6 +529,41 @@ This document records all architectural decisions, actions, command executions, 
   - **Verification**:
     - Python Unit Tests: `.venv\Scripts\python.exe -m unittest tests/test_pdf.py tests/test_email.py` (`Ran 3 tests in 1.922s — OK`, live Resend message ID `01a1981d-340a-7ad1-80ab-e775f3315b1f`).
     - Frontend TypeScript build: `npm run build` in `frontend/` (`built in 1.09s`, 0 errors).
+
+---
+
+## 🛠️ Phase 71: Clinical Dashboard Redesign & Real-Time MongoDB Aggregation Engine
+* *Status: Completed*
+* **Objectives**: Eliminate clutter, mock data, and duplicate navigation from the main dashboard, replacing them with live clinical aggregations and an executive doctor interface.
+* **Actions Performed**:
+  - **Eliminated Unnecessary & Mock UI Elements**:
+    - Removed hardcoded fake "Conversion & Pharmacy Gauges" (94.2% / 98.8% mock percentages).
+    - Removed redundant bottom "Quick Workspace Navigation" cards (which duplicated permanent sidebar navigation).
+    - Removed hardcoded fake "Top 10 Prescribed Drug Frequency" and "Symptom & Disease Distribution" mock arrays.
+    - Removed outdated "AI Sub-Agent Pipeline" box with stale "gemini-2.0-flash / Gemma 4" text.
+    - Removed stale "Gemini 2.0 / Gemma Verified" static text.
+  - **Executive Time-Aware Clinical Hero**:
+    - Dynamic greeting based on doctor's local time (`Good morning` / `Good afternoon` / `Good evening`) with user name and live date badge.
+    - Added high-priority quick action buttons: Primary `[ + Start Consultation ]` (jumps to `/console`) and secondary `[ 🧾 Pharmacy POS ]` (jumps to `/official-receipts`).
+  - **4 Live Metric Cards**:
+    - Prescriptions Issued: Live count synced to MongoDB Atlas.
+    - Patients Treated: Live count of unique patient dossiers.
+    - Medications Prescribed: Live total count of active formulary regimens dispensed.
+    - AI Intelligence Engine: Live active model title (`Gemini 2.5 Flash`) reflecting store configuration.
+  - **Balanced Two-Column Clinical Control Center**:
+    - **Left Column (Recent Patient Consultations Feed)**:
+      - Chronological ordering using `getRecordTimestamp` (strictly newest first, identical to History).
+      - Patient avatar, full name, age & gender badge, diagnosis pill, formatted timestamp (`Today · 11:24 PM` or `Nov 1, 2026`), and medication count pill.
+      - 1-click action: `[ ⚡ Load to Console ]` (re-hydrates active console draft, transcript, and stores).
+      - Header link: `View All History (N) →`.
+    - **Right Column (Real Clinical Insights & Live Engine)**:
+      - **Top Prescribed Medications**: Dynamically aggregated from actual `medicines` in MongoDB consultations. Shows ranked `#1`, `#2`... with real rx counts and proportional progress bars.
+      - **Clinical Diagnoses Distribution**: Dynamically aggregated from actual `diagnosis` records in MongoDB with real percentage distribution.
+      - **Authentic System & Engine Status**: Clean, compact 4-row status monitor (Speech STT, Prescription LLM, MongoDB Atlas, Dispatch Engine).
+  - **Verification**:
+    - Frontend build: `npm run build` passed in 1.02s with 0 errors.
+    - Python tests: `Ran 3 tests in 1.604s — OK` (PDF DOB/Phone encryption + live Resend delivery).
+    - Remote git: Pushed cleanly to `origin/main` (`c90a454`).
 
 ---
 
