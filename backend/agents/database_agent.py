@@ -23,8 +23,11 @@ class DatabaseAgent:
             raise ValueError("Invalid prescription data payload.")
 
         # Ensure metadata timestamp is attached
-        if "created_at" not in prescription_data:
-            prescription_data["created_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
+        if "created_at" not in prescription_data or not prescription_data["created_at"]:
+            prescription_data["created_at"] = now.strftime("%Y-%m-%d %H:%M:%S")
+        if "consultation_date" not in prescription_data or not prescription_data["consultation_date"]:
+            prescription_data["consultation_date"] = now.isoformat() + "Z"
 
         print("[DatabaseAgent] Saving prescription record to MongoDB Atlas...")
         result = self.db_helper.save_data(prescription_data)

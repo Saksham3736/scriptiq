@@ -23,7 +23,33 @@ import {
   CheckSquare,
   Square,
   Check,
+  ArrowUpDown,
 } from 'lucide-react';
+
+export type HistorySortOption = 'recent' | 'oldest' | 'a-z' | 'z-a';
+
+export const getRecordTimestamp = (doc: { consultation_date?: string; created_at?: string; _id?: string }): number => {
+  if (doc.consultation_date) {
+    const t = new Date(doc.consultation_date).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  if (doc.created_at) {
+    const normalized = doc.created_at.includes('T') ? doc.created_at : doc.created_at.replace(' ', 'T') + 'Z';
+    const t = new Date(normalized).getTime();
+    if (!isNaN(t) && t > 0) return t;
+    const t2 = new Date(doc.created_at).getTime();
+    if (!isNaN(t2) && t2 > 0) return t2;
+  }
+  if (doc._id && doc._id.length >= 8) {
+    try {
+      const hexSeconds = parseInt(doc._id.substring(0, 8), 16);
+      if (!isNaN(hexSeconds) && hexSeconds > 1000000000) {
+        return hexSeconds * 1000;
+      }
+    } catch {}
+  }
+  return 0;
+};
 
 interface PrescriptionDoc {
   _id: string;
@@ -50,6 +76,7 @@ export default function HistoryPage() {
   const [prescriptions, setPrescriptions] = useState<PrescriptionDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<HistorySortOption>('recent');
   const [selectedDoc, setSelectedDoc] = useState<PrescriptionDoc | null>(null);
   const [activeDetailTab, setActiveDetailTab] = useState<'structured' | 'transcript'>('structured');
 
@@ -81,9 +108,8 @@ export default function HistoryPage() {
       if (json.success && json.data?.prescriptions) {
         // Guarantee most recent consultations appear at the top
         const sorted = [...json.data.prescriptions].sort((a, b) => {
-          const dateA = a.consultation_date ? new Date(a.consultation_date).getTime() : 0;
-          const dateB = b.consultation_date ? new Date(b.consultation_date).getTime() : 0;
-          if (dateA !== dateB) return dateB - dateA;
+          const diff = getRecordTimestamp(b) - getRecordTimestamp(a);
+          if (diff !== 0) return diff;
           return (b._id || '').localeCompare(a._id || '');
         });
         setPrescriptions(sorted);
@@ -220,14 +246,39 @@ export default function HistoryPage() {
     navigate('/console');
   };
 
-  const filtered = prescriptions.filter((p) => {
-    const term = searchQuery.toLowerCase();
-    return (
-      (p.patient_name || '').toLowerCase().includes(term) ||
-      (p.phone || '').includes(term) ||
-      (p.diagnosis || '').toLowerCase().includes(term)
-    );
-  });
+  const filtered = prescriptions
+    .filter((p) => {
+      const term = searchQuery.toLowerCase().trim();
+      if (!term) return true;
+      return (
+        (p.patient_name || '').toLowerCase().includes(term) ||
+        (p.phone || '').includes(term) ||
+        (p.diagnosis || '').toLowerCase().includes(term)
+      );
+    })
+    .sort((a, b) => {
+      if (sortBy === 'recent') {
+        const diff = getRecordTimestamp(b) - getRecordTimestamp(a);
+        if (diff !== 0) return diff;
+        return (b._id || '').localeCompare(a._id || '');
+      }
+      if (sortBy === 'oldest') {
+        const diff = getRecordTimestamp(a) - getRecordTimestamp(b);
+        if (diff !== 0) return diff;
+        return (a._id || '').localeCompare(b._id || '');
+      }
+      if (sortBy === 'a-z') {
+        const nameA = (a.patient_name || '').trim();
+        const nameB = (b.patient_name || '').trim();
+        return nameA.localeCompare(nameB);
+      }
+      if (sortBy === 'z-a') {
+        const nameA = (a.patient_name || '').trim();
+        const nameB = (b.patient_name || '').trim();
+        return nameB.localeCompare(nameA);
+      }
+      return 0;
+    });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--color-bg-app, #F6F8FA)', color: 'var(--color-ink-900)' }}>
@@ -349,6 +400,75 @@ export default function HistoryPage() {
                 }}
               />
             </div>
+
+            {/* Filter & Sort Controls Bar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--color-ink-500, #64748B)', fontFamily: 'IBM Plex Mono', fontWeight: 500 }}>
+                {filtered.length} {filtered.length === 1 ? 'consultation' : 'consultations'}
+              </span>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ArrowUpDown size={12} color="#12897F" />
+                <select
+                  id="history-sort-select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as HistorySortOption)}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    border: '1.5px solid var(--color-border, #E2E8F0)',
+                    background: 'var(--color-bg-surface, #fff)',
+                    color: 'var(--color-ink-900, #101A2E)',
+                    fontFamily: 'Space Grotesk, sans-serif',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    outline: 'none',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                  }}
+                  title="Filter and Sort Records"
+                >
+                  <option value="recent">Recent (Newest First)</option>
+                  <option value="oldest">Oldest Entry First</option>
+                  <option value="a-z">Patient (A to Z)</option>
+                  <option value="z-a">Patient (Z to A)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Quick Filter Pill Buttons */}
+            <div style={{ display: 'flex', gap: '6px', marginTop: '8px', overflowX: 'auto', paddingBottom: '2px' }}>
+              {[
+                { id: 'recent', label: 'Recent' },
+                { id: 'oldest', label: 'Oldest' },
+                { id: 'a-z', label: 'A to Z' },
+                { id: 'z-a', label: 'Z to A' },
+              ].map((chip) => {
+                const isActive = sortBy === chip.id;
+                return (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={() => setSortBy(chip.id as HistorySortOption)}
+                    style={{
+                      padding: '3px 9px',
+                      borderRadius: '99px',
+                      border: isActive ? '1px solid #12897F' : '1px solid var(--color-border, #E2E8F0)',
+                      background: isActive ? 'var(--color-primary-light, #E4F3F1)' : 'var(--color-bg-surface, #fff)',
+                      color: isActive ? '#12897F' : 'var(--color-ink-500, #64748B)',
+                      fontSize: '11px',
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {chip.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* List area */}
@@ -417,7 +537,10 @@ export default function HistoryPage() {
                           )}
                         </div>
                         <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '11px', color: 'var(--color-ink-500, #5B6B82)' }}>
-                          {item.consultation_date ? new Date(item.consultation_date).toLocaleDateString() : 'Recent'}
+                          {(() => {
+                            const ts = getRecordTimestamp(item);
+                            return ts > 0 ? new Date(ts).toLocaleDateString() : 'Recent';
+                          })()}
                         </span>
                       </div>
 

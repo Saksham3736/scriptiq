@@ -515,7 +515,7 @@ def get_consultations(
         from database.mongodb import DBHelper
         db = DBHelper()
         db.select_collection("prescriptions")
-        cursor = db.retrieve(query if query else None, sort=[("_id", -1)], limit=limit)
+        cursor = db.retrieve(query if query else None, sort=[("consultation_date", -1), ("_id", -1)], limit=limit)
         results = list(cursor)
         for doc in results:
             if "_id" in doc:

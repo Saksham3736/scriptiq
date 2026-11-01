@@ -118,6 +118,7 @@ class AIPrescriptionAgent:
             prescription_data["email"] = prescription_data["patient_email"]
             
         prescription_data["model_used"] = model_override or getattr(config, "LLM_MODEL", "gemini-2.5-flash")
+        prescription_data["consultation_date"] = datetime.now().isoformat() + "Z"
         prescription_data["status"] = "Generated - Pending Review/Amendment"
         print(f"[AIPrescriptionAgent] Prescription generated with model '{prescription_data['model_used']}' for: {prescription_data.get('patient_name', 'Patient')} ({prescription_data.get('age', 'N/A')} Yrs / {prescription_data.get('gender', 'N/A')}) | DOB: {prescription_data.get('patient_dob', 'N/A')} | Email: {prescription_data.get('email', 'N/A')}")
         self.emit_telemetry(telemetry_callback, 2, "PrescriptionAgent", "DONE", "AI JSON Structured", f"Extracted prescription for {prescription_data.get('patient_name', 'Patient')} successfully.", payload={"medicines_count": len(prescription_data.get("medicines", []))})
