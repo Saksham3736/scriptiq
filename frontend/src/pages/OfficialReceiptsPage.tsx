@@ -208,9 +208,6 @@ export default function OfficialReceiptsPage() {
                 <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: '20px', color: 'var(--color-ink-900, #101A2E)', margin: 0 }}>
                   Official Receipts Workspace
                 </h1>
-                <span style={{ padding: '3px 8px', borderRadius: '99px', background: 'var(--color-primary-light, #E4F3F1)', color: '#12897F', fontSize: '11px', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>
-                  Phase 67 Active
-                </span>
               </div>
               <p style={{ fontFamily: 'Inter', fontSize: '13px', color: 'var(--color-ink-500, #5B6B82)', marginTop: '4px', margin: 0 }}>
                 View generated patient pharmacy receipts history and customize the official patient receipt template.

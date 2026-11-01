@@ -151,6 +151,7 @@ export function useExtraction() {
               dob: extractedData.dob || extractedData.patient_dob || '15081995',
               want_in_house_buy: true,
               prescription_data: extractedData,
+              llm_model: useRecordingStore.getState().selectedModel || 'gemini-2.5-flash',
             }),
           });
           const autoJson = await autoRes.json();

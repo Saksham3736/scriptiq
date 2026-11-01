@@ -79,9 +79,16 @@ export default function HistoryPage() {
       const res = await fetch('/api/consultations?limit=100');
       const json = await res.json();
       if (json.success && json.data?.prescriptions) {
-        setPrescriptions(json.data.prescriptions);
-        if (json.data.prescriptions.length > 0 && !selectedDoc) {
-          setSelectedDoc(json.data.prescriptions[0]);
+        // Guarantee most recent consultations appear at the top
+        const sorted = [...json.data.prescriptions].sort((a, b) => {
+          const dateA = a.consultation_date ? new Date(a.consultation_date).getTime() : 0;
+          const dateB = b.consultation_date ? new Date(b.consultation_date).getTime() : 0;
+          if (dateA !== dateB) return dateB - dateA;
+          return (b._id || '').localeCompare(a._id || '');
+        });
+        setPrescriptions(sorted);
+        if (sorted.length > 0 && !selectedDoc) {
+          setSelectedDoc(sorted[0]);
         }
       }
     } catch (err) {
@@ -441,9 +448,9 @@ export default function HistoryPage() {
           {selectedDoc ? (
             <div style={{ maxWidth: '760px', margin: '0 auto', background: 'var(--color-bg-surface, #fff)', borderRadius: '16px', border: '1px solid var(--color-border, #E3E8EE)', padding: '32px', boxShadow: 'var(--shadow-sm)' }}>
               {/* Header Banner */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--color-border, #E3E8EE)', paddingBottom: '20px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid var(--color-border, #E3E8EE)', paddingBottom: '20px', marginBottom: '24px' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
                     <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 700, fontSize: '22px', color: 'var(--color-ink-900, #101A2E)', margin: 0 }}>
                       {selectedDoc.patient_name || 'Patient Record'}
                     </h2>
@@ -452,37 +459,113 @@ export default function HistoryPage() {
                         {selectedDoc.age ? `${selectedDoc.age} Yrs` : ''} {selectedDoc.gender ? `• ${selectedDoc.gender}` : ''}
                       </span>
                     )}
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '99px', background: 'var(--color-primary-light, #E4F3F1)', color: '#12897F', fontSize: '11px', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>
-                      <CheckCircle2 size={12} /> Verified MongoDB Record
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 9px', borderRadius: '99px', background: 'var(--color-primary-light, #E4F3F1)', color: '#12897F', fontSize: '11px', fontFamily: 'IBM Plex Mono', fontWeight: 600 }}>
+                      <CheckCircle2 size={12} /> Verified Record
                     </span>
                   </div>
-                  <p style={{ fontFamily: 'Inter', fontSize: '13px', color: 'var(--color-ink-500, #5B6B82)', margin: 0 }}>
-                    Phone: {selectedDoc.phone || 'N/A'} · DOB Password Key: {selectedDoc.dob || 'Not set'}
-                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontFamily: 'Inter', fontSize: '12px', color: 'var(--color-ink-500, #5B6B82)' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Phone size={12} /> {selectedDoc.phone || 'Phone: N/A'}
+                    </span>
+                    <span>•</span>
+                    <span style={{ fontFamily: 'IBM Plex Mono' }}>
+                      DOB Key: <strong style={{ color: 'var(--color-ink-700, #334155)' }}>{selectedDoc.dob || 'Not set'}</strong>
+                    </span>
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px' }}>
+                {/* Priority-Ordered Action Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  {/* Priority 1: Primary Action */}
                   <button
                     onClick={() => handleLoadIntoConsole(selectedDoc)}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      padding: '10px 16px',
+                      gap: '7px',
+                      padding: '9px 16px',
                       borderRadius: '8px',
-                      background: '#12897F',
+                      background: 'linear-gradient(135deg, #12897F, #0F7268)',
                       color: '#fff',
                       fontFamily: 'Space Grotesk',
                       fontWeight: 600,
                       fontSize: '13px',
                       border: 'none',
                       cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(18,137,127,0.25)',
+                      boxShadow: '0 2px 8px rgba(18,137,127,0.25)',
+                      transition: 'transform 0.1s ease, box-shadow 0.1s ease',
                     }}
+                    title="Load this consultation data back into Doctor Console"
                   >
                     <PlayCircle size={15} /> Load into Console
                   </button>
 
+                  {/* Priority 2: Document Actions */}
+                  {selectedDoc.pdf_path && (() => {
+                    const pdfName = selectedDoc.pdf_path.split(/[\\/]/).pop()!;
+                    return (
+                      <>
+                        <a
+                          href={`/pdfs/${pdfName}`}
+                          download={pdfName}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '9px 14px',
+                            borderRadius: '8px',
+                            background: 'var(--color-bg-surface, #fff)',
+                            color: 'var(--color-ink-900, #101A2E)',
+                            fontFamily: 'Space Grotesk',
+                            fontWeight: 600,
+                            fontSize: '13px',
+                            textDecoration: 'none',
+                            border: '1.5px solid var(--color-border, #E2E8F0)',
+                            cursor: 'pointer',
+                            transition: 'background 0.1s ease',
+                          }}
+                          title={`Download official encrypted PDF (${pdfName})`}
+                        >
+                          <Download size={14} color="#12897F" /> Download PDF
+                        </a>
+
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(pdfName);
+                            addToast({
+                              type: 'success',
+                              title: 'PDF Name Copied',
+                              message: `Copied "${pdfName}" to clipboard.`,
+                            });
+                          }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '9px 12px',
+                            borderRadius: '8px',
+                            background: 'var(--color-bg-surface, #fff)',
+                            color: 'var(--color-ink-700, #475569)',
+                            fontFamily: 'Space Grotesk',
+                            fontWeight: 600,
+                            fontSize: '13px',
+                            border: '1.5px solid var(--color-border, #E2E8F0)',
+                            cursor: 'pointer',
+                          }}
+                          title={`Copy filename '${pdfName}' for file search`}
+                        >
+                          <Copy size={13} color="#64748B" /> Copy Filename
+                        </button>
+                      </>
+                    );
+                  })()}
+
+                  {/* Divider before destructive action */}
+                  <div style={{ width: '1px', height: '22px', background: 'var(--color-border, #E2E8F0)', margin: '0 2px' }} />
+
+                  {/* Priority 3: Destructive Action (Safely Isolated) */}
                   <button
                     onClick={() => {
                       if (selectedDoc) {
@@ -493,79 +576,22 @@ export default function HistoryPage() {
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      padding: '10px 14px',
+                      gap: '5px',
+                      padding: '9px 12px',
                       borderRadius: '8px',
-                      background: 'rgba(225, 85, 84, 0.08)',
+                      background: 'rgba(225, 85, 84, 0.05)',
                       color: '#E15554',
                       fontFamily: 'Space Grotesk',
                       fontWeight: 600,
                       fontSize: '13px',
                       border: '1px solid rgba(225, 85, 84, 0.25)',
                       cursor: 'pointer',
+                      transition: 'background 0.1s ease',
                     }}
                     title="Delete this consultation record"
                   >
-                    <Trash2 size={14} color="#E15554" /> Delete Record
+                    <Trash2 size={13} color="#E15554" /> Delete
                   </button>
-
-                  {selectedDoc.pdf_path && (() => {
-                    const pdfName = selectedDoc.pdf_path.split(/[\\/]/).pop()!;
-                    return (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(pdfName);
-                            addToast({
-                              type: 'success',
-                              title: 'PDF Name Copied to Clipboard',
-                              message: `Copied "${pdfName}" to clipboard for system searching.`,
-                            });
-                          }}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '10px 14px',
-                            borderRadius: '8px',
-                            background: 'var(--color-bg-subtle, #F1F5F9)',
-                            color: 'var(--color-ink-900, #101A2E)',
-                            fontFamily: 'Space Grotesk',
-                            fontWeight: 600,
-                            fontSize: '13px',
-                            border: '1px solid var(--color-border, #E2E8F0)',
-                            cursor: 'pointer',
-                          }}
-                          title={`Copy ${pdfName} to clipboard`}
-                        >
-                          <Copy size={14} color="#12897F" /> Copy PDF Name
-                        </button>
-
-                        <a
-                          href={`/pdfs/${pdfName}`}
-                          download={pdfName}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '10px 14px',
-                            borderRadius: '8px',
-                            background: 'var(--color-bg-subtle, #F1F5F9)',
-                            color: 'var(--color-ink-900, #101A2E)',
-                            fontFamily: 'Space Grotesk',
-                            fontWeight: 600,
-                            fontSize: '13px',
-                            textDecoration: 'none',
-                            border: '1px solid var(--color-border, #E2E8F0)',
-                          }}
-                        >
-                          <Download size={14} color="#12897F" /> PDF
-                        </a>
-                      </div>
-                    );
-                  })()}
                 </div>
               </div>
               {/* View Toggle Tabs (Structured Prescription vs Audio Transcript) */}

@@ -135,6 +135,7 @@ export function useRecordingSocket(wsUrl?: string): UseRecordingSocketReturn {
   const sendProcess = (patientName?: string, phone?: string, dob?: string) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       const currentTranscript = useRecordingStore.getState().transcript;
+      const currentModel = useRecordingStore.getState().selectedModel || 'gemini-2.5-flash';
       socketRef.current.send(
         JSON.stringify({
           event: 'process',
@@ -142,6 +143,7 @@ export function useRecordingSocket(wsUrl?: string): UseRecordingSocketReturn {
           patient_name: patientName,
           phone,
           dob,
+          llm_model: currentModel,
         })
       );
     }

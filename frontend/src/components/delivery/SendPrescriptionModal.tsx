@@ -21,7 +21,7 @@ export default function SendPrescriptionModal({
   onSuccess,
 }: SendPrescriptionModalProps) {
   const [phone, setPhone] = useState(draft.phone || '');
-  const [email, setEmail] = useState(draft.email || 'saksham.kj.3736@gmail.com');
+  const [email, setEmail] = useState(draft.email || 'scriptiq.sk@gmail.com');
   const [channels, setChannels] = useState<{ push: boolean; email: boolean }>({
     push: true,
     email: true,
@@ -323,6 +323,27 @@ export default function SendPrescriptionModal({
                       boxSizing: 'border-box',
                     }}
                   />
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ fontSize: '11px', color: '#12897F', fontFamily: 'IBM Plex Mono' }}>
+                      Resend Sandbox: scriptiq.sk@gmail.com
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setEmail('scriptiq.sk@gmail.com')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#12897F',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: 0,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Use Verified Test Email
+                    </button>
+                  </div>
                 </div>
               </div>
 

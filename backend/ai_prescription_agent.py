@@ -117,8 +117,9 @@ class AIPrescriptionAgent:
         if "patient_email" in prescription_data and not prescription_data.get("email"):
             prescription_data["email"] = prescription_data["patient_email"]
             
+        prescription_data["model_used"] = model_override or getattr(config, "LLM_MODEL", "gemini-2.5-flash")
         prescription_data["status"] = "Generated - Pending Review/Amendment"
-        print(f"[AIPrescriptionAgent] Prescription generated for: {prescription_data.get('patient_name', 'Patient')} ({prescription_data.get('age', 'N/A')} Yrs / {prescription_data.get('gender', 'N/A')}) | DOB: {prescription_data.get('patient_dob', 'N/A')} | Email: {prescription_data.get('email', 'N/A')}")
+        print(f"[AIPrescriptionAgent] Prescription generated with model '{prescription_data['model_used']}' for: {prescription_data.get('patient_name', 'Patient')} ({prescription_data.get('age', 'N/A')} Yrs / {prescription_data.get('gender', 'N/A')}) | DOB: {prescription_data.get('patient_dob', 'N/A')} | Email: {prescription_data.get('email', 'N/A')}")
         self.emit_telemetry(telemetry_callback, 2, "PrescriptionAgent", "DONE", "AI JSON Structured", f"Extracted prescription for {prescription_data.get('patient_name', 'Patient')} successfully.", payload={"medicines_count": len(prescription_data.get("medicines", []))})
         return prescription_data
 
@@ -280,12 +281,13 @@ class AIPrescriptionAgent:
         amendments: Optional[Dict[str, Any]] = None,
         want_in_house_buy: bool = True,
         prescription_data: Optional[Dict[str, Any]] = None,
+        model_override: Optional[str] = None,
         telemetry_callback: Optional[Callable[[Dict[str, Any]], None]] = None
     ) -> Dict[str, Any]:
         """
         Executes the end-to-end zero-touch automated workflow from transcript to patient dispatch and medical desk receipt.
         """
-        print(f"\n[START] Starting Full Automated Workflow for Patient: {patient_name}...")
+        print(f"\n[START] Starting Full Automated Workflow for Patient: {patient_name} with model: {model_override or 'default'}...")
         self.emit_telemetry(telemetry_callback, 1, "SpeechAgent", "DONE", "Speech Transcription Complete", "Audio transcript prepared for AI structuring.")
         
         # 1. Reuse pre-extracted Prescription data or Generate via LLM
@@ -306,6 +308,7 @@ class AIPrescriptionAgent:
                 dob=dob,
                 age=age,
                 gender=gender,
+                model_override=model_override,
                 telemetry_callback=telemetry_callback
             )
         

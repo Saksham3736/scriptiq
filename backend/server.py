@@ -515,8 +515,8 @@ def get_consultations(
         from database.mongodb import DBHelper
         db = DBHelper()
         db.select_collection("prescriptions")
-        cursor = db.retrieve(query if query else None)
-        results = list(cursor)[:limit]
+        cursor = db.retrieve(query if query else None, sort=[("_id", -1)], limit=limit)
+        results = list(cursor)
         for doc in results:
             if "_id" in doc:
                 doc["_id"] = str(doc["_id"])
@@ -1246,12 +1246,14 @@ async def websocket_transcript(websocket: WebSocket):
                 }))
 
                 try:
-                    # Use the correct master orchestrator method
+                    llm_model = msg.get("llm_model") or "gemini-2.5-flash"
+                    # Use the correct master orchestrator method with selected model
                     prescription_data = agent.process_consultation(
                         transcript=full_transcript,
                         patient_name=patient_name,
                         phone=phone,
                         dob=dob,
+                        model_override=llm_model,
                     )
                     buffer = []
                     audio_chunks_b64 = []
@@ -1351,6 +1353,7 @@ class AutoPilotConsultationRequest(BaseModel):
     dob: Optional[str] = Field("15081995", description="DOB DDMMYYYY password key")
     want_in_house_buy: Optional[bool] = Field(True, description="Pharmacy routing flag")
     prescription_data: Optional[Dict[str, Any]] = Field(None, description="Pre-extracted prescription JSON draft")
+    llm_model: Optional[str] = Field("gemini-2.5-flash", description="Selected LLM model for extraction")
 
 
 @app.post("/api/consultation/autopilot", response_model=APIResponse, tags=["Consultation"])
@@ -1369,6 +1372,7 @@ async def run_autopilot_consultation(req: AutoPilotConsultationRequest):
             dob=req.dob,
             want_in_house_buy=req.want_in_house_buy if req.want_in_house_buy is not None else True,
             prescription_data=req.prescription_data,
+            model_override=req.llm_model,
             telemetry_callback=sync_telemetry_callback
         )
         return APIResponse(success=True, data=res)

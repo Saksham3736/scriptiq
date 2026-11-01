@@ -183,6 +183,8 @@ class EmailAgent:
         """
         Dispatches email with attachment via Resend HTTPS REST API (Port 443).
         Bypasses cloud firewall blocks with sub-second deliverability.
+        Includes Smart Sandbox Routing: If sending from sandbox (onboarding@resend.dev) to third-party,
+        routes to verified test address (scriptiq.sk@gmail.com) with header tag and sandbox banner.
         """
         url = "https://api.resend.com/emails"
         headers = {
@@ -190,19 +192,45 @@ class EmailAgent:
             "Content-Type": "application/json"
         }
         
-        # Default Resend sandbox sender
-        sender_email = f"{hospital_name} <onboarding@resend.dev>"
+        # Check if custom verified domain / sender is configured
+        custom_from = os.getenv("RESEND_FROM_EMAIL", "") or getattr(app_config, "RESEND_FROM_EMAIL", "")
+        if custom_from and custom_from.strip():
+            if "<" in custom_from:
+                sender_email = custom_from.strip()
+            else:
+                sender_email = f"{hospital_name} <{custom_from.strip()}>"
+            is_sandbox = False
+        else:
+            sender_email = f"{hospital_name} <onboarding@resend.dev>"
+            is_sandbox = True
+
+        actual_recipient = target_email.strip()
+        actual_subject = subject
+        actual_html = html_content
+
+        # Smart Sandbox Routing: Resend sandbox only permits delivery to account owner (scriptiq.sk@gmail.com).
+        # If testing third-party email in sandbox, deliver to scriptiq.sk@gmail.com with target banner
+        # so delivery succeeds 100% and email + PDF can be verified immediately.
+        if is_sandbox and actual_recipient.lower() != "scriptiq.sk@gmail.com":
+            actual_recipient = "scriptiq.sk@gmail.com"
+            actual_subject = f"[For: {target_email}] {subject}"
+            sandbox_banner = f"""
+            <div style="background-color: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px 16px; margin-bottom: 20px; border-radius: 6px; font-family: sans-serif; font-size: 13px; color: #92400E;">
+                <strong>⚡ Resend Sandbox Routing:</strong> Intended recipient: <code>{target_email}</code>. Delivered to verified developer/doctor account (<code>scriptiq.sk@gmail.com</code>) with attached encrypted prescription PDF.
+            </div>
+            """
+            actual_html = sandbox_banner + html_content
         
         payload = {
             "from": sender_email,
-            "to": [target_email],
+            "to": [actual_recipient],
             "reply_to": doctor_email or "scriptiq.sk@gmail.com",
-            "subject": subject,
-            "html": html_content
+            "subject": actual_subject,
+            "html": actual_html
         }
 
-        # Add doctor BCC if not sending directly to the doctor
-        if doctor_email and target_email.lower() != doctor_email.lower():
+        # Add doctor BCC only if not already delivering directly to the doctor and not in sandbox mirror
+        if not is_sandbox and doctor_email and actual_recipient.lower() != doctor_email.lower():
             payload["bcc"] = [doctor_email]
 
         if pdf_path and os.path.exists(pdf_path):
@@ -218,8 +246,8 @@ class EmailAgent:
             except Exception as read_err:
                 print(f"[EmailAgent] Notice: Failed to attach PDF to Resend ({read_err})")
 
-        print(f"[EmailAgent] Dispatching email to {target_email} via Resend HTTPS REST API (Port 443)...")
-        response = requests.post(url, headers=headers, json=payload, timeout=20)
+        print(f"[EmailAgent] Dispatching email to {actual_recipient} via Resend HTTPS REST API (Port 443)...")
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
         if response.status_code in (200, 201):
             res_data = response.json() if response.text else {}
             print(f"[EmailAgent] Email successfully delivered via Resend API! Message ID: {res_data.get('id')}")
@@ -248,7 +276,6 @@ class EmailAgent:
         hospital_name = config.get("hospital_name", "ScriptIQ Medical Center")
 
         # Determine simulation mode:
-        # If Resend API key, Brevo API key, or real smtp_pass exists, perform REAL dispatch unless force_simulation is True
         if bool(resend_api_key) or bool(brevo_api_key) or bool(smtp_pass):
             simulation_mode = config.get("force_simulation", False)
         else:
@@ -303,6 +330,8 @@ class EmailAgent:
         </html>
         """
 
+        last_cloud_err = None
+
         # 1. Primary Cloud Path: Resend HTTPS REST API (Port 443 — Instant Deliverability)
         if bool(resend_api_key) and not simulation_mode:
             try:
@@ -317,7 +346,8 @@ class EmailAgent:
                     pdf_path=pdf_path
                 )
             except Exception as resend_err:
-                print(f"[EmailAgent] Notice: Resend dispatch failed ({resend_err}), falling back to Brevo...")
+                last_cloud_err = resend_err
+                print(f"[EmailAgent] Notice: Resend dispatch failed ({resend_err}), checking secondary cloud fallback...")
 
         # 2. Secondary Cloud Path: Brevo HTTPS REST API / SDK (Port 443)
         if bool(brevo_api_key) and not simulation_mode:
@@ -333,8 +363,15 @@ class EmailAgent:
                     pdf_path=pdf_path
                 )
             except Exception as brevo_err:
-                print(f"[EmailAgent] Notice: Brevo dispatch failed ({brevo_err}), falling back to SMTP...")
+                last_cloud_err = brevo_err
+                print(f"[EmailAgent] Notice: Brevo dispatch failed ({brevo_err})...")
 
+        # Cloud Fail-Fast Protection:
+        # On Render / cloud environments, raw SMTP ports 465/587 are blocked by cloud firewalls.
+        # If cloud HTTPS APIs were configured but failed, fail fast with the error rather than freezing for 20 seconds.
+        is_cloud_env = bool(os.getenv("RENDER") or os.getenv("PORT") or (resend_api_key and brevo_api_key))
+        if is_cloud_env and last_cloud_err:
+            raise Exception(f"Cloud email dispatch failed: {str(last_cloud_err)}")
 
         if simulation_mode or not smtp_pass:
             print("\n" + "="*50)
